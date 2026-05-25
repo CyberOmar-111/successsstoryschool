@@ -1,0 +1,220 @@
+.teacher-dashboard {
+  min-height: calc(100vh - 83px);
+  background: #f8fbfa;
+}
+
+.teacher-grid {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  align-items: start;
+  gap: 26px;
+  padding: 32px 0 55px;
+}
+
+.teacher-sidebar,
+.portal-panel {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--paper);
+}
+
+.teacher-sidebar {
+  position: sticky;
+  top: 108px;
+  padding: 20px;
+}
+
+.teacher-sidebar .profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.teacher-sidebar .profile span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 47px;
+  height: 47px;
+  border-radius: 50%;
+  color: var(--paper);
+  background: var(--teal);
+  font-weight: 750;
+}
+
+.teacher-sidebar h2 {
+  margin-bottom: 14px;
+  font-size: 1.25rem;
+}
+
+.assignment-list {
+  display: grid;
+  gap: 8px;
+}
+
+.assignment-list button {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--navy);
+  background: var(--surface);
+  text-align: start;
+  cursor: pointer;
+}
+
+.assignment-list button strong,
+.assignment-list button small {
+  display: block;
+}
+
+.assignment-list button small {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.assignment-list button.active {
+  border-color: var(--teal);
+  background: #e4f3f1;
+}
+
+.teacher-workspace {
+  display: grid;
+  gap: 22px;
+}
+
+.workspace-header,
+.class-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+}
+
+.workspace-header h1 {
+  font-size: clamp(1.7rem, 3vw, 2.3rem);
+}
+
+.logout {
+  min-height: 46px;
+  padding: 0 19px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--navy);
+  background: var(--paper);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.select-assignment,
+.teacher-card,
+.recent-posts {
+  padding: 24px;
+}
+
+.class-header {
+  margin-bottom: 21px;
+}
+
+.class-header h2 {
+  margin-bottom: 8px;
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+}
+
+.date-choice {
+  min-width: 185px;
+}
+
+.teacher-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.teacher-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.attendance-card {
+  grid-column: 1 / -1;
+}
+
+.locked-subject {
+  padding: 9px 12px;
+  border-radius: 9px;
+  color: var(--navy);
+  background: var(--surface);
+}
+
+.attendance-table {
+  overflow-x: auto;
+}
+
+.attendance-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.attendance-table th,
+.attendance-table td {
+  padding: 10px 7px;
+  border-bottom: 1px solid var(--line);
+  text-align: start;
+}
+
+.attendance-table select {
+  min-width: 132px;
+}
+
+.empty-note {
+  color: var(--muted);
+}
+
+.recent-posts div {
+  display: grid;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.recent-posts article {
+  padding: 13px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.recent-posts article strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 900px) {
+  .teacher-grid,
+  .teacher-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 650px) {
+  .portal-actions .back-link {
+    display: none;
+  }
+
+  .workspace-header,
+  .class-header {
+    align-items: start;
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#102b46">
+    <meta name="description" content="Success Story School secure teacher portal.">
+    <title>Success Story School | Teacher Portal</title>
+    <link rel="icon" href="/favicon.ico?v=2" type="image/png">
+    <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/png">
+    <link rel="stylesheet" href="portal.css">
+    <link rel="stylesheet" href="teacher.css">
+    <script src="teacher.js" defer></script>
+  </head>
+  <body>
+    <header class="portal-header">
+      <nav class="portal-container portal-nav" aria-label="Teacher portal navigation">
+        <a class="portal-brand" href="index.html" aria-label="Success Story School home">
+          <img src="assets/success-story-mark.png" alt="" width="62" height="62">
+          <span>
+            <strong>Success Story</strong>
+            <small data-i18n="brandPortal">Teacher Portal</small>
+          </span>
+        </a>
+        <div class="portal-actions">
+          <a class="back-link" href="portal.html" data-i18n="studentPortal">Student portal</a>
+          <a class="back-link" href="admin.html" data-i18n="adminPortal">Administration</a>
+          <button class="lang-button" type="button" data-language-toggle>العربية</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="login-section" data-auth-view>
+        <div class="portal-container login-grid">
+          <div class="portal-intro">
+            <p class="eyebrow" data-i18n="eyebrow">Teacher Portal</p>
+            <h1 data-i18n="title">Teach your assigned classes securely.</h1>
+            <p class="intro-text" data-i18n="intro">Use your school-issued teacher ID. Assignments and grades can be entered only for the classes and subjects assigned to you.</p>
+            <div class="feature-grid">
+              <span data-i18n="attendance">Class attendance</span>
+              <span data-i18n="homework">Homework</span>
+              <span data-i18n="grades">Grades</span>
+              <span data-i18n="announcements">Announcements</span>
+            </div>
+          </div>
+          <div class="login-card">
+            <div class="secure-badge" data-i18n="secureAccount">Protected teacher account</div>
+            <form class="login-form" data-login-form>
+              <h2 data-i18n="signInTitle">Teacher sign in</h2>
+              <p data-i18n="signInText">Enter the teacher ID and password provided by administration.</p>
+              <label>
+                <span data-i18n="teacherId">Teacher ID</span>
+                <input name="teacherId" type="text" autocomplete="username" placeholder="TCH-001" pattern="TCH-[0-9]{3}" required>
+              </label>
+              <label>
+                <span data-i18n="password">Password</span>
+                <input name="password" type="password" autocomplete="current-password" required>
+              </label>
+              <p class="password-note" data-i18n="rateLimit">Five failed attempts lock sign-in for 15 minutes.</p>
+              <button class="portal-button primary" type="submit" data-i18n="signIn">Sign in</button>
+              <p class="form-status" data-login-status aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="teacher-dashboard" data-dashboard hidden>
+        <div class="secure-banner" data-i18n="secureBanner">Teacher area. You can update only your assigned classes and subjects.</div>
+        <div class="portal-container teacher-grid">
+          <aside class="teacher-sidebar">
+            <div class="profile">
+              <div class="profile-avatar">TC</div>
+              <div>
+                <strong data-teacher-name></strong>
+                <span data-teacher-id></span>
+              </div>
+            </div>
+            <h2 data-i18n="assignments">Teaching assignments</h2>
+            <nav class="assignment-list" data-assignment-list aria-label="Teaching assignments"></nav>
+          </aside>
+          <div class="teacher-workspace">
+            <header class="workspace-header">
+              <div>
+                <p class="eyebrow" data-i18n="workspace">Class workspace</p>
+                <h1><span data-i18n="welcome">Welcome,</span> <span data-welcome-name></span></h1>
+              </div>
+              <button class="logout" type="button" data-logout data-i18n="logout">Log out</button>
+            </header>
+            <div class="portal-panel select-assignment" data-select-assignment>
+              <h2 data-i18n="chooseAssignment">Choose an assigned class and subject.</h2>
+            </div>
+            <div data-classroom hidden>
+              <header class="class-header">
+                <div>
+                  <h2 data-class-title></h2>
+                  <p><span data-i18n="assignedSubject">Assigned subject:</span> <strong data-class-subject></strong></p>
+                </div>
+                <label class="date-choice">
+                  <span data-i18n="attendanceDate">Attendance date</span>
+                  <input type="date" data-attendance-date>
+                </label>
+              </header>
+              <div class="teacher-cards">
+                <form class="portal-panel teacher-card attendance-card" data-attendance-form>
+                  <h3 data-i18n="attendanceSheet">Class attendance sheet</h3>
+                  <p data-i18n="attendanceNote">Mark every student before saving the day's attendance.</p>
+                  <div class="attendance-table">
+                    <table>
+                      <thead><tr><th data-i18n="student">Student</th><th data-i18n="status">Status</th></tr></thead>
+                      <tbody data-attendance-body></tbody>
+                    </table>
+                  </div>
+                  <p class="empty-note" data-no-students hidden data-i18n="noStudents">There are no students in this class.</p>
+                  <button class="portal-button primary" type="submit" data-i18n="saveAttendance">Save attendance</button>
+                  <p class="form-status" data-attendance-status></p>
+                </form>
+                <form class="portal-panel teacher-card" data-homework-form>
+                  <h3 data-i18n="postHomework">Post homework</h3>
+                  <p class="locked-subject"><span data-i18n="subject">Subject</span>: <strong data-homework-subject></strong></p>
+                  <label><span data-i18n="details">Details</span><textarea name="details" required></textarea></label>
+                  <label><span data-i18n="dueDate">Due date</span><input name="dueDate" type="date"></label>
+                  <button class="portal-button primary" type="submit" data-i18n="publish">Publish to class</button>
+                  <p class="form-status" data-homework-status></p>
+                </form>
+                <form class="portal-panel teacher-card" data-grade-form>
+                  <h3 data-i18n="addGrades">Add grades</h3>
+                  <p class="locked-subject"><span data-i18n="subject">Subject</span>: <strong data-grade-subject></strong></p>
+                  <label><span data-i18n="student">Student</span><select name="studentId" required></select></label>
+                  <label><span data-i18n="termOne">Term 1</span><input name="termOne" type="number" min="0" max="100"></label>
+                  <label><span data-i18n="termTwo">Term 2</span><input name="termTwo" type="number" min="0" max="100"></label>
+                  <button class="portal-button primary" type="submit" data-i18n="saveGrade">Save grade</button>
+                  <p class="form-status" data-grade-status></p>
+                </form>
+                <form class="portal-panel teacher-card" data-announcement-form>
+                  <h3 data-i18n="postAnnouncement">Post announcement</h3>
+                  <label><span data-i18n="announcementTitle">Title</span><input name="title" required></label>
+                  <label><span data-i18n="details">Details</span><textarea name="details" required></textarea></label>
+                  <button class="portal-button primary" type="submit" data-i18n="publish">Publish to class</button>
+                  <p class="form-status" data-announcement-status></p>
+                </form>
+              </div>
+              <section class="portal-panel recent-posts">
+                <h3 data-i18n="recentPosts">Recent posts for this assignment</h3>
+                <div data-recent-posts></div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
