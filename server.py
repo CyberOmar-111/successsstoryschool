@@ -50,6 +50,7 @@ STATIC_FILES = {
     "/favicon.ico",
     "/assets/success-story-logo.jpg",
     "/assets/success-story-mark.png",
+    "/assets/success-story-campus.jpg",
 }
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
