@@ -56,7 +56,10 @@ are fixed to `Grade 10 A` boys, `Grade 10 B` girls, `Grade 9 A/B` boys,
   for 15 minutes.
 - Student ID creation is rate-limited and assigns sequential `SSS-###` values.
 
-For public deployment, run the site over HTTPS.
+For public deployment on Vercel, connect a Neon Postgres database with a
+`DATABASE_URL` environment variable. The `api/index.py` Vercel Function uses the
+hosted database for portal accounts and records, while local previews continue to
+use the ignored SQLite database. Production session cookies are HTTPS-only.
 
 ## Files
 
