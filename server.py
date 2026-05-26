@@ -24,7 +24,7 @@ LOGIN_WINDOW_SECONDS = 15 * 60
 LOGIN_BLOCK_SECONDS = 15 * 60
 LOGIN_MAX_FAILURES = 5
 REGISTER_WINDOW_SECONDS = 60 * 60
-REGISTER_MAX_ATTEMPTS = 5
+REGISTER_MAX_ATTEMPTS = 30
 AVAILABLE_HOMEROOMS = (
     (10, "A", "boys"),
     (10, "B", "girls"),
@@ -1205,12 +1205,6 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             return True
 
     def handle_register(self, body):
-        if not self.registration_allowed():
-            self.send_json(
-                429,
-                {"code": "register_limited", "error": "Too many account requests. Please try again later."},
-            )
-            return
         name = clean_text(body.get("name"))
         password = str(body.get("password", ""))
         homeroom = parse_homeroom_code(body.get("classCode"))
@@ -1225,6 +1219,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             return
         if not homeroom:
             self.send_json(400, {"code": "invalid_class", "error": "Choose an available class."})
+            return
+        if not self.registration_allowed():
+            self.send_json(
+                429,
+                {"code": "register_limited", "error": "Too many account requests. Please try again later."},
+            )
             return
 
         salt = secrets.token_bytes(16)
