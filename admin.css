@@ -118,6 +118,23 @@
   margin-top: 14px;
 }
 
+.portal-button.danger {
+  border-color: #cf6a60;
+  color: #9b2e28;
+  background: #fff5f3;
+}
+
+.portal-button.danger:hover {
+  border-color: #bd5149;
+  color: #fff;
+  background: #ae3c35;
+}
+
+.reset-students-status {
+  margin-top: 10px;
+  font-size: 0.78rem;
+}
+
 .admin-placeholder {
   text-align: center;
 }

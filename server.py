@@ -1157,6 +1157,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_admin_record(body)
         elif request_path == "/api/admin/reset-password":
             self.handle_admin_password_reset(body)
+        elif request_path == "/api/admin/reset-students":
+            self.handle_admin_students_reset(body)
         elif request_path == "/api/admin/class-assignment":
             self.handle_class_assignment(body)
         elif request_path == "/api/admin/class-removal":
@@ -1851,6 +1853,25 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             )
             connection.execute("DELETE FROM sessions WHERE student_id = ?", (student_id,))
         self.send_json(200, {"ok": True})
+
+    def handle_admin_students_reset(self, body):
+        if not self.require_admin():
+            return
+        if str(body.get("confirm", "")) != "RESET STUDENTS":
+            self.send_json(400, {"code": "confirmation_required", "error": "Student reset confirmation required."})
+            return
+        with db_connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            total = connection.execute("SELECT COUNT(*) AS total FROM students").fetchone()["total"]
+            connection.execute("DELETE FROM students")
+            connection.execute("UPDATE sequences SET value = 0 WHERE name = 'student_id'")
+            connection.execute("DELETE FROM registration_attempts")
+            connection.execute(
+                "DELETE FROM login_attempts "
+                "WHERE attempt_key NOT LIKE 'admin|%' AND attempt_key NOT LIKE 'teacher|%'"
+            )
+            connection.commit()
+        self.send_json(200, {"ok": True, "deletedStudents": total})
 
     def handle_class_assignment(self, body):
         if not self.require_admin():

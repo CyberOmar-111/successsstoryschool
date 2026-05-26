@@ -35,6 +35,9 @@ const translations = {
     welcome: "Welcome,",
     logout: "Log out",
     students: "Students",
+    resetAllStudents: "Reset all student accounts",
+    resetStudentsConfirm: "Delete every student account and its individual records? Administrators and teachers will remain.",
+    resetStudentsDone: "All student accounts were deleted. The next student ID will start again at SSS-001.",
     classes: "Classes",
     administrators: "Administrators",
     addAdministrator: "Manage administrators",
@@ -896,6 +899,29 @@ document.querySelector("[data-logout]").addEventListener("click", async () => {
   dashboard.hidden = true;
   authView.hidden = false;
   setAuthMode("login");
+});
+
+document.querySelector("[data-reset-students]").addEventListener("click", async () => {
+  const status = document.querySelector("[data-reset-students-status]");
+  status.textContent = "";
+  if (!window.confirm(text("resetStudentsConfirm"))) {
+    return;
+  }
+  try {
+    await api("/api/admin/reset-students", {
+      method: "POST",
+      body: JSON.stringify({ confirm: "RESET STUDENTS" })
+    });
+    studentDetails = null;
+    classDetails = null;
+    document.querySelector("[data-student-editor]").hidden = true;
+    document.querySelector("[data-class-editor]").hidden = true;
+    document.querySelector("[data-placeholder]").hidden = false;
+    await loadLists();
+    status.textContent = text("resetStudentsDone");
+  } catch (error) {
+    status.textContent = errorText(error);
+  }
 });
 
 languageToggle.addEventListener("click", () => applyLanguage(language === "en" ? "ar" : "en"));

@@ -10,7 +10,7 @@
     <link rel="shortcut icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="stylesheet" href="portal.css">
     <link rel="stylesheet" href="admin.css">
-    <script src="admin.js?v=2" defer></script>
+    <script src="admin.js?v=3" defer></script>
   </head>
   <body>
     <header class="portal-header">
@@ -104,6 +104,8 @@
             <section class="admin-list-card">
               <h2 data-i18n="students">Students</h2>
               <div class="admin-list" data-student-list></div>
+              <button class="portal-button danger admin-add-button" type="button" data-reset-students data-i18n="resetAllStudents">Reset all student accounts</button>
+              <p class="form-status reset-students-status" data-reset-students-status aria-live="polite"></p>
             </section>
             <section class="admin-list-card">
               <h2 data-i18n="classes">Classes</h2>
