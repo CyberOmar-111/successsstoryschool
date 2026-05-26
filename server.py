@@ -63,14 +63,26 @@ CONTENT_TYPES = {
 }
 DUMMY_SALT = b"\x00" * 16
 DUMMY_PASSWORD_HASH = None
+POSTGRES_POOL = None
 
 
 class PostgresConnection:
     def __init__(self):
-        from psycopg import connect
-        from psycopg.rows import dict_row
+        global POSTGRES_POOL
+        if POSTGRES_POOL is None:
+            from psycopg.rows import dict_row
+            from psycopg_pool import ConnectionPool
 
-        self.connection = connect(DATABASE_URL, row_factory=dict_row)
+            POSTGRES_POOL = ConnectionPool(
+                DATABASE_URL,
+                min_size=0,
+                max_size=4,
+                timeout=8,
+                kwargs={"row_factory": dict_row, "prepare_threshold": None},
+                open=True,
+            )
+        self.lease = POSTGRES_POOL.connection()
+        self.connection = self.lease.__enter__()
 
     @staticmethod
     def query(sql):
@@ -98,11 +110,7 @@ class PostgresConnection:
         return self
 
     def __exit__(self, exception_type, exception, traceback):
-        if exception_type:
-            self.connection.rollback()
-        else:
-            self.connection.commit()
-        self.connection.close()
+        return self.lease.__exit__(exception_type, exception, traceback)
 
 
 def db_connection():
@@ -493,6 +501,12 @@ def initialize_postgres_database():
 
 def initialize_database():
     if IS_POSTGRES:
+        with db_connection() as connection:
+            ready = connection.execute(
+                "SELECT to_regclass('public.sequences') AS relation"
+            ).fetchone()["relation"]
+        if ready:
+            return
         initialize_postgres_database()
     else:
         initialize_sqlite_database()
@@ -844,6 +858,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.send_json(200, {"user": public_student(student), "records": records, "class": class_data})
             return
         if request_path == "/api/admin/setup-status":
+            initialize_database()
             with db_connection() as connection:
                 setup_required = connection.execute(
                     "SELECT COUNT(*) AS total FROM administrators"
@@ -854,6 +869,54 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             admin = self.authenticated_admin()
             payload = None if not admin else {"adminId": admin["admin_id"], "name": admin["full_name"]}
             self.send_json(200, {"authenticated": bool(admin), "admin": payload})
+            return
+        if request_path == "/api/admin/dashboard":
+            if not self.require_admin():
+                return
+            with db_connection() as connection:
+                students = connection.execute(
+                    STUDENT_WITH_CLASS_SQL + " ORDER BY students.student_id"
+                ).fetchall()
+                classes = connection.execute(
+                    """
+                    SELECT classes.id, classes.grade, classes.section, COUNT(students.student_id) AS member_count
+                    FROM classes
+                    LEFT JOIN students ON students.class_id = classes.id
+                    GROUP BY classes.id
+                    ORDER BY classes.grade DESC, classes.section
+                    """
+                ).fetchall()
+                administrators = connection.execute(
+                    "SELECT admin_id, full_name, created_at FROM administrators ORDER BY CAST(SUBSTR(admin_id, 5) AS INTEGER)"
+                ).fetchall()
+                teachers = connection.execute(
+                    "SELECT teacher_id, full_name, created_at FROM teachers ORDER BY CAST(SUBSTR(teacher_id, 5) AS INTEGER)"
+                ).fetchall()
+                assignments = connection.execute(
+                    """
+                    SELECT teacher_assignments.id, teacher_assignments.teacher_id, teacher_assignments.subject,
+                           classes.id AS class_id, classes.grade, classes.section
+                    FROM teacher_assignments
+                    JOIN classes ON classes.id = teacher_assignments.class_id
+                    ORDER BY teacher_assignments.teacher_id, classes.grade DESC, classes.section, teacher_assignments.subject
+                    """
+                ).fetchall()
+            by_teacher = {}
+            for assignment in assignments:
+                by_teacher.setdefault(assignment["teacher_id"], []).append(public_teacher_assignment(assignment))
+            self.send_json(200, {
+                "students": [public_student(student) for student in students],
+                "classes": [
+                    {**public_class(class_row), "memberCount": class_row["member_count"]}
+                    for class_row in classes
+                    if homeroom_group(class_row["grade"], class_row["section"])
+                ],
+                "administrators": [public_admin(account) for account in administrators],
+                "teachers": [
+                    {**public_teacher(teacher), "assignments": by_teacher.get(teacher["teacher_id"], [])}
+                    for teacher in teachers
+                ],
+            })
             return
         if request_path == "/api/admin/students":
             if not self.require_admin():
@@ -1066,6 +1129,9 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         except (ValueError, json.JSONDecodeError):
             self.send_json(400, {"code": "bad_request", "error": "Invalid request."})
             return
+
+        if request_path in {"/api/auth/register", "/api/admin/setup"}:
+            initialize_database()
 
         if request_path == "/api/auth/register":
             self.handle_register(body)

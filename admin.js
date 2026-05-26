@@ -537,16 +537,11 @@ function renderClass(result) {
 }
 
 async function loadLists() {
-  const [studentResult, classResult, administratorResult, teacherResult] = await Promise.all([
-    api("/api/admin/students"),
-    api("/api/admin/classes"),
-    api("/api/admin/accounts"),
-    api("/api/admin/teachers")
-  ]);
-  students = studentResult.students;
-  classes = classResult.classes;
-  administrators = administratorResult.administrators;
-  teachers = teacherResult.teachers;
+  const result = await api("/api/admin/dashboard");
+  students = result.students;
+  classes = result.classes;
+  administrators = result.administrators;
+  teachers = result.teachers;
   refreshAssignmentRows();
   renderLists();
 }
@@ -912,14 +907,18 @@ try {
 }
 applyLanguage(language);
 
-api("/api/admin/session")
-  .then(async (session) => {
+api("/api/admin/setup-status")
+  .then(async (status) => {
+    if (status.setupRequired) {
+      setAuthMode("setup");
+      return;
+    }
+    const session = await api("/api/admin/session");
     if (session.authenticated) {
       admin = session.admin;
       await openDashboard();
-      return;
+    } else {
+      setAuthMode("login");
     }
-    const status = await api("/api/admin/setup-status");
-    setAuthMode(status.setupRequired ? "setup" : "login");
   })
   .catch(() => setAuthMode("login"));
