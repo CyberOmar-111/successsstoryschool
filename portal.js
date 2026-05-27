@@ -386,6 +386,11 @@ function showCollection(emptySelector, listSelector, hasValues) {
   document.querySelector(listSelector).hidden = !hasValues;
 }
 
+function renderMetric(valueSelector, statusSelector, value) {
+  document.querySelector(valueSelector).textContent = value ?? "--";
+  document.querySelector(statusSelector).hidden = value !== null;
+}
+
 function renderRecords(records) {
   const grades = records.grades || [];
   const attendance = records.attendance || [];
@@ -467,14 +472,14 @@ function renderRecords(records) {
   });
 
   const gradeValues = grades.flatMap((grade) => [grade.term_one, grade.term_two]).filter((value) => value !== null);
-  document.querySelector("[data-average-overview]").textContent = gradeValues.length
+  renderMetric("[data-average-overview]", "[data-average-status]", gradeValues.length
     ? `${Math.round(gradeValues.reduce((sum, value) => sum + value, 0) / gradeValues.length)}%`
-    : "--";
-  document.querySelector("[data-attendance-overview]").textContent = attendance.length
+    : null);
+  renderMetric("[data-attendance-overview]", "[data-attendance-status]", attendance.length
     ? `${Math.round((attendance.filter((record) => record.status === "present").length / attendance.length) * 100)}%`
-    : "--";
+    : null);
   const dueAmount = fees.filter((fee) => fee.status === "due").reduce((sum, fee) => sum + Number(fee.amount), 0);
-  document.querySelector("[data-fees-overview]").textContent = fees.length ? `${dueAmount.toFixed(2)} JOD` : "--";
+  renderMetric("[data-fees-overview]", "[data-fees-status]", fees.length ? `${dueAmount.toFixed(2)} JOD` : null);
 }
 
 function selectAuthTab(tabName) {
