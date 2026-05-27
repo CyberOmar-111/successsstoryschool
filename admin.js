@@ -38,6 +38,8 @@ const translations = {
     resetAllStudents: "Reset all student accounts",
     resetStudentsConfirm: "Delete every student account and its individual records? Administrators and teachers will remain.",
     resetStudentsDone: "All student accounts were deleted. The next student ID will start again at SSS-001.",
+    resetStudentsRefreshFailed: "The accounts were deleted, but the updated list could not be loaded. Reload this page.",
+    adminSessionExpired: "Your administrator session expired. Please sign in again.",
     classes: "Classes",
     administrators: "Administrators",
     addAdministrator: "Manage administrators",
@@ -309,7 +311,8 @@ function errorText(error) {
     invalid_class: "invalidClass",
     name_required: "nameRequired",
     invalid_current_password: "invalidCurrentPassword",
-    setup_complete: "setupAlreadyComplete"
+    setup_complete: "setupAlreadyComplete",
+    auth_required: "adminSessionExpired"
   };
   return text(errors[error.code] || "genericError");
 }
@@ -912,13 +915,19 @@ document.querySelector("[data-reset-students]").addEventListener("click", async 
       method: "POST",
       body: JSON.stringify({ confirm: "RESET STUDENTS" })
     });
+    students = [];
     studentDetails = null;
     classDetails = null;
     document.querySelector("[data-student-editor]").hidden = true;
     document.querySelector("[data-class-editor]").hidden = true;
     document.querySelector("[data-placeholder]").hidden = false;
-    await loadLists();
     status.textContent = text("resetStudentsDone");
+    renderLists();
+    try {
+      await loadLists();
+    } catch {
+      status.textContent = `${text("resetStudentsDone")} ${text("resetStudentsRefreshFailed")}`;
+    }
   } catch (error) {
     status.textContent = errorText(error);
   }
