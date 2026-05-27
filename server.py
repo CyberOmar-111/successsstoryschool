@@ -1181,10 +1181,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     {**public_student(member), "attendanceStatus": member["attendance_status"] or "present"}
                     for member in members
                 ],
-                "homework": [
-                    {**dict(row), "canDelete": row["posted_by_teacher_id"] == teacher["teacher_id"]}
-                    for row in homework
-                ],
+                "homework": [{**dict(row), "canDelete": True} for row in homework],
                 "announcements": [{**dict(row), "canDelete": True} for row in announcements],
                 "schoolDate": school_date,
             })
@@ -1789,9 +1786,9 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 deleted = connection.execute(
                     """
                     DELETE FROM class_homework
-                    WHERE id = ? AND class_id = ? AND subject = ? AND posted_by_teacher_id = ?
+                    WHERE id = ? AND class_id = ? AND subject = ?
                     """,
-                    (post_id, assignment["class_id"], assignment["subject"], teacher["teacher_id"]),
+                    (post_id, assignment["class_id"], assignment["subject"]),
                 ).rowcount
             else:
                 deleted = connection.execute(
