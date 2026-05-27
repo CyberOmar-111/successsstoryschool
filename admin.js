@@ -119,6 +119,9 @@ const translations = {
     emptyTeachers: "No teacher accounts yet.",
     noRecords: "No records entered yet.",
     noPosts: "No classroom posts yet.",
+    deletePost: "Delete",
+    deletePostConfirm: "Delete this post for all students in the class?",
+    postDeleted: "Post deleted.",
     noMembers: "No students are currently in this class.",
     setupDone: "Administrator account created. Sign in with ADM-1.",
     setupAlreadyComplete: "ADM-1 already exists. Sign in below.",
@@ -253,6 +256,9 @@ const translations = {
     emptyClasses: "لم يتم إنشاء صفوف بعد.",
     noRecords: "لا توجد سجلات مدخلة بعد.",
     noPosts: "لا توجد منشورات صفية بعد.",
+    deletePost: "حذف",
+    deletePostConfirm: "هل تريد حذف هذا المنشور لجميع طلاب الصف؟",
+    postDeleted: "تم حذف المنشور.",
     noMembers: "لا يوجد طلاب في هذا الصف حاليا.",
     setupDone: "تم إنشاء حساب الإدارة. سجل الدخول بالرقم ADM-1.",
     setupAlreadyComplete: "حساب ADM-1 موجود بالفعل. سجل الدخول أدناه.",
@@ -437,13 +443,21 @@ function renderLists() {
   });
 }
 
-function recordArticle(title, details) {
+function recordArticle(title, details, action) {
   const article = document.createElement("article");
   const heading = document.createElement("strong");
   const content = document.createElement("p");
   heading.textContent = title;
   content.textContent = details;
   article.append(heading, content);
+  if (action) {
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove-member delete-post";
+    remove.textContent = text("deletePost");
+    remove.addEventListener("click", action);
+    article.appendChild(remove);
+  }
   return article;
 }
 
@@ -529,12 +543,21 @@ function renderClass(result) {
     input.value = result.class.id;
   });
   const posts = document.querySelector("[data-class-records]");
+  document.querySelector("[data-class-post-status]").textContent = "";
   posts.replaceChildren();
   result.homework.forEach((entry) => {
-    posts.appendChild(recordArticle(`${text("classHomework")}: ${entry.subject}`, `${entry.details}${entry.due_date ? ` - ${entry.due_date}` : ""}`));
+    posts.appendChild(recordArticle(
+      `${text("classHomework")}: ${entry.subject}`,
+      `${entry.details}${entry.due_date ? ` - ${entry.due_date}` : ""}`,
+      () => deleteClassPost("homework", entry.id)
+    ));
   });
   result.announcements.forEach((entry) => {
-    posts.appendChild(recordArticle(`${text("classAnnouncement")}: ${entry.title}`, entry.details));
+    posts.appendChild(recordArticle(
+      `${text("classAnnouncement")}: ${entry.title}`,
+      entry.details,
+      () => deleteClassPost("announcement", entry.id)
+    ));
   });
   if (!posts.childNodes.length) {
     posts.textContent = text("noPosts");
@@ -573,6 +596,25 @@ async function removeClassMember(studentId, classId) {
     status.textContent = text("removed");
     await loadLists();
     await loadClass(classId);
+  } catch (error) {
+    status.textContent = errorText(error);
+  }
+}
+
+async function deleteClassPost(type, postId) {
+  if (!window.confirm(text("deletePostConfirm"))) {
+    return;
+  }
+  const classId = classDetails.class.id;
+  const status = document.querySelector("[data-class-post-status]");
+  status.textContent = "";
+  try {
+    await api("/api/admin/class-record-delete", {
+      method: "POST",
+      body: JSON.stringify({ classId, type, postId })
+    });
+    await loadClass(classId);
+    document.querySelector("[data-class-post-status]").textContent = text("postDeleted");
   } catch (error) {
     status.textContent = errorText(error);
   }

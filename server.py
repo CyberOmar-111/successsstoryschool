@@ -64,6 +64,7 @@ CONTENT_TYPES = {
 DUMMY_SALT = b"\x00" * 16
 DUMMY_PASSWORD_HASH = None
 POSTGRES_POOL = None
+POST_DISMISSALS_READY = False
 
 
 class PostgresConnection:
@@ -265,6 +266,15 @@ def initialize_sqlite_database():
                 details TEXT NOT NULL,
                 posted_by_teacher_id TEXT REFERENCES teachers(teacher_id) ON DELETE SET NULL,
                 posted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS dismissed_posts (
+                student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
+                post_type TEXT NOT NULL CHECK (post_type IN ('homework', 'announcement')),
+                audience TEXT NOT NULL CHECK (audience IN ('student', 'class')),
+                post_id INTEGER NOT NULL,
+                dismissed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (student_id, post_type, audience, post_id)
             );
             """
         )
@@ -482,6 +492,16 @@ def initialize_postgres_database():
             posted_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT)
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS dismissed_posts (
+            student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
+            post_type TEXT NOT NULL CHECK (post_type IN ('homework', 'announcement')),
+            audience TEXT NOT NULL CHECK (audience IN ('student', 'class')),
+            post_id INTEGER NOT NULL,
+            dismissed_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT),
+            PRIMARY KEY (student_id, post_type, audience, post_id)
+        )
+        """,
     )
     with db_connection() as connection:
         for statement in schema:
@@ -497,6 +517,36 @@ def initialize_postgres_database():
         connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM admin_sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM teacher_sessions WHERE expires_at <= ?", (int(time.time()),))
+
+
+def ensure_post_dismissals_table(connection):
+    global POST_DISMISSALS_READY
+    if POST_DISMISSALS_READY:
+        return
+    if IS_POSTGRES:
+        statement = """
+        CREATE TABLE IF NOT EXISTS dismissed_posts (
+            student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
+            post_type TEXT NOT NULL CHECK (post_type IN ('homework', 'announcement')),
+            audience TEXT NOT NULL CHECK (audience IN ('student', 'class')),
+            post_id INTEGER NOT NULL,
+            dismissed_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT),
+            PRIMARY KEY (student_id, post_type, audience, post_id)
+        )
+        """
+    else:
+        statement = """
+        CREATE TABLE IF NOT EXISTS dismissed_posts (
+            student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
+            post_type TEXT NOT NULL CHECK (post_type IN ('homework', 'announcement')),
+            audience TEXT NOT NULL CHECK (audience IN ('student', 'class')),
+            post_id INTEGER NOT NULL,
+            dismissed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (student_id, post_type, audience, post_id)
+        )
+        """
+    connection.execute(statement)
+    POST_DISMISSALS_READY = True
 
 
 def initialize_database():
@@ -781,7 +831,17 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             (assignment_id, teacher_id),
         ).fetchone()
 
-    def portal_records(self, connection, student):
+    def portal_records(self, connection, student, hide_dismissed=True):
+        dismissed = set()
+        if hide_dismissed:
+            ensure_post_dismissals_table(connection)
+            dismissed = {
+                (row["post_type"], row["audience"], row["post_id"])
+                for row in connection.execute(
+                    "SELECT post_type, audience, post_id FROM dismissed_posts WHERE student_id = ?",
+                    (student["student_id"],),
+                ).fetchall()
+            }
         records = {
             "grades": [dict(row) for row in connection.execute(
                 "SELECT subject, term_one, term_two FROM grades WHERE student_id = ? ORDER BY id",
@@ -792,11 +852,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 (student["student_id"],),
             )],
             "homework": [dict(row) for row in connection.execute(
-                "SELECT subject, details, due_date, 'student' AS audience FROM homework WHERE student_id = ? ORDER BY id DESC",
+                "SELECT id, subject, details, due_date, 'student' AS audience FROM homework WHERE student_id = ? ORDER BY id DESC",
                 (student["student_id"],),
             )],
             "announcements": [dict(row) for row in connection.execute(
-                "SELECT title, details, posted_at, 'student' AS audience FROM announcements WHERE student_id = ? ORDER BY id DESC",
+                "SELECT id, title, details, posted_at, 'student' AS audience FROM announcements WHERE student_id = ? ORDER BY id DESC",
                 (student["student_id"],),
             )],
             "fees": [dict(row) for row in connection.execute(
@@ -814,7 +874,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 records["homework"] = [
                     dict(row) for row in connection.execute(
                         """
-                        SELECT subject, details, due_date, 'class' AS audience
+                        SELECT id, subject, details, due_date, 'class' AS audience
                         FROM class_homework WHERE class_id = ? ORDER BY id DESC
                         """,
                         (student["class_id"],),
@@ -823,7 +883,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 records["announcements"] = [
                     dict(row) for row in connection.execute(
                         """
-                        SELECT title, details, posted_at, 'class' AS audience
+                        SELECT id, title, details, posted_at, 'class' AS audience
                         FROM class_announcements WHERE class_id = ? ORDER BY id DESC
                         """,
                         (student["class_id"],),
@@ -837,6 +897,15 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     **public_class(class_row),
                     "members": [{"name": member["full_name"]} for member in members],
                 }
+        if hide_dismissed:
+            records["homework"] = [
+                entry for entry in records["homework"]
+                if ("homework", entry["audience"], entry["id"]) not in dismissed
+            ]
+            records["announcements"] = [
+                entry for entry in records["announcements"]
+                if ("announcement", entry["audience"], entry["id"]) not in dismissed
+            ]
         return records, class_data
 
     def do_GET(self):
@@ -991,7 +1060,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 if not student:
                     self.send_json(404, {"code": "student_not_found", "error": "Student not found."})
                     return
-                records, class_data = self.portal_records(connection, student)
+                records, class_data = self.portal_records(connection, student, hide_dismissed=False)
             self.send_json(200, {"student": public_student(student), "records": records, "class": class_data})
             return
         if request_path == "/api/admin/class":
@@ -1017,11 +1086,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     (class_id,),
                 ).fetchall()
                 homework = connection.execute(
-                    "SELECT subject, details, due_date, posted_at FROM class_homework WHERE class_id = ? ORDER BY id DESC",
+                    "SELECT id, subject, details, due_date, posted_at FROM class_homework WHERE class_id = ? ORDER BY id DESC",
                     (class_id,),
                 ).fetchall()
                 announcements = connection.execute(
-                    "SELECT title, details, posted_at FROM class_announcements WHERE class_id = ? ORDER BY id DESC",
+                    "SELECT id, title, details, posted_at FROM class_announcements WHERE class_id = ? ORDER BY id DESC",
                     (class_id,),
                 ).fetchall()
             self.send_json(200, {
@@ -1090,7 +1159,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 ).fetchall()
                 homework = connection.execute(
                     """
-                    SELECT subject, details, due_date, posted_at
+                    SELECT id, subject, details, due_date, posted_by_teacher_id, posted_at
                     FROM class_homework
                     WHERE class_id = ? AND subject = ?
                     ORDER BY id DESC
@@ -1099,7 +1168,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 ).fetchall()
                 announcements = connection.execute(
                     """
-                    SELECT title, details, posted_at
+                    SELECT id, title, details, posted_at
                     FROM class_announcements
                     WHERE class_id = ? AND posted_by_teacher_id = ?
                     ORDER BY id DESC
@@ -1112,8 +1181,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     {**public_student(member), "attendanceStatus": member["attendance_status"] or "present"}
                     for member in members
                 ],
-                "homework": [dict(row) for row in homework],
-                "announcements": [dict(row) for row in announcements],
+                "homework": [
+                    {**dict(row), "canDelete": row["posted_by_teacher_id"] == teacher["teacher_id"]}
+                    for row in homework
+                ],
+                "announcements": [{**dict(row), "canDelete": True} for row in announcements],
                 "schoolDate": school_date,
             })
             return
@@ -1141,6 +1213,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_logout()
         elif request_path == "/api/portal/profile":
             self.handle_profile(body)
+        elif request_path == "/api/portal/dismiss":
+            self.handle_post_dismissal(body)
         elif request_path == "/api/admin/setup":
             self.handle_admin_setup(body)
         elif request_path == "/api/admin/login":
@@ -1165,6 +1239,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_class_removal(body)
         elif request_path == "/api/admin/class-record":
             self.handle_class_record(body)
+        elif request_path == "/api/admin/class-record-delete":
+            self.handle_class_record_delete(body)
         elif request_path == "/api/teacher/login":
             self.handle_teacher_login(body)
         elif request_path == "/api/teacher/logout":
@@ -1173,6 +1249,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_teacher_homework(body)
         elif request_path == "/api/teacher/announcement":
             self.handle_teacher_announcement(body)
+        elif request_path == "/api/teacher/post-delete":
+            self.handle_teacher_post_delete(body)
         elif request_path == "/api/teacher/grades":
             self.handle_teacher_grades(body)
         elif request_path == "/api/teacher/attendance":
@@ -1694,6 +1772,45 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             )
         self.send_json(201, {"ok": True})
 
+    def handle_teacher_post_delete(self, body):
+        teacher, assignment = self.required_teacher_assignment(body)
+        if not assignment:
+            return
+        post_type = clean_text(body.get("type"), 20)
+        try:
+            post_id = int(body.get("postId"))
+        except (TypeError, ValueError):
+            post_id = 0
+        if post_type not in {"homework", "announcement"} or post_id < 1:
+            self.send_json(400, {"code": "invalid_record", "error": "Choose a post to delete."})
+            return
+        with db_connection() as connection:
+            if post_type == "homework":
+                deleted = connection.execute(
+                    """
+                    DELETE FROM class_homework
+                    WHERE id = ? AND class_id = ? AND subject = ? AND posted_by_teacher_id = ?
+                    """,
+                    (post_id, assignment["class_id"], assignment["subject"], teacher["teacher_id"]),
+                ).rowcount
+            else:
+                deleted = connection.execute(
+                    """
+                    DELETE FROM class_announcements
+                    WHERE id = ? AND class_id = ? AND posted_by_teacher_id = ?
+                    """,
+                    (post_id, assignment["class_id"], teacher["teacher_id"]),
+                ).rowcount
+            if not deleted:
+                self.send_json(404, {"code": "post_not_found", "error": "Post not found or cannot be deleted."})
+                return
+            ensure_post_dismissals_table(connection)
+            connection.execute(
+                "DELETE FROM dismissed_posts WHERE post_type = ? AND audience = 'class' AND post_id = ?",
+                (post_type, post_id),
+            )
+        self.send_json(200, {"ok": True})
+
     def handle_teacher_grades(self, body):
         _teacher, assignment = self.required_teacher_assignment(body)
         if not assignment:
@@ -1962,6 +2079,81 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 self.send_json(400, {"code": "invalid_record", "error": "Only class homework and announcements are supported."})
                 return
         self.send_json(201, {"ok": True})
+
+    def handle_class_record_delete(self, body):
+        if not self.require_admin():
+            return
+        post_type = clean_text(body.get("type"), 20)
+        try:
+            class_id = int(body.get("classId"))
+            post_id = int(body.get("postId"))
+        except (TypeError, ValueError):
+            class_id = 0
+            post_id = 0
+        if post_type not in {"homework", "announcement"} or class_id < 1 or post_id < 1:
+            self.send_json(400, {"code": "invalid_record", "error": "Choose a class post to delete."})
+            return
+        with db_connection() as connection:
+            if post_type == "homework":
+                deleted = connection.execute(
+                    "DELETE FROM class_homework WHERE id = ? AND class_id = ?",
+                    (post_id, class_id),
+                ).rowcount
+            else:
+                deleted = connection.execute(
+                    "DELETE FROM class_announcements WHERE id = ? AND class_id = ?",
+                    (post_id, class_id),
+                ).rowcount
+            if not deleted:
+                self.send_json(404, {"code": "post_not_found", "error": "Class post not found."})
+                return
+            ensure_post_dismissals_table(connection)
+            connection.execute(
+                "DELETE FROM dismissed_posts WHERE post_type = ? AND audience = 'class' AND post_id = ?",
+                (post_type, post_id),
+            )
+        self.send_json(200, {"ok": True})
+
+    def handle_post_dismissal(self, body):
+        student = self.authenticated_student()
+        if not student:
+            self.send_json(401, {"code": "auth_required", "error": "Authentication required."})
+            return
+        post_type = clean_text(body.get("type"), 20)
+        audience = clean_text(body.get("audience"), 20)
+        try:
+            post_id = int(body.get("postId"))
+        except (TypeError, ValueError):
+            post_id = 0
+        queries = {
+            ("homework", "student"): "SELECT 1 FROM homework WHERE id = ? AND student_id = ?",
+            ("announcement", "student"): "SELECT 1 FROM announcements WHERE id = ? AND student_id = ?",
+            ("homework", "class"): "SELECT 1 FROM class_homework WHERE id = ? AND class_id = ?",
+            ("announcement", "class"): "SELECT 1 FROM class_announcements WHERE id = ? AND class_id = ?",
+        }
+        query = queries.get((post_type, audience))
+        owner_id = student["student_id"] if audience == "student" else student["class_id"]
+        if not query or post_id < 1 or not owner_id:
+            self.send_json(400, {"code": "invalid_record", "error": "Choose a post to dismiss."})
+            return
+        with db_connection() as connection:
+            accessible = connection.execute(
+                query,
+                (post_id, owner_id),
+            ).fetchone()
+            if not accessible:
+                self.send_json(404, {"code": "post_not_found", "error": "Post not found."})
+                return
+            ensure_post_dismissals_table(connection)
+            connection.execute(
+                """
+                INSERT INTO dismissed_posts (student_id, post_type, audience, post_id)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT (student_id, post_type, audience, post_id) DO NOTHING
+                """,
+                (student["student_id"], post_type, audience, post_id),
+            )
+        self.send_json(200, {"ok": True})
 
     def handle_profile(self, body):
         student = self.authenticated_student()

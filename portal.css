@@ -599,6 +599,15 @@ code {
   cursor: pointer;
 }
 
+.dismiss-post {
+  display: block;
+  margin-top: 13px;
+}
+
+.post-status {
+  margin-top: 15px;
+}
+
 .panel-title {
   display: flex;
   align-items: center;

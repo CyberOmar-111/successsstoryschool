@@ -310,6 +310,14 @@
   font-size: 0.88rem;
 }
 
+.summary-records .delete-post {
+  margin-top: 11px;
+}
+
+.class-post-status {
+  margin-top: 13px;
+}
+
 .class-editor > h3 {
   margin-bottom: 13px;
   font-size: 1.1rem;

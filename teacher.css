@@ -196,6 +196,26 @@
   margin-bottom: 4px;
 }
 
+.delete-post {
+  margin-top: 10px;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 11px;
+  color: #a73e45;
+  background: #fff1f2;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-post:hover,
+.delete-post:focus-visible {
+  background: #ffe3e5;
+}
+
+.recent-posts .form-status {
+  margin-top: 13px;
+}
+
 @media (max-width: 900px) {
   .teacher-grid,
   .teacher-cards {

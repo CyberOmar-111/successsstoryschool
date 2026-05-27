@@ -90,6 +90,8 @@ const translations = {
     late: "Late",
     homeworkAssignments: "Homework assignments",
     schoolAnnouncements: "School announcements",
+    dismiss: "Dismiss",
+    dismissed: "Dismissed from your view.",
     feesTitle: "Fees & payment status",
     noFees: "No fee records have been entered for this student yet.",
     item: "Item",
@@ -216,6 +218,8 @@ const translations = {
     late: "متأخر",
     homeworkAssignments: "الواجبات المنزلية",
     schoolAnnouncements: "إعلانات المدرسة",
+    dismiss: "إخفاء",
+    dismissed: "تم إخفاؤه من عرضك.",
     feesTitle: "الرسوم وحالة الدفع",
     noFees: "لم يتم إدخال سجلات رسوم لهذا الطالب بعد.",
     item: "البند",
@@ -391,6 +395,25 @@ function renderMetric(valueSelector, statusSelector, value) {
   document.querySelector(statusSelector).hidden = value !== null;
 }
 
+async function dismissPost(type, post, statusSelector) {
+  const status = document.querySelector(statusSelector);
+  status.textContent = "";
+  try {
+    await api("/api/portal/dismiss", {
+      method: "POST",
+      body: JSON.stringify({ type, audience: post.audience, postId: post.id })
+    });
+    const collection = type === "homework" ? "homework" : "announcements";
+    currentRecords[collection] = currentRecords[collection].filter((entry) => (
+      entry.id !== post.id || entry.audience !== post.audience
+    ));
+    renderRecords(currentRecords);
+    status.textContent = text("dismissed");
+  } catch {
+    status.textContent = text("genericError");
+  }
+}
+
 function renderRecords(records) {
   const grades = records.grades || [];
   const attendance = records.attendance || [];
@@ -438,7 +461,12 @@ function renderRecords(records) {
     }
     details.textContent = assignment.details;
     date.textContent = assignment.due_date || "";
-    item.append(subject, details, date);
+    const dismiss = document.createElement("button");
+    dismiss.type = "button";
+    dismiss.className = "text-action dismiss-post";
+    dismiss.textContent = text("dismiss");
+    dismiss.addEventListener("click", () => dismissPost("homework", assignment, "[data-homework-status]"));
+    item.append(subject, details, date, dismiss);
     homeworkList.appendChild(item);
   });
 
@@ -456,7 +484,12 @@ function renderRecords(records) {
     }
     title.textContent = notice.title;
     details.textContent = notice.details;
-    item.append(date, title, details);
+    const dismiss = document.createElement("button");
+    dismiss.type = "button";
+    dismiss.className = "text-action dismiss-post";
+    dismiss.textContent = text("dismiss");
+    dismiss.addEventListener("click", () => dismissPost("announcement", notice, "[data-announcements-status]"));
+    item.append(date, title, details, dismiss);
     announcementList.appendChild(item);
   });
 
