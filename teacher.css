@@ -7,7 +7,7 @@
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
   align-items: start;
-  gap: 26px;
+  gap: var(--space-3);
   padding: 32px 0 55px;
 }
 
@@ -27,7 +27,7 @@
 .teacher-sidebar .profile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-2);
   margin-bottom: 26px;
 }
 
@@ -56,7 +56,7 @@
 
 .assignment-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-1);
 }
 
 .assignment-list button {
@@ -86,7 +86,7 @@
 
 .teacher-workspace {
   display: grid;
-  gap: 22px;
+  gap: var(--space-3);
 }
 
 .workspace-header,
@@ -94,7 +94,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 18px;
+  gap: var(--space-2);
 }
 
 .workspace-header h1 {
@@ -134,14 +134,14 @@
 .teacher-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: var(--space-2);
   margin-bottom: 18px;
 }
 
 .teacher-card {
   display: grid;
   align-content: start;
-  gap: 14px;
+  gap: var(--space-2);
 }
 
 .attendance-card {
@@ -181,7 +181,7 @@
 
 .recent-posts div {
   display: grid;
-  gap: 10px;
+  gap: var(--space-1);
   margin-top: 15px;
 }
 
