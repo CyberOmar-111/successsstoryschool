@@ -961,3 +961,124 @@ html[dir="rtl"] .portal-brand {
     min-height: 0;
   }
 }
+
+/* 2026 UI polish */
+body {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(243, 181, 63, 0.12), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(8, 126, 131, 0.1), transparent 32%),
+    #f8fbfa;
+}
+
+.portal-header {
+  border-bottom-color: rgba(218, 228, 229, 0.78);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 34px rgba(16, 43, 70, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.portal-brand img,
+.login-card,
+.portal-sidebar,
+.portal-panel {
+  box-shadow: 0 20px 55px rgba(16, 43, 70, 0.08);
+}
+
+.login-section {
+  background:
+    radial-gradient(circle at 12% 15%, rgba(243, 181, 63, 0.18), transparent 30%),
+    radial-gradient(circle at 80% 16%, rgba(8, 126, 131, 0.15), transparent 34%),
+    linear-gradient(135deg, #fffaf1 0%, #edf8f5 55%, #f8fbfa 100%);
+}
+
+.login-card,
+.portal-panel,
+.portal-sidebar {
+  border-color: rgba(218, 228, 229, 0.82);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.feature-grid span,
+.metrics article,
+.content-card,
+.attendance-grid article,
+.bus-grid article,
+.class-heading,
+.fees-card {
+  background: linear-gradient(145deg, #ffffff, #f3faf8);
+  box-shadow: 0 10px 25px rgba(16, 43, 70, 0.045);
+}
+
+.portal-button,
+.lang-button,
+.logout,
+.module-tabs button,
+.auth-tabs button,
+.text-action {
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.portal-button:hover,
+.portal-button:focus-visible,
+.lang-button:hover,
+.lang-button:focus-visible,
+.logout:hover,
+.logout:focus-visible {
+  transform: translateY(-1px);
+}
+
+.portal-button.primary {
+  background: linear-gradient(135deg, #087e83, #126d76);
+  box-shadow: 0 12px 24px rgba(8, 126, 131, 0.2);
+}
+
+.portal-button.primary:hover,
+.portal-button.primary:focus-visible {
+  background: linear-gradient(135deg, #06666c, #0f5965);
+  box-shadow: 0 16px 28px rgba(8, 126, 131, 0.25);
+}
+
+input,
+select,
+textarea {
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 4px rgba(8, 126, 131, 0.1);
+}
+
+.module-tabs button:hover,
+.module-tabs button.active,
+.auth-tabs button.active {
+  box-shadow: 0 8px 18px rgba(8, 126, 131, 0.08);
+}
+
+.metrics article {
+  position: relative;
+  overflow: hidden;
+}
+
+.metrics article::after {
+  position: absolute;
+  right: -26px;
+  bottom: -32px;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  pointer-events: none;
+  content: "";
+  background: rgba(243, 181, 63, 0.16);
+}
+
+.metrics article > * {
+  position: relative;
+  z-index: 1;
+}
+
+html[dir="rtl"] .metrics article::after {
+  right: auto;
+  left: -26px;
+}

@@ -2185,3 +2185,72 @@ textarea {
     height: 330px;
   }
 }
+
+/* 2026 landing polish */
+.site-header {
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 30px rgba(16, 43, 70, 0.045);
+  backdrop-filter: blur(14px);
+}
+
+.hero {
+  background:
+    radial-gradient(circle at 14% 12%, rgba(243, 181, 63, 0.2), transparent 28%),
+    radial-gradient(circle at 88% 10%, rgba(8, 126, 131, 0.14), transparent 33%),
+    linear-gradient(135deg, #fffaf1 0%, #edf8f5 58%, #f9fcfb 100%);
+}
+
+.hero::after {
+  position: absolute;
+  top: 80px;
+  left: -120px;
+  z-index: 0;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  pointer-events: none;
+  content: "";
+  background: rgba(8, 126, 131, 0.06);
+}
+
+.hero-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-logo,
+.school-scene,
+.achievement-card,
+.program-card,
+.value-card,
+.event-card,
+.contact-panel {
+  box-shadow: 0 20px 55px rgba(20, 44, 74, 0.09);
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #087d78, #126d76);
+}
+
+.button-secondary,
+.language-toggle,
+.portal-link {
+  backdrop-filter: blur(10px);
+}
+
+.program-card,
+.value-card,
+.event-card {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.program-card:hover,
+.value-card:hover,
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 58px rgba(20, 44, 74, 0.12);
+}
+
+.trust-bar {
+  background: linear-gradient(90deg, #0f2b46, #0e4f58);
+}
