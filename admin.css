@@ -448,3 +448,35 @@
 .remove-member:focus-visible {
   transform: translateY(-1px);
 }
+
+/* CTA hierarchy overrides */
+.admin-add-button.text-action,
+.add-assignment.text-action {
+  width: max-content;
+  justify-self: start;
+  margin-top: 14px;
+}
+
+.portal-button.danger,
+.remove-member,
+.summary-records .delete-post {
+  min-height: auto;
+  border: 0;
+  border-bottom: 2px solid rgba(167, 62, 69, 0.22);
+  border-radius: 0;
+  padding: 0 0 3px;
+  color: #a73e45;
+  background: transparent;
+}
+
+.portal-button.danger:hover,
+.portal-button.danger:focus-visible,
+.remove-member:hover,
+.remove-member:focus-visible,
+.summary-records .delete-post:hover,
+.summary-records .delete-post:focus-visible {
+  border-bottom-color: currentColor;
+  color: #8f2630;
+  background: transparent;
+  transform: none;
+}

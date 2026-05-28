@@ -2265,3 +2265,102 @@ textarea {
 .trust-bar {
   background: linear-gradient(90deg, #0f2b46, #0e4f58);
 }
+
+/* CTA hierarchy: one primary, one secondary, the rest read as text links. */
+.nav-links .nav-text-link {
+  color: var(--navy-soft);
+  font-weight: 700;
+}
+
+.nav-links .nav-priority-link {
+  color: var(--teal-dark);
+}
+
+.hero-actions {
+  align-items: center;
+}
+
+.hero-actions .button-primary {
+  min-width: 184px;
+  box-shadow: 0 18px 34px rgba(8, 125, 120, 0.26);
+}
+
+.hero-actions .button-secondary {
+  min-width: 176px;
+  border-color: rgba(8, 125, 120, 0.42);
+  color: var(--teal-dark);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: none;
+}
+
+.button-secondary {
+  box-shadow: none;
+}
+
+.language-toggle {
+  width: max-content;
+  min-height: auto;
+  border: 0;
+  border-bottom: 2px solid rgba(8, 125, 120, 0.24);
+  border-radius: 0;
+  padding: 0 0 3px;
+  color: var(--teal-dark);
+  background: transparent;
+  box-shadow: none;
+}
+
+.language-toggle:hover,
+.language-toggle:focus-visible {
+  border-bottom-color: currentColor;
+  background: transparent;
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+  border: 0;
+  border-bottom: 2px solid rgba(8, 125, 120, 0.28);
+  border-radius: 0;
+  padding: 0 0 3px;
+  color: var(--teal-dark);
+  background: transparent;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.text-link::after {
+  margin-inline-start: 8px;
+  content: "\2192";
+  transition: transform 180ms ease;
+}
+
+.text-link:hover,
+.text-link:focus-visible {
+  border-bottom-color: currentColor;
+  outline: 0;
+}
+
+.text-link:hover::after,
+.text-link:focus-visible::after {
+  transform: translateX(3px);
+}
+
+html[dir="rtl"] .text-link::after {
+  content: "\2190";
+}
+
+html[dir="rtl"] .text-link:hover::after,
+html[dir="rtl"] .text-link:focus-visible::after {
+  transform: translateX(-3px);
+}
+
+.events .section-heading .text-link {
+  margin-top: 33px;
+}
+
+.directions-button {
+  margin-top: 31px;
+}

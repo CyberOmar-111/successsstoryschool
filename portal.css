@@ -1093,3 +1093,190 @@ html[dir="rtl"] .metrics article::after {
   right: auto;
   left: -26px;
 }
+
+/* CTA hierarchy: primary is solid, secondary is outline, utilities are text links. */
+.portal-button.primary {
+  box-shadow: 0 14px 28px rgba(8, 126, 131, 0.23);
+}
+
+.portal-button.secondary {
+  border-color: rgba(8, 126, 131, 0.38);
+  color: var(--teal-dark);
+  background: transparent;
+  box-shadow: none;
+}
+
+.portal-button.secondary:hover,
+.portal-button.secondary:focus-visible {
+  color: var(--teal-dark);
+  background: rgba(8, 126, 131, 0.07);
+}
+
+.text-action,
+.back-link,
+.staff-link,
+.logout,
+.lang-button {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+  min-height: auto;
+  border: 0;
+  border-bottom: 2px solid rgba(8, 126, 131, 0.24);
+  border-radius: 0;
+  padding: 0 0 3px;
+  color: var(--teal-dark);
+  background: transparent;
+  font: inherit;
+  font-weight: 750;
+  text-align: start;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.text-action::after,
+.back-link::after,
+.staff-link::after {
+  margin-inline-start: 8px;
+  content: "\2192";
+  transition: transform 180ms ease;
+}
+
+.text-action:hover,
+.text-action:focus-visible,
+.back-link:hover,
+.back-link:focus-visible,
+.staff-link:hover,
+.staff-link:focus-visible,
+.logout:hover,
+.logout:focus-visible,
+.lang-button:hover,
+.lang-button:focus-visible {
+  border-bottom-color: currentColor;
+  background: transparent;
+  outline: 0;
+  transform: none;
+}
+
+.text-action:hover::after,
+.text-action:focus-visible::after,
+.back-link:hover::after,
+.back-link:focus-visible::after,
+.staff-link:hover::after,
+.staff-link:focus-visible::after {
+  transform: translateX(3px);
+}
+
+html[dir="rtl"] .text-action::after,
+html[dir="rtl"] .back-link::after,
+html[dir="rtl"] .staff-link::after {
+  content: "\2190";
+}
+
+html[dir="rtl"] .text-action:hover::after,
+html[dir="rtl"] .text-action:focus-visible::after,
+html[dir="rtl"] .back-link:hover::after,
+html[dir="rtl"] .back-link:focus-visible::after,
+html[dir="rtl"] .staff-link:hover::after,
+html[dir="rtl"] .staff-link:focus-visible::after {
+  transform: translateX(-3px);
+}
+
+.text-action.danger::after,
+.back-link::after,
+.dismiss-post::after {
+  display: none;
+  content: "";
+}
+
+.text-action.danger,
+.portal-button.danger,
+.delete-post,
+.remove-member {
+  min-height: auto;
+  border: 0;
+  border-bottom: 2px solid rgba(167, 62, 69, 0.22);
+  border-radius: 0;
+  padding: 0 0 3px;
+  color: #a73e45;
+  background: transparent;
+  box-shadow: none;
+}
+
+.text-action.danger:hover,
+.text-action.danger:focus-visible,
+.portal-button.danger:hover,
+.portal-button.danger:focus-visible,
+.delete-post:hover,
+.delete-post:focus-visible,
+.remove-member:hover,
+.remove-member:focus-visible {
+  border-bottom-color: currentColor;
+  color: #8f2630;
+  background: transparent;
+  transform: none;
+}
+
+.contact-button {
+  margin-top: 18px;
+}
+
+.record-form .portal-button.primary,
+.teacher-card .portal-button.primary,
+.registration-form .portal-button.primary {
+  width: max-content;
+  min-height: auto;
+  border: 0;
+  border-bottom: 2px solid rgba(8, 126, 131, 0.24);
+  border-radius: 0;
+  padding: 0 0 3px;
+  color: var(--teal-dark);
+  background: transparent;
+  box-shadow: none;
+  justify-self: start;
+}
+
+.record-form .portal-button.primary::after,
+.teacher-card .portal-button.primary::after,
+.registration-form .portal-button.primary::after {
+  margin-inline-start: 8px;
+  content: "\2192";
+  transition: transform 180ms ease;
+}
+
+.record-form .portal-button.primary:hover,
+.record-form .portal-button.primary:focus-visible,
+.teacher-card .portal-button.primary:hover,
+.teacher-card .portal-button.primary:focus-visible,
+.registration-form .portal-button.primary:hover,
+.registration-form .portal-button.primary:focus-visible {
+  border-bottom-color: currentColor;
+  color: var(--teal-dark);
+  background: transparent;
+  transform: none;
+}
+
+.record-form .portal-button.primary:hover::after,
+.record-form .portal-button.primary:focus-visible::after,
+.teacher-card .portal-button.primary:hover::after,
+.teacher-card .portal-button.primary:focus-visible::after,
+.registration-form .portal-button.primary:hover::after,
+.registration-form .portal-button.primary:focus-visible::after {
+  transform: translateX(3px);
+}
+
+html[dir="rtl"] .record-form .portal-button.primary::after,
+html[dir="rtl"] .teacher-card .portal-button.primary::after,
+html[dir="rtl"] .registration-form .portal-button.primary::after {
+  content: "\2190";
+}
+
+html[dir="rtl"] .record-form .portal-button.primary:hover::after,
+html[dir="rtl"] .record-form .portal-button.primary:focus-visible::after,
+html[dir="rtl"] .teacher-card .portal-button.primary:hover::after,
+html[dir="rtl"] .teacher-card .portal-button.primary:focus-visible::after,
+html[dir="rtl"] .registration-form .portal-button.primary:hover::after,
+html[dir="rtl"] .registration-form .portal-button.primary:focus-visible::after {
+  transform: translateX(-3px);
+}

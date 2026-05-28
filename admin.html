@@ -8,8 +8,8 @@
     <title>Success Story School | Administration</title>
     <link rel="icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="shortcut icon" href="/assets/success-story-mark.png?v=3" type="image/png">
-    <link rel="stylesheet" href="portal.css?v=7">
-    <link rel="stylesheet" href="admin.css?v=7">
+    <link rel="stylesheet" href="portal.css?v=8">
+    <link rel="stylesheet" href="admin.css?v=8">
     <script src="admin.js?v=4" defer></script>
   </head>
   <body>
@@ -104,7 +104,7 @@
             <section class="admin-list-card">
               <h2 data-i18n="students">Students</h2>
               <div class="admin-list" data-student-list></div>
-              <button class="portal-button danger admin-add-button" type="button" data-reset-students data-i18n="resetAllStudents">Reset all student accounts</button>
+              <button class="text-action danger admin-add-button" type="button" data-reset-students data-i18n="resetAllStudents">Reset all student accounts</button>
               <p class="form-status reset-students-status" data-reset-students-status aria-live="polite"></p>
             </section>
             <section class="admin-list-card">
@@ -115,12 +115,12 @@
             <section class="admin-list-card">
               <h2 data-i18n="administrators">Administrators</h2>
               <div class="admin-list account-list" data-admin-list></div>
-              <button class="portal-button secondary admin-add-button" type="button" data-new-admin data-i18n="addAdministrator">Manage administrators</button>
+              <button class="text-action admin-add-button" type="button" data-new-admin data-i18n="addAdministrator">Manage administrators</button>
             </section>
             <section class="admin-list-card">
               <h2 data-i18n="teachers">Teachers</h2>
               <div class="admin-list account-list" data-teacher-list></div>
-              <button class="portal-button secondary admin-add-button" type="button" data-new-teacher data-i18n="addTeacher">Add teacher</button>
+              <button class="text-action admin-add-button" type="button" data-new-teacher data-i18n="addTeacher">Add teacher</button>
             </section>
           </aside>
 
@@ -204,7 +204,7 @@
                 <p class="password-note" data-i18n="teacherPasswordRule">Use at least 8 characters with a letter, number, and symbol.</p>
                 <h3 data-i18n="teachingAssignments">Teaching assignments</h3>
                 <div class="teaching-assignments" data-teaching-assignments></div>
-                <button class="portal-button secondary add-assignment" type="button" data-add-assignment data-i18n="addTeachingAssignment">Add class and subject</button>
+                <button class="text-action add-assignment" type="button" data-add-assignment data-i18n="addTeachingAssignment">Add class and subject</button>
                 <button class="portal-button primary" type="submit" data-i18n="createTeacher">Create teacher account</button>
                 <p class="form-status" data-teacher-account-status aria-live="polite"></p>
                 <div class="id-result" data-new-teacher-result hidden>
