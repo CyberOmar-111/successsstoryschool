@@ -1082,3 +1082,91 @@ html[dir="rtl"] .metrics article::after {
   right: auto;
   left: -26px;
 }
+
+/* 2026 forced palette: cosmic campus */
+:root {
+  --navy: #24183f;
+  --navy-soft: #4b3f73;
+  --teal: #0f8c8a;
+  --teal-dark: #075f68;
+  --gold: #ffbe4f;
+  --cream: #fff2dd;
+  --paper: #fffdf9;
+  --surface: #f3f0ff;
+  --line: #ddd6f3;
+  --muted: #655f7a;
+  --success: #168a68;
+  --berry: #d84f78;
+  --violet: #7048e8;
+  --coral: #ff6b4a;
+  --mint: #c8f7dc;
+  --shadow: 0 22px 50px rgba(36, 24, 63, 0.12);
+}
+
+body {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 107, 74, 0.12), transparent 30%),
+    radial-gradient(circle at 92% 10%, rgba(112, 72, 232, 0.12), transparent 32%),
+    radial-gradient(circle at 50% 100%, rgba(15, 140, 138, 0.08), transparent 34%),
+    #fffdf9;
+}
+
+.portal-header {
+  border-bottom-color: rgba(112, 72, 232, 0.14);
+  background: rgba(255, 253, 249, 0.88);
+}
+
+.portal-brand img {
+  border-color: rgba(255, 107, 74, 0.2);
+  background: #fff7ea;
+}
+
+.login-section {
+  background:
+    radial-gradient(circle at 12% 15%, rgba(255, 107, 74, 0.18), transparent 30%),
+    radial-gradient(circle at 82% 14%, rgba(112, 72, 232, 0.16), transparent 34%),
+    radial-gradient(circle at 50% 90%, rgba(15, 140, 138, 0.13), transparent 34%),
+    linear-gradient(135deg, #fff2dd 0%, #f2eeff 55%, #e9fbf8 100%);
+}
+
+.portal-button.primary,
+.profile-avatar {
+  background: linear-gradient(135deg, var(--violet), var(--teal));
+  box-shadow: 0 13px 26px rgba(112, 72, 232, 0.22);
+}
+
+.portal-button.primary:hover,
+.portal-button.primary:focus-visible {
+  background: linear-gradient(135deg, #5f3bd3, var(--teal-dark));
+}
+
+.module-tabs button.active,
+.auth-tabs button.active,
+.assignment-list button.active,
+.admin-list button.active {
+  border-color: rgba(112, 72, 232, 0.24);
+  color: var(--navy);
+  background: linear-gradient(135deg, #f3f0ff, #e7fbf8);
+}
+
+.text-action,
+.back-link,
+.portal-brand small,
+.metrics strong {
+  color: var(--teal-dark);
+}
+
+.feature-grid span,
+.metrics article,
+.content-card,
+.attendance-grid article,
+.bus-grid article,
+.class-heading,
+.fees-card {
+  border-color: rgba(112, 72, 232, 0.1);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(242, 238, 255, 0.56));
+}
+
+.metrics article::after {
+  background: radial-gradient(circle, rgba(255, 190, 79, 0.28), rgba(255, 107, 74, 0.12));
+}
