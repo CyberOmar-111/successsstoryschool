@@ -1,5 +1,6 @@
 const languageToggle = document.querySelector("[data-language-toggle]");
 const authView = document.querySelector("[data-auth-view]");
+const loadingView = document.querySelector("[data-portal-loading]");
 const dashboard = document.querySelector("[data-dashboard]");
 const registerForm = document.querySelector("[data-register-form]");
 const loginForm = document.querySelector("[data-login-form]");
@@ -19,6 +20,7 @@ const translations = {
     portalEyebrow: "Student Portal",
     portalTitle: "Your school account starts here.",
     portalText: "Create your password and receive your own Success Story School student ID. Use it to sign in securely and access school services.",
+    loadingPortal: "Loading your portal...",
     grades: "Grades",
     myClass: "My class",
     attendance: "Attendance",
@@ -306,6 +308,27 @@ function messageForError(error) {
   return text(keys[error.code] || "genericError");
 }
 
+function showPortalLoading() {
+  loadingView.hidden = false;
+  loadingView.setAttribute("aria-busy", "true");
+  authView.hidden = true;
+  dashboard.hidden = true;
+}
+
+function showAuthView() {
+  loadingView.hidden = true;
+  loadingView.setAttribute("aria-busy", "false");
+  dashboard.hidden = true;
+  authView.hidden = false;
+}
+
+function showDashboardView() {
+  loadingView.hidden = true;
+  loadingView.setAttribute("aria-busy", "false");
+  authView.hidden = true;
+  dashboard.hidden = false;
+}
+
 function applyLanguage(nextLanguage) {
   language = nextLanguage === "ar" ? "ar" : "en";
   document.documentElement.lang = language;
@@ -535,17 +558,17 @@ function openPanel(panelName) {
 }
 
 async function openDashboard() {
+  showPortalLoading();
   const portal = await api("/api/portal");
   currentUser = portal.user;
   currentRecords = portal.records;
   currentClass = portal.class;
-  authView.hidden = true;
-  dashboard.hidden = false;
   profileForm.elements.transport.value = currentUser.transport || "";
   refreshUserDetails();
   renderClass();
   renderRecords(currentRecords);
   openPanel("overview");
+  showDashboardView();
 }
 
 languageToggle.addEventListener("click", () => {
@@ -601,6 +624,7 @@ loginForm.addEventListener("submit", async (event) => {
     loginForm.reset();
     await openDashboard();
   } catch (error) {
+    showAuthView();
     loginStatus.textContent = messageForError(error);
   }
 });
@@ -635,8 +659,7 @@ document.querySelector("[data-logout]").addEventListener("click", async () => {
   await api("/api/auth/logout", { method: "POST", body: "{}" });
   currentUser = null;
   currentClass = null;
-  dashboard.hidden = true;
-  authView.hidden = false;
+  showAuthView();
   profileStatus.textContent = "";
   selectAuthTab("signin");
 });
@@ -648,13 +671,15 @@ try {
 }
 applyLanguage(language);
 
+showPortalLoading();
 api("/api/auth/session")
-  .then((session) => {
+  .then(async (session) => {
     if (session.authenticated) {
-      openDashboard().catch(() => {
-        dashboard.hidden = true;
-        authView.hidden = false;
-      });
+      await openDashboard();
+      return;
     }
+    showAuthView();
   })
-  .catch(() => {});
+  .catch(() => {
+    showAuthView();
+  });

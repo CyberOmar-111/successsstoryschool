@@ -8,8 +8,8 @@
     <title>Success Story School | Student Portal</title>
     <link rel="icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="shortcut icon" href="/assets/success-story-mark.png?v=3" type="image/png">
-    <link rel="stylesheet" href="portal.css?v=8">
-    <script src="portal.js" defer></script>
+    <link rel="stylesheet" href="portal.css?v=9">
+    <script src="portal.js?v=9" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#portal-main" data-i18n="skip">Skip to portal content</a>
@@ -117,6 +117,78 @@
             </form>
             <a class="staff-link" href="admin.html" data-i18n="administratorLogin">Administrator login</a>
             <a class="staff-link" href="teacher.html" data-i18n="teacherLogin">Teacher login</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard portal-loading" data-portal-loading hidden aria-busy="true" aria-label="Loading student portal">
+        <div class="secure-banner">
+          <span class="skeleton-line skeleton-line-wide"></span>
+        </div>
+        <div class="portal-container dashboard-grid">
+          <aside class="portal-sidebar skeleton-sidebar" aria-hidden="true">
+            <div class="profile">
+              <div class="skeleton-circle"></div>
+              <div class="skeleton-stack">
+                <span class="skeleton-line skeleton-line-medium"></span>
+                <span class="skeleton-line skeleton-line-short"></span>
+              </div>
+            </div>
+            <div class="role-chip skeleton-chip"></div>
+            <div class="module-tabs skeleton-tabs">
+              <span class="skeleton-pill"></span>
+              <span class="skeleton-pill"></span>
+              <span class="skeleton-pill"></span>
+              <span class="skeleton-pill"></span>
+              <span class="skeleton-pill"></span>
+            </div>
+          </aside>
+
+          <div class="dashboard-content" aria-hidden="true">
+            <header class="dashboard-header">
+              <div class="skeleton-stack skeleton-heading">
+                <span class="skeleton-line skeleton-line-short"></span>
+                <span class="skeleton-line skeleton-title"></span>
+              </div>
+              <span class="skeleton-pill skeleton-action"></span>
+            </header>
+
+            <section class="portal-panel">
+              <div class="metrics">
+                <article class="skeleton-card">
+                  <span class="skeleton-line skeleton-line-medium"></span>
+                  <span class="skeleton-line skeleton-stat"></span>
+                  <span class="skeleton-line skeleton-line-short"></span>
+                </article>
+                <article class="skeleton-card">
+                  <span class="skeleton-line skeleton-line-medium"></span>
+                  <span class="skeleton-line skeleton-stat"></span>
+                  <span class="skeleton-line skeleton-line-short"></span>
+                </article>
+                <article class="skeleton-card">
+                  <span class="skeleton-line skeleton-line-medium"></span>
+                  <span class="skeleton-line skeleton-stat"></span>
+                  <span class="skeleton-line skeleton-line-short"></span>
+                </article>
+              </div>
+              <div class="overview-cards">
+                <article class="content-card skeleton-card">
+                  <span class="skeleton-line skeleton-line-medium"></span>
+                  <span class="skeleton-line"></span>
+                  <span class="skeleton-line skeleton-line-short"></span>
+                </article>
+                <article class="content-card skeleton-card">
+                  <span class="skeleton-line skeleton-line-medium"></span>
+                  <span class="skeleton-line"></span>
+                  <span class="skeleton-line skeleton-line-short"></span>
+                </article>
+                <article class="content-card skeleton-card">
+                  <span class="skeleton-line skeleton-line-medium"></span>
+                  <span class="skeleton-line"></span>
+                  <span class="skeleton-line skeleton-line-short"></span>
+                </article>
+              </div>
+            </section>
           </div>
         </div>
       </section>
