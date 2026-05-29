@@ -6,6 +6,7 @@ import re
 import secrets
 import sqlite3
 import time
+from email.utils import formatdate, parsedate_to_datetime
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -750,6 +751,36 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
     def session_cookie(name, value, max_age):
         secure = "; Secure" if IS_POSTGRES or os.environ.get("VERCEL") else ""
         return f"{name}={value}; HttpOnly; SameSite=Strict; Path=/; Max-Age={max_age}{secure}"
+
+    @staticmethod
+    def static_etag(file_stat):
+        return f"\"{file_stat.st_mtime_ns:x}-{file_stat.st_size:x}\""
+
+    @staticmethod
+    def static_cache_control(file_path, query):
+        if file_path.suffix == ".html":
+            return "no-cache, max-age=0, must-revalidate"
+        if query.get("v"):
+            return "public, max-age=31536000, immutable"
+        if file_path.suffix in {".css", ".js"}:
+            return "public, max-age=3600, must-revalidate"
+        if file_path.suffix in {".ico", ".jpg", ".jpeg", ".png", ".svg", ".webp"}:
+            return "public, max-age=86400, must-revalidate"
+        return "public, max-age=300, must-revalidate"
+
+    def client_has_fresh_static(self, etag, modified_at):
+        if_none_match = self.headers.get("If-None-Match")
+        if if_none_match:
+            client_etags = [value.strip() for value in if_none_match.split(",")]
+            return "*" in client_etags or etag in client_etags
+        if_modified_since = self.headers.get("If-Modified-Since")
+        if not if_modified_since:
+            return False
+        try:
+            client_date = parsedate_to_datetime(if_modified_since)
+        except (TypeError, ValueError):
+            return False
+        return int(modified_at) <= int(client_date.timestamp())
 
     def session_token(self):
         return self.cookie_token("sss_session")
@@ -2177,12 +2208,26 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         if pathname not in STATIC_FILES:
             self.send_error(404, "Not found")
             return
+        query = parse_qs(urlparse(self.path).query)
         file_path = ROOT / "assets" / "success-story-mark.png" if pathname == "/favicon.ico" else ROOT / pathname.lstrip("/")
+        file_stat = file_path.stat()
+        etag = self.static_etag(file_stat)
+        last_modified = formatdate(file_stat.st_mtime, usegmt=True)
+        cache_control = self.static_cache_control(file_path, query)
+        if self.client_has_fresh_static(etag, file_stat.st_mtime):
+            self.send_response(304)
+            self.send_header("ETag", etag)
+            self.send_header("Last-Modified", last_modified)
+            self.send_header("Cache-Control", cache_control)
+            self.end_headers()
+            return
         content = file_path.read_bytes()
         self.send_response(200)
         self.send_header("Content-Type", CONTENT_TYPES.get(file_path.suffix, "application/octet-stream"))
         self.send_header("Content-Length", str(len(content)))
-        self.send_header("Cache-Control", "no-cache" if file_path.suffix == ".html" else "public, max-age=300")
+        self.send_header("ETag", etag)
+        self.send_header("Last-Modified", last_modified)
+        self.send_header("Cache-Control", cache_control)
         self.end_headers()
         self.wfile.write(content)
 
