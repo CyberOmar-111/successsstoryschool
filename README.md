@@ -1,13 +1,13 @@
 # Success Story School Website
 
 A new responsive landing page for Success Story School. The site includes academics,
-student life, admissions steps, honest beta feedback placeholders, a founder story,
-technical transparency badges, FAQ content, and an inquiry form interaction.
+student life, admissions steps, school-approved feedback slots, a school system story,
+school confidence points, FAQ content, and an inquiry form interaction.
 It also includes bilingual student, teacher, and administrator portals with
 server-backed accounts, classroom rosters, grades, attendance, homework,
 announcements, fees, bus information, and registration screens.
 
-## Preview
+## Local Run
 
 From this folder, start the secure local portal server:
 
@@ -52,7 +52,7 @@ are fixed to `Grade 10 A` boys, `Grade 10 B` girls, `Grade 9 A/B` boys,
 
 The student overview is data-aware. Empty metrics show `Not posted`, but that
 label disappears automatically once attendance, grades, or fees are entered.
-The overview also previews the latest homework and announcement, shows live
+The overview also shows the latest homework and announcement, live
 counts, and lets students mark posts as read so old items leave their account
 without deleting the original school record.
 
@@ -71,7 +71,7 @@ violet are not used as primary or accent colors.
 Buttons use the accent for action and the primary for contrast. Backgrounds use
 neutral surfaces with primary overlays. Headings use the primary. Cards use
 neutral backgrounds with primary or accent borders, badges, and section markers.
-All additional tints are derived from those three colors with CSS `color-mix()`.
+All additional tints are derived from those three colors for a consistent look.
 
 ## Motion System
 
@@ -88,11 +88,11 @@ Reduced-motion users receive the card content instantly.
 ## Content Integrity
 
 The homepage avoids fake social proof. It does not publish invented testimonials,
-fake user quotes, unsupported statistics, or placeholder results that look real.
-The `Beta feedback` section uses empty skeleton slots until real attributed
-feedback is available, and the trust section uses verifiable signals instead:
-project stack, database readiness, session security, password hashing, and clear
-empty-state behavior for student records.
+fake user quotes, unsupported statistics, or empty values that look like real
+school results. The `School feedback` section stays empty until the school
+approves real feedback, and the trust section uses school-facing signals:
+protected accounts, staff-posted records, announcements, contact routes, and clear
+waiting states for student records.
 
 ## Portal Security
 

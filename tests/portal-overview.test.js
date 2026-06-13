@@ -78,21 +78,22 @@ test("motion is bounded to CTA hover and one-shot feature-card opacity", () => {
   assert.match(homepageJs, /"data-reveal-card": true/);
 });
 
-test("homepage uses honest beta content instead of fake social proof", () => {
+test("homepage uses production school content instead of demo or coding language", () => {
   assert.doesNotMatch(homepageJs, /Why families trust us/);
   assert.doesNotMatch(homepageJs, /\["previewRoster",\s*"28"/);
   assert.doesNotMatch(homepageJs, /\["previewAverage",\s*"88%"/);
   assert.doesNotMatch(homepageJs, /\["previewAttendance",\s*"96%"/);
-  assert.match(homepageJs, /feedbackEyebrow: "Beta feedback"/);
-  assert.match(homepageJs, /feedbackTitle: "What early users are saying"/);
-  assert.match(homepageJs, /No testimonials are published yet/);
+  assert.doesNotMatch(homepageJs, /Beta feedback|What early users are saying|fake demo|Technical transparency|HTML, CSS|JavaScript|React UI|Python backend|SQLite local|Supabase Postgres|DATABASE_URL|HTTP-only|scrypt/);
+  assert.match(homepageJs, /feedbackEyebrow: "School feedback"/);
+  assert.match(homepageJs, /feedbackTitle: "Feedback from the school community"/);
+  assert.match(homepageJs, /Published feedback will appear here after Success Story School approves real comments/);
   assert.match(homepageJs, /howWorksTitle: "A clear path from inquiry to school account\."/);
-  assert.match(homepageJs, /trustBadgeHonest: "No fake testimonials or statistics"/);
-  assert.match(homepageJs, /faqThreeQ: "Does the portal show fake demo results\?"/);
+  assert.match(homepageJs, /trustBadgeHonest: "School-approved feedback only"/);
+  assert.match(homepageJs, /faqThreeQ: "Does the portal invent academic results\?"/);
   assert.match(homepageCss, /\.feedback-slot/);
   assert.match(homepageCss, /\.skeleton-line/);
   assert.match(homepageCss, /\.trust-badge/);
   assert.match(homepageCss, /\.faq-card/);
   assert.match(readme, /## Content Integrity/);
-  assert.match(readme, /avoids fake social proof/);
+  assert.match(readme, /protected accounts, staff-posted records/);
 });
