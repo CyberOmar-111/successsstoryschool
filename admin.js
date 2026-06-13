@@ -10,8 +10,8 @@ const translations = {
   en: {
     pageTitle: "Success Story School | Administration",
     brandAdmin: "Administration",
-    studentPortal: "Student portal",
-    teacherPortal: "Teacher portal",
+    studentPortal: "Student Account",
+    teacherPortal: "Teacher Account",
     eyebrow: "School Administration",
     title: "Manage real student records and classrooms.",
     intro: "Assign students to one classroom roster, enter their records, and publish assignments or announcements once for the whole class.",
@@ -35,11 +35,6 @@ const translations = {
     welcome: "Welcome,",
     logout: "Log out",
     students: "Students",
-    resetAllStudents: "Reset all student accounts",
-    resetStudentsConfirm: "Delete every student account and its individual records? Administrators and teachers will remain.",
-    resetStudentsDone: "All student accounts were deleted. The next student ID will start again at SSS-001.",
-    resetStudentsRefreshFailed: "The accounts were deleted, but the updated list could not be loaded. Reload this page.",
-    adminSessionExpired: "Your administrator session expired. Please sign in again.",
     classes: "Classes",
     administrators: "Administrators",
     addAdministrator: "Manage administrators",
@@ -119,9 +114,6 @@ const translations = {
     emptyTeachers: "No teacher accounts yet.",
     noRecords: "No records entered yet.",
     noPosts: "No classroom posts yet.",
-    deletePost: "Delete",
-    deletePostConfirm: "Delete this post for all students in the class?",
-    postDeleted: "Post deleted.",
     noMembers: "No students are currently in this class.",
     setupDone: "Administrator account created. Sign in with ADM-1.",
     setupAlreadyComplete: "ADM-1 already exists. Sign in below.",
@@ -147,7 +139,7 @@ const translations = {
     fees: "Fees"
   },
   ar: {
-    teacherPortal: "بوابة المعلم",
+    teacherPortal: "حساب المعلم",
     teachers: "المعلمون",
     addTeacher: "إضافة معلم",
     newTeacher: "إنشاء حساب معلم",
@@ -166,7 +158,7 @@ const translations = {
     subjectRequired: "أضف شعبة ومادة واحدة على الأقل للمعلم.",
     pageTitle: "مدرسة قصة نجاح | الإدارة",
     brandAdmin: "الإدارة",
-    studentPortal: "بوابة الطالب",
+    studentPortal: "حساب الطالب",
     eyebrow: "إدارة المدرسة",
     title: "إدارة سجلات الطلاب والصفوف الفعلية.",
     intro: "ضع الطلاب في شعبة صفية واحدة، وأدخل سجلاتهم، وانشر الواجبات أو الإعلانات مرة واحدة لكل الصف.",
@@ -256,9 +248,6 @@ const translations = {
     emptyClasses: "لم يتم إنشاء صفوف بعد.",
     noRecords: "لا توجد سجلات مدخلة بعد.",
     noPosts: "لا توجد منشورات صفية بعد.",
-    deletePost: "حذف",
-    deletePostConfirm: "هل تريد حذف هذا المنشور لجميع طلاب الصف؟",
-    postDeleted: "تم حذف المنشور.",
     noMembers: "لا يوجد طلاب في هذا الصف حاليا.",
     setupDone: "تم إنشاء حساب الإدارة. سجل الدخول بالرقم ADM-1.",
     setupAlreadyComplete: "حساب ADM-1 موجود بالفعل. سجل الدخول أدناه.",
@@ -317,8 +306,7 @@ function errorText(error) {
     invalid_class: "invalidClass",
     name_required: "nameRequired",
     invalid_current_password: "invalidCurrentPassword",
-    setup_complete: "setupAlreadyComplete",
-    auth_required: "adminSessionExpired"
+    setup_complete: "setupAlreadyComplete"
   };
   return text(errors[error.code] || "genericError");
 }
@@ -443,21 +431,13 @@ function renderLists() {
   });
 }
 
-function recordArticle(title, details, action) {
+function recordArticle(title, details) {
   const article = document.createElement("article");
   const heading = document.createElement("strong");
   const content = document.createElement("p");
   heading.textContent = title;
   content.textContent = details;
   article.append(heading, content);
-  if (action) {
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "remove-member delete-post";
-    remove.textContent = text("deletePost");
-    remove.addEventListener("click", action);
-    article.appendChild(remove);
-  }
   return article;
 }
 
@@ -543,21 +523,12 @@ function renderClass(result) {
     input.value = result.class.id;
   });
   const posts = document.querySelector("[data-class-records]");
-  document.querySelector("[data-class-post-status]").textContent = "";
   posts.replaceChildren();
   result.homework.forEach((entry) => {
-    posts.appendChild(recordArticle(
-      `${text("classHomework")}: ${entry.subject}`,
-      `${entry.details}${entry.due_date ? ` - ${entry.due_date}` : ""}`,
-      () => deleteClassPost("homework", entry.id)
-    ));
+    posts.appendChild(recordArticle(`${text("classHomework")}: ${entry.subject}`, `${entry.details}${entry.due_date ? ` - ${entry.due_date}` : ""}`));
   });
   result.announcements.forEach((entry) => {
-    posts.appendChild(recordArticle(
-      `${text("classAnnouncement")}: ${entry.title}`,
-      entry.details,
-      () => deleteClassPost("announcement", entry.id)
-    ));
+    posts.appendChild(recordArticle(`${text("classAnnouncement")}: ${entry.title}`, entry.details));
   });
   if (!posts.childNodes.length) {
     posts.textContent = text("noPosts");
@@ -566,11 +537,16 @@ function renderClass(result) {
 }
 
 async function loadLists() {
-  const result = await api("/api/admin/dashboard");
-  students = result.students;
-  classes = result.classes;
-  administrators = result.administrators;
-  teachers = result.teachers;
+  const [studentResult, classResult, administratorResult, teacherResult] = await Promise.all([
+    api("/api/admin/students"),
+    api("/api/admin/classes"),
+    api("/api/admin/accounts"),
+    api("/api/admin/teachers")
+  ]);
+  students = studentResult.students;
+  classes = classResult.classes;
+  administrators = administratorResult.administrators;
+  teachers = teacherResult.teachers;
   refreshAssignmentRows();
   renderLists();
 }
@@ -596,25 +572,6 @@ async function removeClassMember(studentId, classId) {
     status.textContent = text("removed");
     await loadLists();
     await loadClass(classId);
-  } catch (error) {
-    status.textContent = errorText(error);
-  }
-}
-
-async function deleteClassPost(type, postId) {
-  if (!window.confirm(text("deletePostConfirm"))) {
-    return;
-  }
-  const classId = classDetails.class.id;
-  const status = document.querySelector("[data-class-post-status]");
-  status.textContent = "";
-  try {
-    await api("/api/admin/class-record-delete", {
-      method: "POST",
-      body: JSON.stringify({ classId, type, postId })
-    });
-    await loadClass(classId);
-    document.querySelector("[data-class-post-status]").textContent = text("postDeleted");
   } catch (error) {
     status.textContent = errorText(error);
   }
@@ -946,35 +903,6 @@ document.querySelector("[data-logout]").addEventListener("click", async () => {
   setAuthMode("login");
 });
 
-document.querySelector("[data-reset-students]").addEventListener("click", async () => {
-  const status = document.querySelector("[data-reset-students-status]");
-  status.textContent = "";
-  if (!window.confirm(text("resetStudentsConfirm"))) {
-    return;
-  }
-  try {
-    await api("/api/admin/reset-students", {
-      method: "POST",
-      body: JSON.stringify({ confirm: "RESET STUDENTS" })
-    });
-    students = [];
-    studentDetails = null;
-    classDetails = null;
-    document.querySelector("[data-student-editor]").hidden = true;
-    document.querySelector("[data-class-editor]").hidden = true;
-    document.querySelector("[data-placeholder]").hidden = false;
-    status.textContent = text("resetStudentsDone");
-    renderLists();
-    try {
-      await loadLists();
-    } catch {
-      status.textContent = `${text("resetStudentsDone")} ${text("resetStudentsRefreshFailed")}`;
-    }
-  } catch (error) {
-    status.textContent = errorText(error);
-  }
-});
-
 languageToggle.addEventListener("click", () => applyLanguage(language === "en" ? "ar" : "en"));
 
 try {
@@ -984,18 +912,14 @@ try {
 }
 applyLanguage(language);
 
-api("/api/admin/setup-status")
-  .then(async (status) => {
-    if (status.setupRequired) {
-      setAuthMode("setup");
-      return;
-    }
-    const session = await api("/api/admin/session");
+api("/api/admin/session")
+  .then(async (session) => {
     if (session.authenticated) {
       admin = session.admin;
       await openDashboard();
-    } else {
-      setAuthMode("login");
+      return;
     }
+    const status = await api("/api/admin/setup-status");
+    setAuthMode(status.setupRequired ? "setup" : "login");
   })
   .catch(() => setAuthMode("login"));

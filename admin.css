@@ -4,7 +4,7 @@
   padding: 18px 20px;
   border-radius: 15px;
   color: var(--navy);
-  background: #eef8f6;
+  background: var(--soft-teal);
 }
 
 .security-callout strong {
@@ -22,7 +22,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: 24px;
   padding: 28px 0 20px;
 }
 
@@ -34,7 +34,7 @@
   display: grid;
   grid-template-columns: 285px 1fr;
   align-items: start;
-  gap: var(--space-3);
+  gap: 24px;
   padding-bottom: 48px;
 }
 
@@ -42,11 +42,11 @@
   position: sticky;
   top: 105px;
   display: grid;
-  gap: var(--space-2);
+  gap: 15px;
 }
 
 .admin-list-card {
-  border: 1px solid #e2eaea;
+  border: 1px solid var(--line);
   border-radius: 18px;
   padding: 17px;
   background: var(--paper);
@@ -59,7 +59,7 @@
 
 .admin-list {
   display: grid;
-  gap: var(--space-1);
+  gap: 8px;
 }
 
 .admin-list button {
@@ -71,13 +71,16 @@
   background: var(--surface);
   text-align: start;
   cursor: pointer;
+  transition: background var(--duration) var(--ease-out),
+              border-color var(--duration) var(--ease-out),
+              color var(--duration) var(--ease-out);
 }
 
 .admin-list button:hover,
 .admin-list button.active {
-  border-color: rgba(8, 126, 131, 0.25);
+  border-color: color-mix(in srgb, var(--primary) 25%, transparent);
   color: var(--teal-dark);
-  background: #e4f3f1;
+  background: var(--soft-teal);
 }
 
 .admin-list strong,
@@ -118,23 +121,6 @@
   margin-top: 14px;
 }
 
-.portal-button.danger {
-  border-color: #cf6a60;
-  color: #9b2e28;
-  background: #fff5f3;
-}
-
-.portal-button.danger:hover {
-  border-color: #bd5149;
-  color: #fff;
-  background: #ae3c35;
-}
-
-.reset-students-status {
-  margin-top: 10px;
-  font-size: 0.78rem;
-}
-
 .admin-placeholder {
   text-align: center;
 }
@@ -146,7 +132,7 @@
 
 .password-change-form {
   margin-top: 25px;
-  border-top-color: rgba(8, 126, 131, 0.28);
+  border-top-color: color-mix(in srgb, var(--primary) 28%, transparent);
 }
 
 .teacher-form {
@@ -155,15 +141,15 @@
 
 .teaching-assignments {
   display: grid;
-  gap: var(--space-1);
+  gap: 10px;
 }
 
 .teacher-assignment-row {
   display: grid;
   grid-template-columns: minmax(210px, 1fr) minmax(155px, 1fr) auto;
   align-items: end;
-  gap: var(--space-1);
-  border: 1px solid #e5eded;
+  gap: 10px;
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px;
   background: var(--surface);
@@ -190,7 +176,7 @@
   display: flex;
   justify-content: space-between;
   align-items: start;
-  gap: var(--space-2);
+  gap: 14px;
   margin-bottom: 22px;
 }
 
@@ -207,18 +193,18 @@
   border-radius: 999px;
   padding: 10px 15px;
   color: var(--teal-dark);
-  background: #e4f3f1;
+  background: var(--soft-teal);
   font-size: 0.86rem;
 }
 
 .record-form {
   display: grid;
   align-content: start;
-  gap: var(--space-2);
-  border: 1px solid #e4ecec;
+  gap: 12px;
+  border: 1px solid var(--line);
   border-radius: 16px;
   padding: 18px;
-  background: #fff;
+  background: var(--paper);
 }
 
 .record-form h3 {
@@ -228,7 +214,7 @@
 
 .record-form label {
   display: grid;
-  gap: var(--space-1);
+  gap: 7px;
   color: var(--navy-soft);
   font-size: 0.83rem;
   font-weight: 650;
@@ -238,7 +224,7 @@
 .record-form select,
 .record-form textarea {
   width: 100%;
-  border: 1px solid #d4e0e0;
+  border: 1px solid var(--line);
   border-radius: 9px;
   padding: 10px 11px;
   color: var(--navy);
@@ -273,7 +259,7 @@
 .editor-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(260px, 1fr));
-  gap: var(--space-2);
+  gap: 15px;
 }
 
 .records-view {
@@ -289,7 +275,7 @@
 
 .summary-records {
   display: grid;
-  gap: var(--space-1);
+  gap: 10px;
 }
 
 .summary-records article {
@@ -308,14 +294,6 @@
 .summary-records article small {
   color: var(--muted);
   font-size: 0.88rem;
-}
-
-.summary-records .delete-post {
-  margin-top: 11px;
-}
-
-.class-post-status {
-  margin-top: 13px;
 }
 
 .class-editor > h3 {
@@ -338,7 +316,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-1);
+  gap: 8px;
   padding: 8px 8px 8px 14px;
   border: 1px solid #e5eded;
   border-radius: 11px;
@@ -394,89 +372,4 @@
     align-items: start;
     flex-direction: column;
   }
-}
-
-/* 2026 admin polish */
-.admin-dashboard {
-  background:
-    radial-gradient(circle at 10% 0%, rgba(8, 126, 131, 0.08), transparent 32%),
-    #f8fbfa;
-}
-
-.admin-list-card,
-.student-editor,
-.class-editor,
-.staff-editor,
-.admin-placeholder,
-.record-form,
-.summary-records article {
-  box-shadow: 0 14px 32px rgba(16, 43, 70, 0.055);
-}
-
-.admin-list-card,
-.record-form,
-.summary-records article {
-  border-color: rgba(218, 228, 229, 0.86);
-}
-
-.admin-list button,
-.account-list .admin-account,
-.member-row,
-.teacher-assignment-row {
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
-}
-
-.admin-list button:hover,
-.admin-list button.active {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(8, 126, 131, 0.08);
-}
-
-.record-form {
-  background: linear-gradient(145deg, #ffffff, #fbfefd);
-}
-
-.class-chip {
-  box-shadow: inset 0 0 0 1px rgba(8, 126, 131, 0.1);
-}
-
-.remove-member {
-  transition: transform 160ms ease, background 160ms ease;
-}
-
-.remove-member:hover,
-.remove-member:focus-visible {
-  transform: translateY(-1px);
-}
-
-/* CTA hierarchy overrides */
-.admin-add-button.text-action,
-.add-assignment.text-action {
-  width: max-content;
-  justify-self: start;
-  margin-top: 14px;
-}
-
-.portal-button.danger,
-.remove-member,
-.summary-records .delete-post {
-  min-height: auto;
-  border: 0;
-  border-bottom: 2px solid rgba(167, 62, 69, 0.22);
-  border-radius: 0;
-  padding: 0 0 3px;
-  color: #a73e45;
-  background: transparent;
-}
-
-.portal-button.danger:hover,
-.portal-button.danger:focus-visible,
-.remove-member:hover,
-.remove-member:focus-visible,
-.summary-records .delete-post:hover,
-.summary-records .delete-post:focus-visible {
-  border-bottom-color: currentColor;
-  color: #8f2630;
-  background: transparent;
-  transform: none;
 }

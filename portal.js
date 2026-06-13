@@ -1,6 +1,5 @@
 const languageToggle = document.querySelector("[data-language-toggle]");
 const authView = document.querySelector("[data-auth-view]");
-const loadingView = document.querySelector("[data-portal-loading]");
 const dashboard = document.querySelector("[data-dashboard]");
 const registerForm = document.querySelector("[data-register-form]");
 const loginForm = document.querySelector("[data-login-form]");
@@ -13,14 +12,13 @@ const profileStatus = document.querySelector("[data-profile-status]");
 
 const translations = {
   en: {
-    title: "Success Story School | Student Portal",
-    skip: "Skip to portal content",
-    brandPortal: "Student Portal",
+    title: "Success Story School | Student Account",
+    skip: "Skip to account content",
+    brandPortal: "Student Account",
     backWebsite: "Back to website",
-    portalEyebrow: "Student Portal",
+    portalEyebrow: "Student Account",
     portalTitle: "Your school account starts here.",
     portalText: "Create your password and receive your own Success Story School student ID. Use it to sign in securely and access school services.",
-    loadingPortal: "Loading your portal...",
     grades: "Grades",
     myClass: "My class",
     attendance: "Attendance",
@@ -62,6 +60,10 @@ const translations = {
     gradeLabel: "Grade:",
     notSelected: "Not selected",
     overview: "Overview",
+    overviewSnapshot: "Student snapshot",
+    accountReady: "Account ready",
+    accountReadyText: "School records will appear here as soon as staff publish them.",
+    accountActiveText: "Latest school records are now live in this overview.",
     classRoster: "Class roster",
     noClass: "You have not been placed in a class yet.",
     yourClass: "Your class",
@@ -92,8 +94,6 @@ const translations = {
     late: "Late",
     homeworkAssignments: "Homework assignments",
     schoolAnnouncements: "School announcements",
-    dismiss: "Dismiss",
-    dismissed: "Dismissed from your view.",
     feesTitle: "Fees & payment status",
     noFees: "No fee records have been entered for this student yet.",
     item: "Item",
@@ -138,15 +138,17 @@ const translations = {
     noBusValue: "No bus required",
     administratorLogin: "Administrator login",
     teacherLogin: "Teacher login",
-    classPost: "Class post"
+    classPost: "Class post",
+    dueDate: "Due",
+    markRead: "Mark as read"
   },
   ar: {
     teacherLogin: "دخول المعلم",
-    title: "مدرسة قصة نجاح | بوابة الطالب",
-    skip: "الانتقال إلى محتوى البوابة",
-    brandPortal: "بوابة الطالب",
+    title: "مدرسة قصة نجاح | حساب الطالب",
+    skip: "الانتقال إلى محتوى الحساب",
+    brandPortal: "حساب الطالب",
     backWebsite: "العودة إلى الموقع",
-    portalEyebrow: "بوابة الطالب",
+    portalEyebrow: "حساب الطالب",
     portalTitle: "حسابك المدرسي يبدأ هنا.",
     portalText: "أنشئ كلمة مرورك واحصل على رقم طالب خاص بك من مدرسة قصة نجاح. استخدمه لتسجيل الدخول بأمان والوصول إلى خدمات المدرسة.",
     grades: "العلامات",
@@ -220,8 +222,6 @@ const translations = {
     late: "متأخر",
     homeworkAssignments: "الواجبات المنزلية",
     schoolAnnouncements: "إعلانات المدرسة",
-    dismiss: "إخفاء",
-    dismissed: "تم إخفاؤه من عرضك.",
     feesTitle: "الرسوم وحالة الدفع",
     noFees: "لم يتم إدخال سجلات رسوم لهذا الطالب بعد.",
     item: "البند",
@@ -308,27 +308,6 @@ function messageForError(error) {
   return text(keys[error.code] || "genericError");
 }
 
-function showPortalLoading() {
-  loadingView.hidden = false;
-  loadingView.setAttribute("aria-busy", "true");
-  authView.hidden = true;
-  dashboard.hidden = true;
-}
-
-function showAuthView() {
-  loadingView.hidden = true;
-  loadingView.setAttribute("aria-busy", "false");
-  dashboard.hidden = true;
-  authView.hidden = false;
-}
-
-function showDashboardView() {
-  loadingView.hidden = true;
-  loadingView.setAttribute("aria-busy", "false");
-  authView.hidden = true;
-  dashboard.hidden = false;
-}
-
 function applyLanguage(nextLanguage) {
   language = nextLanguage === "ar" ? "ar" : "en";
   document.documentElement.lang = language;
@@ -340,7 +319,7 @@ function applyLanguage(nextLanguage) {
   languageToggle.textContent = language === "ar" ? "English" : "العربية";
   languageToggle.setAttribute(
     "aria-label",
-    language === "ar" ? "View portal in English" : "عرض البوابة باللغة العربية"
+    language === "ar" ? "View account in English" : "عرض الحساب باللغة العربية"
   );
   refreshUserDetails();
   renderRecords(currentRecords);
@@ -348,7 +327,7 @@ function applyLanguage(nextLanguage) {
   try {
     localStorage.setItem("sss-language", language);
   } catch {
-    // The portal remains usable if language preference cannot be saved.
+    // The account remains usable if language preference cannot be saved.
   }
 }
 
@@ -380,14 +359,18 @@ function refreshUserDetails() {
 function renderClass() {
   const emptyClass = document.querySelector("[data-empty-class]");
   const classDetails = document.querySelector("[data-class-details]");
+  const overviewClass = document.querySelector("[data-overview-class]");
   if (!currentClass) {
     emptyClass.hidden = false;
     classDetails.hidden = true;
+    overviewClass.textContent = "--";
     return;
   }
   emptyClass.hidden = true;
   classDetails.hidden = false;
-  document.querySelector("[data-class-name]").textContent = classroomName(currentClass);
+  const className = classroomName(currentClass);
+  document.querySelector("[data-class-name]").textContent = className;
+  overviewClass.textContent = className;
   const members = document.querySelector("[data-class-members]");
   members.replaceChildren();
   currentClass.members.forEach((member) => {
@@ -413,28 +396,123 @@ function showCollection(emptySelector, listSelector, hasValues) {
   document.querySelector(listSelector).hidden = !hasValues;
 }
 
-function renderMetric(valueSelector, statusSelector, value) {
-  document.querySelector(valueSelector).textContent = value ?? "--";
-  document.querySelector(statusSelector).hidden = value !== null;
+function metricHasValue(value) {
+  return value !== "--" && value !== "";
 }
 
-async function dismissPost(type, post, statusSelector) {
-  const status = document.querySelector(statusSelector);
-  status.textContent = "";
-  try {
-    await api("/api/portal/dismiss", {
-      method: "POST",
-      body: JSON.stringify({ type, audience: post.audience, postId: post.id })
-    });
-    const collection = type === "homework" ? "homework" : "announcements";
-    currentRecords[collection] = currentRecords[collection].filter((entry) => (
-      entry.id !== post.id || entry.audience !== post.audience
-    ));
-    renderRecords(currentRecords);
-    status.textContent = text("dismissed");
-  } catch {
-    status.textContent = text("genericError");
+function updateMetric(name, value) {
+  const card = document.querySelector(`[data-metric-card="${name}"]`);
+  const status = document.querySelector(`[data-metric-status="${name}"]`);
+  const hasValue = metricHasValue(value);
+  if (card) {
+    card.dataset.state = hasValue ? "ready" : "empty";
   }
+  if (status) {
+    status.hidden = hasValue;
+    status.textContent = text("notPosted");
+  }
+}
+
+function formatPostMeta(primary, audience) {
+  const parts = [];
+  if (primary) {
+    parts.push(primary);
+  }
+  if (audience === "class") {
+    parts.push(text("classPost"));
+  }
+  return parts.join(" - ");
+}
+
+function postMatches(post, target) {
+  return post.id === target.id && post.audience === target.audience;
+}
+
+async function dismissPost(type, post) {
+  await api("/api/portal/dismiss", {
+    method: "POST",
+    body: JSON.stringify({ type, audience: post.audience, postId: post.id })
+  });
+  const collection = type === "homework" ? "homework" : "announcements";
+  currentRecords = {
+    ...currentRecords,
+    [collection]: (currentRecords[collection] || []).filter((item) => !postMatches(item, post))
+  };
+  renderRecords(currentRecords);
+}
+
+function addDismissButton(item, type, post) {
+  const button = document.createElement("button");
+  button.className = "dismiss-action";
+  button.type = "button";
+  button.textContent = text("markRead");
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      await dismissPost(type, post);
+    } catch {
+      button.disabled = false;
+    }
+  });
+  item.appendChild(button);
+}
+
+function renderOverviewCards({ grades, attendance, homework, announcements, fees }) {
+  const hasRecords = grades.length + attendance.length + homework.length + announcements.length + fees.length > 0;
+  const title = document.querySelector("[data-overview-title]");
+  const subtitle = document.querySelector("[data-overview-subtitle]");
+  title.textContent = currentUser ? `${currentUser.name.split(" ")[0]}'s account` : text("accountReady");
+  subtitle.textContent = hasRecords ? text("accountActiveText") : text("accountReadyText");
+
+  const latestAnnouncement = announcements[0];
+  const announcementCard = document.querySelector('[data-overview-card="announcements"]');
+  const announcementMeta = document.querySelector("[data-overview-announcement-meta]");
+  document.querySelector("[data-overview-announcements-count]").textContent = announcements.length;
+  document.querySelector("[data-overview-announcements-badge]").textContent = announcements.length;
+  announcementCard.dataset.state = latestAnnouncement ? "ready" : "empty";
+  document.querySelector("[data-overview-announcement-title]").textContent = latestAnnouncement
+    ? latestAnnouncement.title
+    : text("announcements");
+  document.querySelector("[data-overview-announcement-detail]").textContent = latestAnnouncement
+    ? latestAnnouncement.details
+    : text("noAnnouncements");
+  const announcementMetaText = latestAnnouncement
+    ? formatPostMeta(latestAnnouncement.posted_at, latestAnnouncement.audience)
+    : "";
+  announcementMeta.textContent = announcementMetaText;
+  announcementMeta.hidden = !announcementMetaText;
+
+  const latestHomework = homework[0];
+  const homeworkCard = document.querySelector('[data-overview-card="homework"]');
+  const homeworkMeta = document.querySelector("[data-overview-homework-meta]");
+  document.querySelector("[data-overview-homework-count]").textContent = homework.length;
+  document.querySelector("[data-overview-homework-badge]").textContent = homework.length;
+  homeworkCard.dataset.state = latestHomework ? "ready" : "empty";
+  document.querySelector("[data-overview-homework-title]").textContent = latestHomework
+    ? latestHomework.subject
+    : text("homework");
+  document.querySelector("[data-overview-homework-detail]").textContent = latestHomework
+    ? latestHomework.details
+    : text("noHomework");
+  const homeworkMetaText = latestHomework
+    ? formatPostMeta(latestHomework.due_date ? `${text("dueDate")} ${latestHomework.due_date}` : "", latestHomework.audience)
+    : "";
+  homeworkMeta.textContent = homeworkMetaText;
+  homeworkMeta.hidden = !homeworkMetaText;
+
+  const registrationCard = document.querySelector('[data-overview-card="registration"]');
+  const registrationBadge = document.querySelector("[data-overview-registration-badge]");
+  const registrationDetail = document.querySelector("[data-overview-registration-detail]");
+  const transportLabel = currentUser?.transport === "bus"
+    ? text("busValue")
+    : currentUser?.transport === "none"
+      ? text("noBusValue")
+      : text("notSelected");
+  registrationCard.dataset.state = currentUser?.transport ? "ready" : "empty";
+  registrationBadge.textContent = transportLabel;
+  registrationDetail.textContent = currentUser?.transport
+    ? `${text("transportRequest")}: ${transportLabel}`
+    : text("completeRegistration");
 }
 
 function renderRecords(records) {
@@ -475,21 +553,25 @@ function renderRecords(records) {
   homeworkList.replaceChildren();
   homework.forEach((assignment) => {
     const item = document.createElement("article");
+    item.className = "post-item";
+    item.dataset.kind = "homework";
     const subject = document.createElement("span");
     const details = document.createElement("h4");
-    const date = document.createElement("small");
+    const meta = document.createElement("small");
     subject.textContent = assignment.subject;
     if (assignment.audience === "class") {
       subject.textContent = `${assignment.subject} - ${text("classPost")}`;
     }
     details.textContent = assignment.details;
-    date.textContent = assignment.due_date || "";
-    const dismiss = document.createElement("button");
-    dismiss.type = "button";
-    dismiss.className = "text-action dismiss-post";
-    dismiss.textContent = text("dismiss");
-    dismiss.addEventListener("click", () => dismissPost("homework", assignment, "[data-homework-status]"));
-    item.append(subject, details, date, dismiss);
+    meta.textContent = formatPostMeta(
+      assignment.due_date ? `${text("dueDate")} ${assignment.due_date}` : "",
+      assignment.audience
+    );
+    item.append(subject, details);
+    if (meta.textContent) {
+      item.appendChild(meta);
+    }
+    addDismissButton(item, "homework", assignment);
     homeworkList.appendChild(item);
   });
 
@@ -498,21 +580,16 @@ function renderRecords(records) {
   announcementList.replaceChildren();
   announcements.forEach((notice) => {
     const item = document.createElement("article");
+    item.className = "post-item";
+    item.dataset.kind = "announcement";
     const date = document.createElement("time");
     const title = document.createElement("h4");
     const details = document.createElement("p");
-    date.textContent = notice.posted_at;
-    if (notice.audience === "class") {
-      date.textContent = `${notice.posted_at} - ${text("classPost")}`;
-    }
+    date.textContent = formatPostMeta(notice.posted_at, notice.audience);
     title.textContent = notice.title;
     details.textContent = notice.details;
-    const dismiss = document.createElement("button");
-    dismiss.type = "button";
-    dismiss.className = "text-action dismiss-post";
-    dismiss.textContent = text("dismiss");
-    dismiss.addEventListener("click", () => dismissPost("announcement", notice, "[data-announcements-status]"));
-    item.append(date, title, details, dismiss);
+    item.append(date, title, details);
+    addDismissButton(item, "announcement", notice);
     announcementList.appendChild(item);
   });
 
@@ -528,14 +605,21 @@ function renderRecords(records) {
   });
 
   const gradeValues = grades.flatMap((grade) => [grade.term_one, grade.term_two]).filter((value) => value !== null);
-  renderMetric("[data-average-overview]", "[data-average-status]", gradeValues.length
+  const averageOverview = gradeValues.length
     ? `${Math.round(gradeValues.reduce((sum, value) => sum + value, 0) / gradeValues.length)}%`
-    : null);
-  renderMetric("[data-attendance-overview]", "[data-attendance-status]", attendance.length
+    : "--";
+  document.querySelector("[data-average-overview]").textContent = averageOverview;
+  updateMetric("average", averageOverview);
+  const attendanceOverview = attendance.length
     ? `${Math.round((attendance.filter((record) => record.status === "present").length / attendance.length) * 100)}%`
-    : null);
+    : "--";
+  document.querySelector("[data-attendance-overview]").textContent = attendanceOverview;
+  updateMetric("attendance", attendanceOverview);
   const dueAmount = fees.filter((fee) => fee.status === "due").reduce((sum, fee) => sum + Number(fee.amount), 0);
-  renderMetric("[data-fees-overview]", "[data-fees-status]", fees.length ? `${dueAmount.toFixed(2)} JOD` : null);
+  const feesOverview = fees.length ? `${dueAmount.toFixed(2)} JOD` : "--";
+  document.querySelector("[data-fees-overview]").textContent = feesOverview;
+  updateMetric("fees", feesOverview);
+  renderOverviewCards({ grades, attendance, homework, announcements, fees });
 }
 
 function selectAuthTab(tabName) {
@@ -558,17 +642,17 @@ function openPanel(panelName) {
 }
 
 async function openDashboard() {
-  showPortalLoading();
   const portal = await api("/api/portal");
   currentUser = portal.user;
   currentRecords = portal.records;
   currentClass = portal.class;
+  authView.hidden = true;
+  dashboard.hidden = false;
   profileForm.elements.transport.value = currentUser.transport || "";
   refreshUserDetails();
   renderClass();
   renderRecords(currentRecords);
   openPanel("overview");
-  showDashboardView();
 }
 
 languageToggle.addEventListener("click", () => {
@@ -624,7 +708,6 @@ loginForm.addEventListener("submit", async (event) => {
     loginForm.reset();
     await openDashboard();
   } catch (error) {
-    showAuthView();
     loginStatus.textContent = messageForError(error);
   }
 });
@@ -649,6 +732,7 @@ profileForm.addEventListener("submit", async (event) => {
     currentUser = result.user;
     profileForm.elements.transport.value = currentUser.transport || "";
     refreshUserDetails();
+    renderRecords(currentRecords);
     profileStatus.textContent = text("detailsSaved");
   } catch {
     profileStatus.textContent = text("genericError");
@@ -659,7 +743,8 @@ document.querySelector("[data-logout]").addEventListener("click", async () => {
   await api("/api/auth/logout", { method: "POST", body: "{}" });
   currentUser = null;
   currentClass = null;
-  showAuthView();
+  dashboard.hidden = true;
+  authView.hidden = false;
   profileStatus.textContent = "";
   selectAuthTab("signin");
 });
@@ -671,15 +756,13 @@ try {
 }
 applyLanguage(language);
 
-showPortalLoading();
 api("/api/auth/session")
-  .then(async (session) => {
+  .then((session) => {
     if (session.authenticated) {
-      await openDashboard();
-      return;
+      openDashboard().catch(() => {
+        dashboard.hidden = true;
+        authView.hidden = false;
+      });
     }
-    showAuthView();
   })
-  .catch(() => {
-    showAuthView();
-  });
+  .catch(() => {});

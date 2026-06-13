@@ -25,7 +25,7 @@ LOGIN_WINDOW_SECONDS = 15 * 60
 LOGIN_BLOCK_SECONDS = 15 * 60
 LOGIN_MAX_FAILURES = 5
 REGISTER_WINDOW_SECONDS = 60 * 60
-REGISTER_MAX_ATTEMPTS = 30
+REGISTER_MAX_ATTEMPTS = 5
 AVAILABLE_HOMEROOMS = (
     (10, "A", "boys"),
     (10, "B", "girls"),
@@ -39,6 +39,8 @@ AVAILABLE_HOMEROOMS = (
 )
 STATIC_FILES = {
     "/index.html",
+    "/school-app.js",
+    "/school-react.css",
     "/styles.css",
     "/script.js",
     "/portal.html",
@@ -692,13 +694,20 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
     server_version = "SuccessStoryPortal/1.0"
 
     def end_headers(self):
+        request_path = urlparse(self.path).path
+        script_src = "script-src 'self'"
+        connect_src = "connect-src 'self'"
+        if request_path in {"/", "/index.html"}:
+            script_src = "script-src 'self' https://unpkg.com"
+            connect_src = "connect-src 'self' https://unpkg.com"
+
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "same-origin")
         self.send_header(
             "Content-Security-Policy",
             "default-src 'self'; img-src 'self' data:; style-src 'self'; "
-            "script-src 'self'; connect-src 'self'; form-action 'self'; "
+            f"{script_src}; {connect_src}; form-action 'self'; "
             "base-uri 'none'; frame-ancestors 'none'",
         )
         super().end_headers()

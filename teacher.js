@@ -7,11 +7,11 @@ const attendanceDate = document.querySelector("[data-attendance-date]");
 
 const translations = {
   en: {
-    pageTitle: "Success Story School | Teacher Portal",
-    brandPortal: "Teacher Portal",
-    studentPortal: "Student portal",
+    pageTitle: "Success Story School | Teacher Account",
+    brandPortal: "Teacher Account",
+    studentPortal: "Student Account",
     adminPortal: "Administration",
-    eyebrow: "Teacher Portal",
+    eyebrow: "Teacher Account",
     title: "Teach your assigned classes securely.",
     intro: "Use your school-issued teacher ID. Assignments and grades can be entered only for the classes and subjects assigned to you.",
     attendance: "Class attendance",
@@ -53,9 +53,6 @@ const translations = {
     recentPosts: "Recent posts for this assignment",
     noAssignments: "No teaching assignments have been assigned to this account.",
     noPosts: "No posts have been published yet.",
-    deletePost: "Delete",
-    deletePostConfirm: "Delete this post for all students in the class?",
-    postDeleted: "Post deleted.",
     present: "Present",
     absent: "Absent",
     late: "Late",
@@ -78,11 +75,11 @@ const translations = {
     class8DGirls: "Grade 8 D - Girls"
   },
   ar: {
-    pageTitle: "مدرسة قصة نجاح | بوابة المعلم",
-    brandPortal: "بوابة المعلم",
-    studentPortal: "بوابة الطالب",
+    pageTitle: "مدرسة قصة نجاح | حساب المعلم",
+    brandPortal: "حساب المعلم",
+    studentPortal: "حساب الطالب",
     adminPortal: "الإدارة",
-    eyebrow: "بوابة المعلم",
+    eyebrow: "حساب المعلم",
     title: "درّس الشعب المعيّنة لك بأمان.",
     intro: "استخدم رقم المعلم الصادر عن المدرسة. يمكنك إدخال الواجبات والعلامات فقط للشعب والمواد المعيّنة لك.",
     attendance: "حضور الصف",
@@ -124,9 +121,6 @@ const translations = {
     recentPosts: "المنشورات الأخيرة لهذا التعيين",
     noAssignments: "لم يتم تعيين شعب ومواد لهذا الحساب بعد.",
     noPosts: "لم يتم نشر أي محتوى بعد.",
-    deletePost: "حذف",
-    deletePostConfirm: "هل تريد حذف هذا المنشور لجميع طلاب الصف؟",
-    postDeleted: "تم حذف المنشور.",
     present: "حاضر",
     absent: "غائب",
     late: "متأخر",
@@ -264,40 +258,14 @@ function statusSelect(student) {
   return select;
 }
 
-function addPost(container, heading, details, type, entry) {
+function addPost(container, heading, details) {
   const article = document.createElement("article");
   const title = document.createElement("strong");
   const content = document.createElement("p");
   title.textContent = heading;
   content.textContent = details;
   article.append(title, content);
-  if (entry.canDelete) {
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "delete-post";
-    remove.textContent = text("deletePost");
-    remove.addEventListener("click", () => deletePost(type, entry.id));
-    article.appendChild(remove);
-  }
   container.appendChild(article);
-}
-
-async function deletePost(type, postId) {
-  if (!window.confirm(text("deletePostConfirm"))) {
-    return;
-  }
-  const status = document.querySelector("[data-posts-status]");
-  status.textContent = "";
-  try {
-    await api("/api/teacher/post-delete", {
-      method: "POST",
-      body: JSON.stringify({ assignmentId: selectedAssignmentId, type, postId })
-    });
-    await loadClassroom(selectedAssignmentId);
-    document.querySelector("[data-posts-status]").textContent = text("postDeleted");
-  } catch (error) {
-    status.textContent = errorText(error);
-  }
 }
 
 function renderClassroom() {
@@ -341,10 +309,10 @@ function renderClassroom() {
   posts.replaceChildren();
   classroom.homework.forEach((entry) => {
     const date = entry.due_date ? ` - ${entry.due_date}` : "";
-    addPost(posts, `${text("homeworkPost")}: ${entry.subject}`, `${entry.details}${date}`, "homework", entry);
+    addPost(posts, `${text("homeworkPost")}: ${entry.subject}`, `${entry.details}${date}`);
   });
   classroom.announcements.forEach((entry) => {
-    addPost(posts, `${text("announcementPost")}: ${entry.title}`, entry.details, "announcement", entry);
+    addPost(posts, `${text("announcementPost")}: ${entry.title}`, entry.details);
   });
   if (!posts.childNodes.length) {
     posts.textContent = text("noPosts");

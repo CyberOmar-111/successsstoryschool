@@ -1,13 +1,13 @@
 .teacher-dashboard {
   min-height: calc(100vh - 83px);
-  background: #f8fbfa;
+  background: var(--neutral);
 }
 
 .teacher-grid {
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
   align-items: start;
-  gap: var(--space-3);
+  gap: 26px;
   padding: 32px 0 55px;
 }
 
@@ -27,7 +27,7 @@
 .teacher-sidebar .profile {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 12px;
   margin-bottom: 26px;
 }
 
@@ -56,7 +56,7 @@
 
 .assignment-list {
   display: grid;
-  gap: var(--space-1);
+  gap: 8px;
 }
 
 .assignment-list button {
@@ -67,6 +67,9 @@
   background: var(--surface);
   text-align: start;
   cursor: pointer;
+  transition: background var(--duration) var(--ease-out),
+              border-color var(--duration) var(--ease-out),
+              color var(--duration) var(--ease-out);
 }
 
 .assignment-list button strong,
@@ -81,12 +84,12 @@
 
 .assignment-list button.active {
   border-color: var(--teal);
-  background: #e4f3f1;
+  background: var(--soft-teal);
 }
 
 .teacher-workspace {
   display: grid;
-  gap: var(--space-3);
+  gap: 22px;
 }
 
 .workspace-header,
@@ -94,7 +97,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-2);
+  gap: 18px;
 }
 
 .workspace-header h1 {
@@ -110,6 +113,14 @@
   background: var(--paper);
   font-weight: 700;
   cursor: pointer;
+  transition: background var(--duration) var(--ease-out),
+              border-color var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+
+.logout:hover,
+.logout:focus-visible {
+  transform: translateY(-2px);
 }
 
 .select-assignment,
@@ -134,14 +145,14 @@
 .teacher-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: 18px;
   margin-bottom: 18px;
 }
 
 .teacher-card {
   display: grid;
   align-content: start;
-  gap: var(--space-2);
+  gap: 14px;
 }
 
 .attendance-card {
@@ -181,7 +192,7 @@
 
 .recent-posts div {
   display: grid;
-  gap: var(--space-1);
+  gap: 10px;
   margin-top: 15px;
 }
 
@@ -194,26 +205,6 @@
 .recent-posts article strong {
   display: block;
   margin-bottom: 4px;
-}
-
-.delete-post {
-  margin-top: 10px;
-  border: 0;
-  border-radius: 8px;
-  padding: 8px 11px;
-  color: #a73e45;
-  background: #fff1f2;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.delete-post:hover,
-.delete-post:focus-visible {
-  background: #ffe3e5;
-}
-
-.recent-posts .form-status {
-  margin-top: 13px;
 }
 
 @media (max-width: 900px) {
@@ -237,77 +228,4 @@
     align-items: start;
     flex-direction: column;
   }
-}
-
-/* 2026 teacher polish */
-.teacher-dashboard {
-  background:
-    radial-gradient(circle at 12% 0%, rgba(243, 181, 63, 0.12), transparent 30%),
-    radial-gradient(circle at 88% 8%, rgba(8, 126, 131, 0.1), transparent 34%),
-    #f8fbfa;
-}
-
-.teacher-sidebar,
-.teacher-card,
-.recent-posts,
-.select-assignment {
-  box-shadow: 0 18px 42px rgba(16, 43, 70, 0.07);
-}
-
-.teacher-sidebar,
-.portal-panel {
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.assignment-list button,
-.teacher-card,
-.recent-posts article,
-.delete-post,
-.logout {
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
-}
-
-.assignment-list button:hover,
-.assignment-list button.active {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(8, 126, 131, 0.08);
-}
-
-.teacher-card:hover,
-.recent-posts article:hover {
-  transform: translateY(-1px);
-}
-
-.recent-posts article {
-  border: 1px solid rgba(218, 228, 229, 0.85);
-  border-left: 4px solid rgba(8, 126, 131, 0.36);
-  background: linear-gradient(145deg, #ffffff, #f4faf8);
-}
-
-html[dir="rtl"] .recent-posts article {
-  border-right: 4px solid rgba(8, 126, 131, 0.36);
-  border-left-width: 1px;
-}
-
-.locked-subject {
-  box-shadow: inset 0 0 0 1px rgba(8, 126, 131, 0.08);
-}
-
-/* CTA hierarchy overrides */
-.delete-post {
-  min-height: auto;
-  border: 0;
-  border-bottom: 2px solid rgba(167, 62, 69, 0.22);
-  border-radius: 0;
-  padding: 0 0 3px;
-  color: #a73e45;
-  background: transparent;
-}
-
-.delete-post:hover,
-.delete-post:focus-visible {
-  border-bottom-color: currentColor;
-  color: #8f2630;
-  background: transparent;
-  transform: none;
 }

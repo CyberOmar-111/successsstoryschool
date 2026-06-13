@@ -1,7 +1,8 @@
 # Success Story School Website
 
 A new responsive landing page for Success Story School. The site includes academics,
-student life, admissions steps, events, a testimonial, and an inquiry form interaction.
+student life, admissions steps, honest beta feedback placeholders, a founder story,
+technical transparency badges, FAQ content, and an inquiry form interaction.
 It also includes bilingual student, teacher, and administrator portals with
 server-backed accounts, classroom rosters, grades, attendance, homework,
 announcements, fees, bus information, and registration screens.
@@ -47,6 +48,52 @@ Students choose their homeroom while creating an account. Available portal homer
 are fixed to `Grade 10 A` boys, `Grade 10 B` girls, `Grade 9 A/B` boys,
 `Grade 9 C` girls, `Grade 8 A/B` boys, and `Grade 8 C/D` girls.
 
+## Student Overview
+
+The student overview is data-aware. Empty metrics show `Not posted`, but that
+label disappears automatically once attendance, grades, or fees are entered.
+The overview also previews the latest homework and announcement, shows live
+counts, and lets students mark posts as read so old items leave their account
+without deleting the original school record.
+
+## Color System
+
+The school UI uses a three-color warm academic palette. Purple, indigo, and
+violet are not used as primary or accent colors.
+
+- Primary: `#1f5a44` - deep forest green for headings, navigation, secure panels,
+  and primary information states.
+- Neutral: `#f7f1e6` - warm ivory for page backgrounds, quiet cards, empty states,
+  and readable surface contrast.
+- Accent: `#d59a2b` - saffron gold for primary buttons, highlights, badges, and
+  important card emphasis.
+
+Buttons use the accent for action and the primary for contrast. Backgrounds use
+neutral surfaces with primary overlays. Headings use the primary. Cards use
+neutral backgrounds with primary or accent borders, badges, and section markers.
+All additional tints are derived from those three colors with CSS `color-mix()`.
+
+## Motion System
+
+Animation is intentionally restrained. The hero renders instantly, cards do not
+lift or slide, and there are no decorative loops, particles, bounces, or animated
+backgrounds. Motion is limited to:
+
+- Primary CTA hover feedback through a subtle color and shadow transition.
+- One-time feature-card opacity reveals on scroll, lasting 200ms with a 100ms
+  stagger and no transform movement.
+
+Reduced-motion users receive the card content instantly.
+
+## Content Integrity
+
+The homepage avoids fake social proof. It does not publish invented testimonials,
+fake user quotes, unsupported statistics, or placeholder results that look real.
+The `Beta feedback` section uses empty skeleton slots until real attributed
+feedback is available, and the trust section uses verifiable signals instead:
+project stack, database readiness, session security, password hashing, and clear
+empty-state behavior for student records.
+
 ## Portal Security
 
 - SQLite data is stored in the private ignored path `.data/portal.db`.
@@ -56,10 +103,29 @@ are fixed to `Grade 10 A` boys, `Grade 10 B` girls, `Grade 9 A/B` boys,
   for 15 minutes.
 - Student ID creation is rate-limited and assigns sequential `SSS-###` values.
 
-For public deployment on Vercel, connect a Neon Postgres database with a
-`DATABASE_URL` environment variable. The `api/index.py` Vercel Function uses the
-hosted database for portal accounts and records, while local previews continue to
-use the ignored SQLite database. Production session cookies are HTTPS-only.
+Local development uses SQLite by default. For public deployment on Render, connect
+Supabase Postgres by adding a `DATABASE_URL` environment variable. Use the
+Supabase pooler connection string with SSL enabled, for example:
+
+```text
+DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@POOLER_HOST:5432/postgres?sslmode=require
+HOST=0.0.0.0
+```
+
+Keep the Render build command as `pip install -r requirements.txt` and use
+`python server.py` as the start command. The server will create the needed
+Supabase tables automatically on first start. Production session cookies become
+HTTPS-only when `DATABASE_URL` is set.
+
+## Quality Checks
+
+Run these before deploying:
+
+```powershell
+python -m py_compile server.py
+node --check portal.js
+Get-Content -Raw .\tests\portal-overview.test.js | node
+```
 
 ## Files
 
@@ -75,6 +141,6 @@ use the ignored SQLite database. Production session cookies are HTTPS-only.
 - `teacher.html` - teacher sign-in and assigned-class workspace
 - `teacher.css` - responsive teacher workspace styles
 - `teacher.js` - bilingual teacher attendance, homework, grade, and announcement actions
-- `server.py` - SQLite-backed account and protected portal API server
+- `server.py` - SQLite or Supabase Postgres-backed account and protected portal API server
 - `assets/success-story-logo.jpg` - supplied Success Story School reference logo
 - `assets/success-story-mark.png` - icon-only logo used alongside the live wordmark
