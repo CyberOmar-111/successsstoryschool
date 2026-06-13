@@ -67,20 +67,19 @@ by the same portal data used by the record forms and lists.
 
 ## Color System
 
-The school UI uses a three-color warm academic palette. Purple, indigo, and
-violet are not used as primary or accent colors.
+The school UI uses a premium teal and indigo academic palette.
 
-- Primary: `#1f5a44` - deep forest green for headings, navigation, secure panels,
-  and primary information states.
-- Neutral: `#f7f1e6` - warm ivory for page backgrounds, quiet cards, empty states,
-  and readable surface contrast.
-- Accent: `#d59a2b` - saffron gold for primary buttons, highlights, badges, and
-  important card emphasis.
+- Primary: `#0f766e` - confident teal for account actions, active states,
+  secure panels, and school-service highlights.
+- Neutral: `#f5f7fb` - cool institutional white-blue for page backgrounds,
+  quiet cards, empty states, and readable surface contrast.
+- Accent: `#4f46e5` - indigo for authority, dashboard depth, premium headers,
+  and important account emphasis.
 
-Buttons use the accent for action and the primary for contrast. Backgrounds use
-neutral surfaces with primary overlays. Headings use the primary. Cards use
-neutral backgrounds with primary or accent borders, badges, and section markers.
-All additional tints are derived from those three colors for a consistent look.
+Buttons use a teal-to-indigo treatment for action and contrast. Backgrounds use
+neutral surfaces with indigo structure and teal highlights. Headings use deep
+indigo, while cards use neutral backgrounds with teal or indigo borders, badges,
+and section markers.
 
 ## Motion System
 

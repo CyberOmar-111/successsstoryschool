@@ -78,14 +78,14 @@ test("teacher and administration dashboards expose live command centers", () => 
 
 test("palette is role-based and context-aware", () => {
   const paletteCss = `${css}\n${homepageCss}`;
-  assert.match(css, /--primary: #1f5a44/);
-  assert.match(css, /--neutral: #f7f1e6/);
-  assert.match(css, /--accent: #d59a2b/);
-  assert.match(homepageCss, /--primary: #1f5a44/);
-  assert.match(homepageCss, /--neutral: #f7f1e6/);
-  assert.match(homepageCss, /--accent: #d59a2b/);
-  assert.doesNotMatch(paletteCss, /purple|indigo|violet|plum/i);
-  assert.doesNotMatch(paletteCss, /#(?:4f46e5|6366f1|7c3aed|8b5cf6|a855f7|9333ea|6c3f85)/i);
+  assert.match(css, /--primary: #0f766e/);
+  assert.match(css, /--neutral: #f5f7fb/);
+  assert.match(css, /--accent: #4f46e5/);
+  assert.match(homepageCss, /--primary: #0f766e/);
+  assert.match(homepageCss, /--neutral: #f5f7fb/);
+  assert.match(homepageCss, /--accent: #4f46e5/);
+  assert.match(paletteCss, /teal/i);
+  assert.match(paletteCss, /indigo|#4f46e5/i);
   assert.match(css, /\.module-tabs button\[data-tab="announcements"\]/);
   assert.match(css, /\.metrics article\[data-metric-card="attendance"\]/);
   assert.match(css, /\.content-card\[data-overview-card="homework"\]/);
@@ -93,6 +93,7 @@ test("palette is role-based and context-aware", () => {
   assert.match(js, /item\.dataset\.kind = "homework"/);
   assert.match(js, /item\.dataset\.kind = "announcement"/);
   assert.match(homepageCss, /linear-gradient\(90deg, var\(--primary\), var\(--accent\)\)/);
+  assert.match(readme, /premium teal and indigo academic palette/);
 });
 
 test("motion is bounded to CTA hover and one-shot feature-card opacity", () => {
