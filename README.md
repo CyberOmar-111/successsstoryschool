@@ -56,6 +56,15 @@ The overview also shows the latest homework and announcement, live
 counts, and lets students mark posts as read so old items leave their account
 without deleting the original school record.
 
+## Role Dashboards
+
+Student, teacher, and administrator accounts now share a school-ready command
+center pattern. Student accounts show account status, homeroom, school updates,
+and transportation request status. Teacher accounts show teaching load, current
+class, class size, and selected subject. Administrator accounts show live counts
+for students, classes, teachers, and administrators. These summaries are driven
+by the same portal data used by the record forms and lists.
+
 ## Color System
 
 The school UI uses a three-color warm academic palette. Purple, indigo, and

@@ -354,6 +354,21 @@ function displayDashboard() {
   authView.hidden = true;
   dashboard.hidden = false;
   document.querySelector("[data-admin-name]").textContent = admin.name;
+  updateAdminSummary();
+}
+
+function setAdminSummary(selector, value) {
+  const element = document.querySelector(selector);
+  if (element) {
+    element.textContent = value;
+  }
+}
+
+function updateAdminSummary() {
+  setAdminSummary("[data-admin-total-students]", students.length);
+  setAdminSummary("[data-admin-total-classes]", classes.length);
+  setAdminSummary("[data-admin-total-teachers]", teachers.length);
+  setAdminSummary("[data-admin-total-admins]", administrators.length);
 }
 
 function createListButton(primary, secondary, onClick, active) {
@@ -370,6 +385,7 @@ function createListButton(primary, secondary, onClick, active) {
 }
 
 function renderLists() {
+  updateAdminSummary();
   const studentList = document.querySelector("[data-student-list]");
   const classList = document.querySelector("[data-class-list]");
   const adminList = document.querySelector("[data-admin-list]");

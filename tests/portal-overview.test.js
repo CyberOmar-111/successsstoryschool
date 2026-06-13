@@ -7,6 +7,12 @@ const root = process.cwd();
 const html = fs.readFileSync(path.join(root, "portal.html"), "utf8");
 const js = fs.readFileSync(path.join(root, "portal.js"), "utf8");
 const css = fs.readFileSync(path.join(root, "portal.css"), "utf8");
+const teacherHtml = fs.readFileSync(path.join(root, "teacher.html"), "utf8");
+const teacherJs = fs.readFileSync(path.join(root, "teacher.js"), "utf8");
+const teacherCss = fs.readFileSync(path.join(root, "teacher.css"), "utf8");
+const adminHtml = fs.readFileSync(path.join(root, "admin.html"), "utf8");
+const adminJs = fs.readFileSync(path.join(root, "admin.js"), "utf8");
+const adminCss = fs.readFileSync(path.join(root, "admin.css"), "utf8");
 const homepageJs = fs.readFileSync(path.join(root, "school-app.js"), "utf8");
 const homepageCss = fs.readFileSync(path.join(root, "school-react.css"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
@@ -39,11 +45,35 @@ test("student posts can be dismissed through the real portal API", () => {
 });
 
 test("student overview has premium responsive visual states", () => {
+  assert.match(html, /student-command-center/);
+  assert.match(html, /account-path/);
+  assert.match(js, /data-summary-updates/);
+  assert.match(js, /data-summary-transport/);
   assert.match(css, /\.overview-snapshot/);
   assert.match(css, /\.overview-quick/);
+  assert.match(css, /\.command-center/);
+  assert.match(css, /\.account-path/);
   assert.match(css, /\.metrics article\[data-state="ready"\]/);
   assert.match(css, /\.content-card\[data-state="ready"\]/);
   assert.match(css, /@media \(max-width: 700px\)/);
+});
+
+test("teacher and administration dashboards expose live command centers", () => {
+  assert.match(teacherHtml, /teacher-command-center/);
+  assert.match(teacherHtml, /data-teacher-assignment-count/);
+  assert.match(teacherHtml, /data-teacher-current-subject/);
+  assert.match(teacherJs, /function updateTeacherSummary/);
+  assert.match(teacherJs, /data-teacher-class-size/);
+  assert.match(teacherCss, /\.teacher-command-center/);
+  assert.match(teacherCss, /\.workspace-header/);
+
+  assert.match(adminHtml, /admin-command-center/);
+  assert.match(adminHtml, /data-admin-total-students/);
+  assert.match(adminHtml, /data-admin-total-admins/);
+  assert.match(adminJs, /function updateAdminSummary/);
+  assert.match(adminJs, /data-admin-total-teachers/);
+  assert.match(adminCss, /\.admin-command-center/);
+  assert.match(adminCss, /\.admin-workspace/);
 });
 
 test("palette is role-based and context-aware", () => {
@@ -66,7 +96,7 @@ test("palette is role-based and context-aware", () => {
 });
 
 test("motion is bounded to CTA hover and one-shot feature-card opacity", () => {
-  const motionCss = `${css}\n${homepageCss}`;
+  const motionCss = `${css}\n${teacherCss}\n${adminCss}\n${homepageCss}`;
   assert.doesNotMatch(motionCss, /@keyframes/);
   assert.doesNotMatch(motionCss, /animation\s*:/);
   assert.doesNotMatch(motionCss, /scroll-behavior:\s*smooth/);

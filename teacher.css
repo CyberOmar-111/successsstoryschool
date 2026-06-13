@@ -1,14 +1,15 @@
 .teacher-dashboard {
   min-height: calc(100vh - 83px);
-  background: var(--neutral);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--paper) 90%, var(--neutral)), color-mix(in srgb, var(--neutral) 96%, white));
 }
 
 .teacher-grid {
   display: grid;
-  grid-template-columns: 290px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   align-items: start;
-  gap: 26px;
-  padding: 32px 0 55px;
+  gap: 28px;
+  padding: 34px 0 58px;
 }
 
 .teacher-sidebar,
@@ -21,7 +22,12 @@
 .teacher-sidebar {
   position: sticky;
   top: 108px;
-  padding: 20px;
+  overflow: hidden;
+  padding: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), color-mix(in srgb, var(--neutral) 50%, white)),
+    var(--paper);
+  box-shadow: 0 22px 52px color-mix(in srgb, var(--primary) 9%, transparent);
 }
 
 .teacher-sidebar .profile {
@@ -60,7 +66,8 @@
 }
 
 .assignment-list button {
-  padding: 13px;
+  min-height: 70px;
+  padding: 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
   color: var(--navy);
@@ -83,8 +90,9 @@
 }
 
 .assignment-list button.active {
-  border-color: var(--teal);
-  background: var(--soft-teal);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+  background: color-mix(in srgb, var(--primary) 11%, var(--neutral));
+  box-shadow: inset 4px 0 0 var(--accent);
 }
 
 .teacher-workspace {
@@ -100,8 +108,31 @@
   gap: 18px;
 }
 
+.workspace-header {
+  padding: 22px 24px;
+  border: 1px solid color-mix(in srgb, var(--primary) 15%, var(--neutral));
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 96%, black), color-mix(in srgb, var(--primary) 88%, transparent)),
+    var(--primary);
+  box-shadow: 0 24px 56px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.workspace-header .eyebrow,
+.workspace-header h1 {
+  color: var(--paper);
+}
+
+.workspace-header .eyebrow {
+  margin-bottom: 8px;
+}
+
 .workspace-header h1 {
   font-size: clamp(1.7rem, 3vw, 2.3rem);
+}
+
+.teacher-command-center {
+  margin-bottom: 0;
 }
 
 .logout {
@@ -114,13 +145,14 @@
   font-weight: 700;
   cursor: pointer;
   transition: background var(--duration) var(--ease-out),
-              border-color var(--duration) var(--ease-out),
-              transform var(--duration) var(--ease-out);
+              border-color var(--duration) var(--ease-out);
 }
 
 .logout:hover,
 .logout:focus-visible {
-  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 28%, transparent);
+  color: var(--teal-dark);
+  background: color-mix(in srgb, var(--primary) 8%, white);
 }
 
 .select-assignment,
@@ -131,6 +163,10 @@
 
 .class-header {
   margin-bottom: 21px;
+  padding: 22px;
+  border: 1px solid color-mix(in srgb, var(--primary) 15%, var(--neutral));
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--neutral) 66%, white);
 }
 
 .class-header h2 {
@@ -144,7 +180,7 @@
 
 .teacher-cards {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
   gap: 18px;
   margin-bottom: 18px;
 }
@@ -156,7 +192,7 @@
 }
 
 .attendance-card {
-  grid-column: 1 / -1;
+  grid-row: span 2;
 }
 
 .locked-subject {
@@ -197,9 +233,10 @@
 }
 
 .recent-posts article {
-  padding: 13px;
+  padding: 15px;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--neutral));
   border-radius: 12px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--neutral) 55%, white);
 }
 
 .recent-posts article strong {

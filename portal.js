@@ -19,6 +19,16 @@ const translations = {
     portalEyebrow: "Student Account",
     portalTitle: "Your school account starts here.",
     portalText: "Create your password and receive your own Success Story School student ID. Use it to sign in securely and access school services.",
+    studentPathOne: "Create account",
+    studentPathOneText: "Choose your homeroom and receive your student ID.",
+    studentPathTwo: "Sign in securely",
+    studentPathTwoText: "Use your student ID and private password.",
+    studentPathThree: "Follow school records",
+    studentPathThreeText: "View posts, attendance, grades, fees, and bus requests.",
+    accountStatus: "Account status",
+    activeAccount: "Active",
+    homeroom: "Homeroom",
+    schoolUpdates: "School updates",
     grades: "Grades",
     myClass: "My class",
     attendance: "Attendance",
@@ -354,16 +364,25 @@ function refreshUserDetails() {
     : currentUser.transport === "none"
       ? text("noBusValue")
       : text("notSelected");
+  const summaryTransport = document.querySelector("[data-summary-transport]");
+  if (summaryTransport) {
+    summaryTransport.removeAttribute("data-i18n");
+    summaryTransport.textContent = busLabel.textContent;
+  }
 }
 
 function renderClass() {
   const emptyClass = document.querySelector("[data-empty-class]");
   const classDetails = document.querySelector("[data-class-details]");
   const overviewClass = document.querySelector("[data-overview-class]");
+  const summaryClass = document.querySelector("[data-summary-class]");
   if (!currentClass) {
     emptyClass.hidden = false;
     classDetails.hidden = true;
     overviewClass.textContent = "--";
+    if (summaryClass) {
+      summaryClass.textContent = "--";
+    }
     return;
   }
   emptyClass.hidden = true;
@@ -371,6 +390,9 @@ function renderClass() {
   const className = classroomName(currentClass);
   document.querySelector("[data-class-name]").textContent = className;
   overviewClass.textContent = className;
+  if (summaryClass) {
+    summaryClass.textContent = className;
+  }
   const members = document.querySelector("[data-class-members]");
   members.replaceChildren();
   currentClass.members.forEach((member) => {
@@ -463,6 +485,10 @@ function renderOverviewCards({ grades, attendance, homework, announcements, fees
   const subtitle = document.querySelector("[data-overview-subtitle]");
   title.textContent = currentUser ? `${currentUser.name.split(" ")[0]}'s account` : text("accountReady");
   subtitle.textContent = hasRecords ? text("accountActiveText") : text("accountReadyText");
+  const summaryUpdates = document.querySelector("[data-summary-updates]");
+  if (summaryUpdates) {
+    summaryUpdates.textContent = homework.length + announcements.length;
+  }
 
   const latestAnnouncement = announcements[0];
   const announcementCard = document.querySelector('[data-overview-card="announcements"]');

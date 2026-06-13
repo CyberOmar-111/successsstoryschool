@@ -30,6 +30,11 @@ const translations = {
     workspace: "Class workspace",
     welcome: "Welcome,",
     logout: "Log out",
+    teachingLoad: "Teaching load",
+    currentClass: "Current class",
+    classSize: "Class size",
+    selectedSubject: "Selected subject",
+    noneSelected: "None selected",
     chooseAssignment: "Choose an assigned class and subject.",
     assignedSubject: "Assigned subject:",
     attendanceDate: "Attendance date",
@@ -220,11 +225,35 @@ function displayDashboard() {
   document.querySelector("[data-teacher-name]").textContent = teacher.name;
   document.querySelector("[data-teacher-id]").textContent = teacher.teacherId;
   document.querySelector("[data-welcome-name]").textContent = teacher.name;
+  updateTeacherSummary();
+}
+
+function setTeacherSummary(selector, value) {
+  const element = document.querySelector(selector);
+  if (!element) {
+    return;
+  }
+  element.removeAttribute("data-i18n");
+  element.textContent = value;
+}
+
+function updateTeacherSummary() {
+  setTeacherSummary("[data-teacher-assignment-count]", assignments.length);
+  if (!classroom) {
+    setTeacherSummary("[data-teacher-current-class]", text("noneSelected"));
+    setTeacherSummary("[data-teacher-class-size]", 0);
+    setTeacherSummary("[data-teacher-current-subject]", text("noneSelected"));
+    return;
+  }
+  setTeacherSummary("[data-teacher-current-class]", className(classroom.assignment.class));
+  setTeacherSummary("[data-teacher-class-size]", classroom.students.length);
+  setTeacherSummary("[data-teacher-current-subject]", classroom.assignment.subject);
 }
 
 function renderAssignments() {
   const list = document.querySelector("[data-assignment-list]");
   list.replaceChildren();
+  updateTeacherSummary();
   if (!assignments.length) {
     const empty = document.createElement("p");
     empty.textContent = text("noAssignments");
@@ -270,9 +299,11 @@ function addPost(container, heading, details) {
 
 function renderClassroom() {
   if (!classroom) {
+    updateTeacherSummary();
     return;
   }
   const assignment = classroom.assignment;
+  updateTeacherSummary();
   document.querySelector("[data-select-assignment]").hidden = true;
   document.querySelector("[data-classroom]").hidden = false;
   document.querySelector("[data-class-title]").textContent = className(assignment.class);
