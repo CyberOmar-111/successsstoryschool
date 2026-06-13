@@ -88,12 +88,16 @@ test("homepage uses production school content instead of demo or coding language
   assert.match(homepageJs, /feedbackTitle: "Feedback from the school community"/);
   assert.match(homepageJs, /Published feedback will appear here after Success Story School approves real comments/);
   assert.match(homepageJs, /howWorksTitle: "A clear path from inquiry to school account\."/);
-  assert.match(homepageJs, /trustBadgeHonest: "School-approved feedback only"/);
+  assert.match(homepageJs, /trustEyebrow: "Family support"/);
+  assert.match(homepageJs, /trustTitle: "Helpful school information in one place\."/);
+  assert.match(homepageJs, /trustBadgeStack: "Admissions inquiry"/);
+  assert.match(homepageJs, /trustBadgeBackend: "Campus directions"/);
+  assert.match(homepageJs, /trustBadgeHonest: "School-approved feedback"/);
   assert.match(homepageJs, /faqThreeQ: "Does the portal invent academic results\?"/);
   assert.match(homepageCss, /\.feedback-slot/);
   assert.match(homepageCss, /\.skeleton-line/);
   assert.match(homepageCss, /\.trust-badge/);
   assert.match(homepageCss, /\.faq-card/);
   assert.match(readme, /## Content Integrity/);
-  assert.match(readme, /protected accounts, staff-posted records/);
+  assert.match(readme, /admissions inquiry, campus directions, grade information/);
 });
