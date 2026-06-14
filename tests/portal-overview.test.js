@@ -4,13 +4,14 @@ const path = require("node:path");
 const test = require("node:test");
 
 const root = process.cwd();
+const indexHtml = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const html = fs.readFileSync(path.join(root, "portal.html"), "utf8");
+const teacherHtml = fs.readFileSync(path.join(root, "teacher.html"), "utf8");
+const adminHtml = fs.readFileSync(path.join(root, "admin.html"), "utf8");
 const js = fs.readFileSync(path.join(root, "portal.js"), "utf8");
 const css = fs.readFileSync(path.join(root, "portal.css"), "utf8");
-const teacherHtml = fs.readFileSync(path.join(root, "teacher.html"), "utf8");
 const teacherJs = fs.readFileSync(path.join(root, "teacher.js"), "utf8");
 const teacherCss = fs.readFileSync(path.join(root, "teacher.css"), "utf8");
-const adminHtml = fs.readFileSync(path.join(root, "admin.html"), "utf8");
 const adminJs = fs.readFileSync(path.join(root, "admin.js"), "utf8");
 const adminCss = fs.readFileSync(path.join(root, "admin.css"), "utf8");
 const homepageJs = fs.readFileSync(path.join(root, "school-app.js"), "utf8");
@@ -78,12 +79,23 @@ test("teacher and administration dashboards expose live command centers", () => 
 
 test("palette is role-based and context-aware", () => {
   const paletteCss = `${css}\n${homepageCss}`;
+  assert.match(indexHtml, /<link rel="stylesheet" href="school-react\.css">/);
+  assert.match(indexHtml, /<meta name="theme-color" content="#12324A">/);
+  assert.match(html, /<meta name="theme-color" content="#12324A">/);
+  assert.match(teacherHtml, /<meta name="theme-color" content="#12324A">/);
+  assert.match(adminHtml, /<meta name="theme-color" content="#12324A">/);
   assert.match(css, /--primary: #0f766e/);
-  assert.match(css, /--neutral: #f5f7fb/);
+  assert.match(css, /--neutral: #f4f8f7/);
   assert.match(css, /--accent: #d59a2b/);
+  assert.match(css, /--ink: #1e293b/);
+  assert.match(css, /--navy: #12324a/);
+  assert.match(css, /--line: #d8e3e0/);
   assert.match(homepageCss, /--primary: #0f766e/);
-  assert.match(homepageCss, /--neutral: #f5f7fb/);
+  assert.match(homepageCss, /--neutral: #f4f8f7/);
   assert.match(homepageCss, /--accent: #d59a2b/);
+  assert.match(homepageCss, /--ink: #1e293b/);
+  assert.match(homepageCss, /--navy: #12324a/);
+  assert.match(homepageCss, /--line: #d8e3e0/);
   assert.match(paletteCss, /teal/i);
   assert.doesNotMatch(paletteCss, /purple|indigo|violet|plum/i);
   assert.doesNotMatch(paletteCss, /#(?:4f46e5|6366f1|7c3aed|8b5cf6|a855f7|9333ea|6c3f85|1e1b4b)/i);
@@ -94,7 +106,7 @@ test("palette is role-based and context-aware", () => {
   assert.match(js, /item\.dataset\.kind = "homework"/);
   assert.match(js, /item\.dataset\.kind = "announcement"/);
   assert.match(homepageCss, /linear-gradient\(90deg, var\(--primary\), var\(--accent\)\)/);
-  assert.match(readme, /premium teal and gold academic palette/);
+  assert.match(readme, /premium teal and gold\s+academic palette/);
   assert.match(readme, /no purple,\s+indigo, or violet accents/);
 });
 

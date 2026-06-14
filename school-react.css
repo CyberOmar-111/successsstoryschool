@@ -1,10 +1,10 @@
 :root {
   --primary: #0f766e;
-  --neutral: #f5f7fb;
+  --neutral: #f4f8f7;
   --accent: #d59a2b;
-  --ink: #15213a;
-  --muted: color-mix(in srgb, #102a43 58%, var(--neutral));
-  --navy: #102a43;
+  --ink: #1e293b;
+  --muted: color-mix(in srgb, #12324a 58%, var(--neutral));
+  --navy: #12324a;
   --blue: var(--teal);
   --teal: var(--primary);
   --green: var(--primary);
@@ -14,7 +14,7 @@
   --paper: #ffffff;
   --mist: var(--neutral);
   --warm: color-mix(in srgb, var(--accent) 10%, var(--neutral));
-  --line: color-mix(in srgb, var(--navy) 14%, var(--neutral));
+  --line: #d8e3e0;
   --shadow: 0 18px 42px color-mix(in srgb, var(--navy) 13%, transparent);
   --deep-shadow: 0 28px 76px color-mix(in srgb, var(--navy) 28%, transparent);
   --soft-shadow: 0 12px 30px color-mix(in srgb, var(--navy) 9%, transparent);
@@ -31,7 +31,7 @@
 body {
   margin: 0;
   color: var(--ink);
-  background: #f8fbff;
+  background: var(--neutral);
   font-family: "Segoe UI", "Aptos", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -976,7 +976,7 @@ h3 {
 }
 
 .faq-section {
-  background: #f8fbff;
+  background: var(--neutral);
 }
 
 .faq-grid {
@@ -992,7 +992,7 @@ h3 {
 }
 
 .overview {
-  background: linear-gradient(180deg, var(--paper), #f8fbff);
+  background: linear-gradient(180deg, var(--paper), var(--neutral));
 }
 
 .overview-grid {

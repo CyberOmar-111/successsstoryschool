@@ -1,9 +1,9 @@
 :root {
   --primary: #0f766e;
-  --neutral: #f5f7fb;
+  --neutral: #f4f8f7;
   --accent: #d59a2b;
-  --ink: #15213a;
-  --navy: #102a43;
+  --ink: #1e293b;
+  --navy: #12324a;
   --navy-soft: color-mix(in srgb, var(--navy) 68%, var(--neutral));
   --teal: var(--primary);
   --teal-dark: #0b4f4a;
@@ -11,7 +11,7 @@
   --cream: var(--neutral);
   --paper: #ffffff;
   --surface: color-mix(in srgb, var(--neutral) 88%, white);
-  --line: color-mix(in srgb, var(--navy) 14%, var(--neutral));
+  --line: #d8e3e0;
   --muted: color-mix(in srgb, var(--navy) 54%, var(--neutral));
   --success: var(--primary);
   --crimson: var(--accent);
@@ -65,7 +65,7 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    linear-gradient(135deg, #f8fbff 0%, var(--neutral) 48%, color-mix(in srgb, var(--teal) 8%, white) 100%);
+    linear-gradient(135deg, #ffffff 0%, var(--neutral) 48%, color-mix(in srgb, var(--teal) 8%, white) 100%);
   font-family: "Segoe UI", "Aptos", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -521,7 +521,7 @@ code {
 .dashboard {
   min-height: calc(100vh - 83px);
   background:
-    linear-gradient(135deg, #fbfdff 0%, color-mix(in srgb, var(--neutral) 92%, white) 42%, color-mix(in srgb, var(--accent) 8%, white) 100%);
+    linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--neutral) 92%, white) 42%, color-mix(in srgb, var(--accent) 8%, white) 100%);
 }
 
 .dashboard-grid {
