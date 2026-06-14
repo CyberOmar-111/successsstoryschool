@@ -1,11 +1,11 @@
 :root {
   --primary: #0f766e;
   --neutral: #f5f7fb;
-  --accent: #4f46e5;
+  --accent: #d59a2b;
   --ink: #15213a;
-  --muted: color-mix(in srgb, #1e1b4b 58%, var(--neutral));
-  --navy: #1e1b4b;
-  --blue: var(--accent);
+  --muted: color-mix(in srgb, #102a43 58%, var(--neutral));
+  --navy: #102a43;
+  --blue: var(--teal);
   --teal: var(--primary);
   --green: var(--primary);
   --gold: var(--accent);
@@ -347,7 +347,7 @@ h3 {
   align-items: center;
   color: var(--paper);
   background:
-    linear-gradient(90deg, rgba(30, 27, 75, 0.92), rgba(79, 70, 229, 0.58), rgba(15, 118, 110, 0.32)),
+    linear-gradient(90deg, rgba(16, 42, 67, 0.92), rgba(15, 118, 110, 0.62), rgba(213, 154, 43, 0.3)),
     url("assets/success-story-campus.jpg") center / cover no-repeat;
 }
 
@@ -1267,7 +1267,7 @@ address a {
 
 [dir="rtl"] .hero {
   background:
-    linear-gradient(270deg, rgba(30, 27, 75, 0.9), rgba(79, 70, 229, 0.56), rgba(15, 118, 110, 0.26)),
+    linear-gradient(270deg, rgba(16, 42, 67, 0.9), rgba(15, 118, 110, 0.58), rgba(213, 154, 43, 0.26)),
     url("assets/success-story-campus.jpg") center / cover no-repeat;
 }
 
