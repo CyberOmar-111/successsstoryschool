@@ -17,26 +17,28 @@ python server.py
 
 Then open `http://localhost:4173/`.
 
-Student portal: `http://localhost:4173/portal.html`
+Student account: `http://localhost:4173/student`
 
-Students enter their name and create a password. The server issues a unique student
-ID such as `SSS-001`, which is required together with the password for future logins.
-New accounts begin with empty academic records until school staff enter real data.
+Students enter their name, request a homeroom, and create a password. The server
+issues a unique student ID such as `SSS-001`, which is required together with the
+password for future logins. New public registrations stay pending until school
+staff verify the account; pending accounts cannot sign in and receive a
+"Waiting for admin permission" message.
 
-Administrator portal: `http://localhost:4173/admin.html`
+Staff administration account: `http://localhost:4173/office-access`
 
-The first visit creates the fixed administrator ID `ADM-1` through a one-time setup
-screen. Choose a private strong password there; do not use a shared or predictable
-password. Once signed in, an administrator can issue separate protected accounts
-`ADM-2`, `ADM-3`, through `ADM-20` and beyond for additional staff. Administrators
-can place students in fixed classroom groups such as `Grade 8 B`, add student
-records, post homework or announcements once for a whole class, add or remove
-students from that homeroom without deleting their accounts, and reset a student
-password without viewing the previous password. A signed-in administrator can
-change their own password; administrator passwords must be at least 8 characters
-with a letter, number, and symbol.
+The first setup screen requires a private administrator ID, a strong password,
+and, in production, the `ADMIN_SETUP_SECRET` environment variable. Do not use a
+shared, default, or predictable administrator ID. Once signed in, an
+administrator can issue separate protected accounts for additional staff,
+verify or decline pending student accounts into fixed classroom groups such as
+`Grade 8 B`, add student records, post homework or announcements once for a
+whole class, remove students from live class access without deleting their
+accounts, and reset a student password without viewing the previous password. A
+signed-in administrator can change their own password; administrator passwords
+must be at least 8 characters with a letter, number, and symbol.
 
-Teacher portal: `http://localhost:4173/teacher.html`
+Teacher account: `http://localhost:4173/teacher`
 
 Administrators issue protected `TCH-###` teacher accounts and assign each teacher
 one or more classroom-and-subject teaching assignments. In the teacher portal, a
@@ -44,9 +46,9 @@ teacher chooses one of those assigned class subjects, records attendance for the
 whole class, posts homework and announcements, and enters grades. Homework and
 grade subjects are locked to the selected teaching assignment on the server.
 
-Students choose their homeroom while creating an account. Available portal homerooms
-are fixed to `Grade 10 A` boys, `Grade 10 B` girls, `Grade 9 A/B` boys,
-`Grade 9 C` girls, `Grade 8 A/B` boys, and `Grade 8 C/D` girls.
+Students request their homeroom while creating an account. Available account
+requests are fixed to `Grade 10 A` boys, `Grade 10 B` girls, `Grade 9 A/B`
+boys, `Grade 9 C` girls, `Grade 8 A/B` boys, and `Grade 8 C/D` girls.
 
 ## Student Overview
 
@@ -111,6 +113,12 @@ waiting states for student records.
 - Five failed login attempts lock that student, teacher, or administrator ID/device combination
   for 15 minutes.
 - Student ID creation is rate-limited and assigns sequential `SSS-###` values.
+- Student self-registration creates pending accounts only; students cannot sign
+  in until an administrator verifies the account. Administrators can also
+  decline account requests.
+- Production administrator setup requires `ADMIN_SETUP_SECRET` in addition to
+  the administrator password, so an empty database cannot be claimed publicly.
+- User-facing navigation uses clean routes: `/student`, `/teacher`, and `/office-access`.
 
 Local development uses SQLite by default. For public deployment on Render, connect
 Supabase Postgres by adding a `DATABASE_URL` environment variable. Use the
@@ -118,6 +126,7 @@ Supabase pooler connection string with SSL enabled, for example:
 
 ```text
 DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@POOLER_HOST:5432/postgres?sslmode=require
+ADMIN_SETUP_SECRET=choose-a-long-private-one-time-secret
 HOST=0.0.0.0
 ```
 

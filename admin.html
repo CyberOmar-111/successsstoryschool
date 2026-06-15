@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#12324A">
-    <meta name="description" content="Success Story School administration account.">
-    <title>Success Story School | Administration</title>
+    <meta name="description" content="Success Story School authorized staff sign-in.">
+    <title>Success Story School | Staff Login</title>
     <link rel="icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="shortcut icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="stylesheet" href="portal.css">
@@ -14,17 +14,16 @@
   </head>
   <body>
     <header class="portal-header">
-      <nav class="portal-container portal-nav" aria-label="Administration navigation">
-        <a class="portal-brand" href="index.html" aria-label="Success Story School home">
+      <nav class="portal-container portal-nav" aria-label="Staff sign-in navigation">
+        <a class="portal-brand" href="/" aria-label="Success Story School home">
           <img src="/assets/success-story-logo.jpg?v=4" alt="" width="62" height="62">
           <span>
             <strong>Success Story</strong>
-            <small data-i18n="brandAdmin">Administration</small>
+            <small data-i18n="brandAdmin">Staff Portal</small>
           </span>
         </a>
         <div class="portal-actions">
-          <a class="back-link" href="teacher.html" data-i18n="teacherPortal">Teacher Account</a>
-          <a class="back-link" href="portal.html" data-i18n="studentPortal">Student Account</a>
+          <a class="back-link" href="/" data-i18n="backWebsite">Back to website</a>
           <button class="lang-button" type="button" data-language-toggle>العربية</button>
         </div>
       </nav>
@@ -32,32 +31,25 @@
 
     <main>
       <section class="login-section admin-auth" data-auth-view>
-        <div class="portal-container login-grid">
-          <div class="portal-intro">
-            <p class="eyebrow" data-i18n="eyebrow">School Administration</p>
-            <h1 data-i18n="title">Manage real student records and classrooms.</h1>
-            <p class="intro-text" data-i18n="intro">
-              Assign students to one classroom roster, enter their records, and publish assignments or announcements once for the whole class.
-            </p>
-            <div class="security-callout">
-              <strong data-i18n="securityTitle">Protected records</strong>
-              <p data-i18n="securityText">Passwords are never shown. The administrator can only replace a student's password when needed.</p>
-            </div>
-          </div>
-
-          <div class="login-card">
-            <div class="secure-badge" data-i18n="protectedAdmin">Protected administrator account</div>
+        <div class="portal-container admin-login-shell">
+          <div class="login-card admin-login-card">
             <form class="login-form" data-setup-form hidden>
               <h2 data-i18n="setupTitle">Set up administrator access</h2>
-              <p data-i18n="setupText">The administrator ID is fixed. Choose a private strong password now; it will not be viewable later.</p>
+              <p data-i18n="setupText">For authorized school staff only. Choose a private strong password; it will not be viewable later.</p>
               <label>
                 <span data-i18n="adminId">Administrator ID</span>
-                <input value="ADM-1" readonly>
+                <input name="adminId" placeholder="Administrator ID" pattern="ADM-[0-9]{4,8}" autocomplete="username" required>
               </label>
+              <p class="password-note" data-i18n="adminIdRule">Enter a private administrator ID in the format ADM-0000.</p>
               <label>
                 <span data-i18n="adminName">Administrator name</span>
                 <input name="name" type="text" value="School Administrator" maxlength="80" required>
               </label>
+              <label>
+                <span data-i18n="setupSecret">Private setup secret</span>
+                <input name="setupSecret" type="password" autocomplete="one-time-code">
+              </label>
+              <p class="password-note" data-i18n="setupSecretNote">Required only on the public production server.</p>
               <label>
                 <span data-i18n="newPassword">Create password</span>
                 <input name="password" type="password" minlength="8" autocomplete="new-password" required>
@@ -67,16 +59,16 @@
                 <input name="confirmPassword" type="password" minlength="8" autocomplete="new-password" required>
               </label>
               <p class="password-note" data-i18n="adminPasswordRule">Use at least 8 characters with a letter, number, and symbol.</p>
-              <button class="portal-button primary" type="submit" data-i18n="createAdmin">Create ADM-1 account</button>
+              <button class="portal-button primary" type="submit" data-i18n="createAdmin">Create account</button>
               <p class="form-status" data-setup-status aria-live="polite"></p>
             </form>
 
             <form class="login-form" data-login-form hidden>
-              <h2 data-i18n="signInTitle">Administrator sign in</h2>
-              <p data-i18n="signInText">Use your issued administrator ID to access records and classroom tools.</p>
+              <h2 data-i18n="signInTitle">Administration Login</h2>
+              <p data-i18n="signInText">For authorized school staff only.</p>
               <label>
                 <span data-i18n="adminId">Administrator ID</span>
-                <input name="adminId" value="ADM-1" placeholder="ADM-1" pattern="ADM-[0-9]+" autocomplete="username" required>
+                <input name="adminId" placeholder="Administrator ID" pattern="ADM-[0-9]+" autocomplete="username" required>
               </label>
               <label>
                 <span data-i18n="password">Password</span>
@@ -237,12 +229,13 @@
                   <p class="eyebrow" data-i18n="studentRecord">Student record</p>
                   <h2 data-selected-student-name></h2>
                   <span class="record-id" data-selected-student-id></span>
+                  <span class="record-id" data-selected-student-status></span>
                 </div>
                 <strong class="class-chip" data-selected-student-class></strong>
               </div>
 
-              <form class="record-form assignment-form" data-class-assignment-form>
-                <h3 data-i18n="placeClass">Place in classroom</h3>
+              <form class="record-form assignment-form verification-form" data-class-assignment-form>
+                <h3 data-i18n="studentVerification">Student verification</h3>
                 <input name="studentId" type="hidden">
                 <label>
                   <span data-i18n="approvedHomeroom">Approved homeroom</span>
@@ -259,7 +252,10 @@
                     <option value="8-D" data-i18n="class8DGirls">Grade 8 D - Girls</option>
                   </select>
                 </label>
-                <button class="portal-button primary" type="submit" data-i18n="assignClass">Assign class</button>
+                <div class="verification-actions">
+                  <button class="portal-button primary" type="submit" data-i18n="verifyStudent">Verify</button>
+                  <button class="portal-button secondary danger" type="button" data-decline-student data-i18n="declineStudent">Decline</button>
+                </div>
                 <p class="form-status" data-class-assignment-status></p>
               </form>
 

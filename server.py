@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("SSS_DATA_DIR", str(ROOT / ".data")))
 DB_PATH = DATA_DIR / "portal.db"
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+ADMIN_SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "").strip()
 IS_POSTGRES = bool(DATABASE_URL)
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "4173"))
@@ -56,6 +57,18 @@ STATIC_FILES = {
     "/assets/success-story-logo.jpg",
     "/assets/success-story-mark.png",
     "/assets/success-story-campus.jpg",
+}
+CLEAN_ROUTES = {
+    "/student": "/portal.html",
+    "/teacher": "/teacher.html",
+    "/office-access": "/admin.html",
+    "/home": "/index.html",
+}
+LEGACY_ROUTE_REDIRECTS = {
+    "/index.html": "/",
+    "/portal.html": "/student",
+    "/teacher.html": "/teacher",
+    "/admin.html": "/office-access",
 }
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -155,6 +168,9 @@ def initialize_sqlite_database():
                 grade INTEGER CHECK (grade BETWEEN 1 AND 10),
                 transport TEXT CHECK (transport IN ('bus', 'none') OR transport IS NULL),
                 class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
+                requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
+                is_approved INTEGER NOT NULL DEFAULT 1,
+                approved_at TEXT,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -288,6 +304,14 @@ def initialize_sqlite_database():
             connection.execute(
                 "ALTER TABLE students ADD COLUMN class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL"
             )
+        if "requested_class_id" not in student_columns:
+            connection.execute(
+                "ALTER TABLE students ADD COLUMN requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL"
+            )
+        if "is_approved" not in student_columns:
+            connection.execute("ALTER TABLE students ADD COLUMN is_approved INTEGER NOT NULL DEFAULT 1")
+        if "approved_at" not in student_columns:
+            connection.execute("ALTER TABLE students ADD COLUMN approved_at TEXT")
         homework_columns = {
             row["name"] for row in connection.execute("PRAGMA table_info(class_homework)").fetchall()
         }
@@ -305,6 +329,9 @@ def initialize_sqlite_database():
         connection.executemany(
             "INSERT OR IGNORE INTO classes (grade, section) VALUES (?, ?)",
             [(grade, section) for grade, section, _group in AVAILABLE_HOMEROOMS],
+        )
+        connection.execute(
+            "UPDATE students SET requested_class_id = class_id WHERE requested_class_id IS NULL AND class_id IS NOT NULL"
         )
         connection.execute(
             """
@@ -364,6 +391,9 @@ def initialize_postgres_database():
             grade INTEGER CHECK (grade BETWEEN 1 AND 10),
             transport TEXT CHECK (transport IN ('bus', 'none') OR transport IS NULL),
             class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
+            requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
+            is_approved BOOLEAN NOT NULL DEFAULT TRUE,
+            approved_at TEXT,
             created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT)
         )
         """,
@@ -517,6 +547,12 @@ def initialize_postgres_database():
             "INSERT INTO classes (grade, section) VALUES (?, ?) ON CONFLICT (grade, section) DO NOTHING",
             [(grade, section) for grade, section, _group in AVAILABLE_HOMEROOMS],
         )
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL")
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS is_approved BOOLEAN NOT NULL DEFAULT TRUE")
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS approved_at TEXT")
+        connection.execute(
+            "UPDATE students SET requested_class_id = class_id WHERE requested_class_id IS NULL AND class_id IS NOT NULL"
+        )
         connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM admin_sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM teacher_sessions WHERE expires_at <= ?", (int(time.time()),))
@@ -554,12 +590,6 @@ def ensure_post_dismissals_table(connection):
 
 def initialize_database():
     if IS_POSTGRES:
-        with db_connection() as connection:
-            ready = connection.execute(
-                "SELECT to_regclass('public.sequences') AS relation"
-            ).fetchone()["relation"]
-        if ready:
-            return
         initialize_postgres_database()
     else:
         initialize_sqlite_database()
@@ -610,6 +640,10 @@ def valid_admin_password(password):
     return valid_password(password, 8) and any(not character.isalnum() for character in password)
 
 
+def valid_setup_admin_id(admin_id):
+    return bool(re.fullmatch(r"ADM-\d{4,8}", admin_id)) and int(admin_id[4:]) > 0
+
+
 def homeroom_group(grade, section):
     for allowed_grade, allowed_section, group in AVAILABLE_HOMEROOMS:
         if grade == allowed_grade and section == allowed_section:
@@ -631,6 +665,13 @@ def public_student(row):
     class_id = row["class_id"] if "class_id" in row.keys() else None
     if class_id and "class_grade" in row.keys() and row["class_grade"]:
         class_name = f"Grade {row['class_grade']} {row['class_section']}"
+    requested_class_name = None
+    requested_class_code = None
+    requested_class_id = row["requested_class_id"] if "requested_class_id" in row.keys() else None
+    if requested_class_id and "requested_class_grade" in row.keys() and row["requested_class_grade"]:
+        requested_class_name = f"Grade {row['requested_class_grade']} {row['requested_class_section']}"
+        requested_class_code = f"{row['requested_class_grade']}-{row['requested_class_section']}"
+    is_approved = bool(row["is_approved"]) if "is_approved" in row.keys() else True
     return {
         "studentId": row["student_id"],
         "name": row["full_name"],
@@ -638,6 +679,11 @@ def public_student(row):
         "transport": row["transport"],
         "classId": class_id,
         "className": class_name,
+        "requestedClassId": requested_class_id,
+        "requestedClassName": requested_class_name,
+        "requestedClassCode": requested_class_code,
+        "approvalStatus": "approved" if is_approved else "pending",
+        "approved": is_approved,
         "createdAt": row["created_at"],
     }
 
@@ -684,9 +730,12 @@ def public_teacher_assignment(row):
 
 
 STUDENT_WITH_CLASS_SQL = """
-    SELECT students.*, classes.grade AS class_grade, classes.section AS class_section
+    SELECT students.*, classes.grade AS class_grade, classes.section AS class_section,
+           requested_classes.grade AS requested_class_grade,
+           requested_classes.section AS requested_class_section
     FROM students
     LEFT JOIN classes ON classes.id = students.class_id
+    LEFT JOIN classes AS requested_classes ON requested_classes.id = students.requested_class_id
 """
 
 
@@ -722,6 +771,14 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.send_header(header, value)
         self.end_headers()
         self.wfile.write(content)
+
+    def redirect_clean_route(self, location):
+        parsed_path = urlparse(self.path)
+        query = f"?{parsed_path.query}" if parsed_path.query else ""
+        self.send_response(308)
+        self.send_header("Location", f"{location}{query}")
+        self.send_header("Cache-Control", "public, max-age=3600")
+        self.end_headers()
 
     def read_json(self):
         length = int(self.headers.get("Content-Length", "0"))
@@ -802,7 +859,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         now = int(time.time())
         with db_connection() as connection:
             connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (now,))
-            return connection.execute(
+            student = connection.execute(
                 STUDENT_WITH_CLASS_SQL
                 + """
                 JOIN sessions ON sessions.student_id = students.student_id
@@ -810,6 +867,10 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 """,
                 (token_hash, now),
             ).fetchone()
+            if student and not bool(student["is_approved"]):
+                connection.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+                return None
+            return student
 
     def authenticated_admin(self):
         token = self.cookie_token("sss_admin_session")
@@ -905,7 +966,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             )],
         }
         class_data = None
-        if student["class_id"]:
+        is_approved = bool(student["is_approved"]) if "is_approved" in student.keys() else True
+        if is_approved and student["class_id"]:
             class_row = connection.execute(
                 "SELECT id, grade, section FROM classes WHERE id = ?",
                 (student["class_id"],),
@@ -929,14 +991,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                         (student["class_id"],),
                     )
                 ] + records["announcements"]
-                members = connection.execute(
-                    "SELECT full_name FROM students WHERE class_id = ? ORDER BY full_name",
-                    (student["class_id"],),
-                ).fetchall()
-                class_data = {
-                    **public_class(class_row),
-                    "members": [{"name": member["full_name"]} for member in members],
-                }
+                class_data = public_class(class_row)
         if hide_dismissed:
             records["homework"] = [
                 entry for entry in records["homework"]
@@ -972,7 +1027,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 setup_required = connection.execute(
                     "SELECT COUNT(*) AS total FROM administrators"
                 ).fetchone()["total"] == 0
-            self.send_json(200, {"adminId": "ADM-1", "setupRequired": setup_required})
+            self.send_json(200, {"setupRequired": setup_required})
             return
         if request_path == "/api/admin/session":
             admin = self.authenticated_admin()
@@ -990,7 +1045,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     """
                     SELECT classes.id, classes.grade, classes.section, COUNT(students.student_id) AS member_count
                     FROM classes
-                    LEFT JOIN students ON students.class_id = classes.id
+                    LEFT JOIN students ON students.class_id = classes.id AND students.is_approved = TRUE
                     GROUP BY classes.id
                     ORDER BY classes.grade DESC, classes.section
                     """
@@ -1077,7 +1132,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     """
                     SELECT classes.id, classes.grade, classes.section, COUNT(students.student_id) AS member_count
                     FROM classes
-                    LEFT JOIN students ON students.class_id = classes.id
+                    LEFT JOIN students ON students.class_id = classes.id AND students.is_approved = TRUE
                     GROUP BY classes.id
                     ORDER BY classes.grade DESC, classes.section
                     """
@@ -1122,7 +1177,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     self.send_json(404, {"code": "class_not_found", "error": "Class not found."})
                     return
                 members = connection.execute(
-                    STUDENT_WITH_CLASS_SQL + " WHERE students.class_id = ? ORDER BY students.full_name",
+                    STUDENT_WITH_CLASS_SQL + " WHERE students.class_id = ? AND students.is_approved = TRUE ORDER BY students.full_name",
                     (class_id,),
                 ).fetchall()
                 homework = connection.execute(
@@ -1192,7 +1247,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                             ORDER BY attendance.id DESC LIMIT 1) AS attendance_status
                     FROM students
                     JOIN classes ON classes.id = students.class_id
-                    WHERE students.class_id = ?
+                    WHERE students.class_id = ? AND students.is_approved = TRUE
                     ORDER BY students.full_name
                     """,
                     (school_date, assignment["class_id"]),
@@ -1272,6 +1327,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_admin_students_reset(body)
         elif request_path == "/api/admin/class-assignment":
             self.handle_class_assignment(body)
+        elif request_path == "/api/admin/student-decline":
+            self.handle_student_decline(body)
         elif request_path == "/api/admin/class-removal":
             self.handle_class_removal(body)
         elif request_path == "/api/admin/class-record":
@@ -1365,10 +1422,13 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             student_id = f"SSS-{next_number:03d}"
             connection.execute(
                 """
-                INSERT INTO students (student_id, full_name, password_salt, password_hash, grade, class_id)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO students (
+                    student_id, full_name, password_salt, password_hash,
+                    grade, class_id, requested_class_id, is_approved
+                )
+                VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
                 """,
-                (student_id, name, salt, hashed, grade, class_row["id"]),
+                (student_id, name, salt, hashed, grade, class_row["id"], False),
             )
             connection.commit()
         self.send_json(201, {"studentId": student_id})
@@ -1439,6 +1499,9 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             status = 429 if blocked_until else 401
             self.send_json(status, {"code": code, "error": "Invalid student ID or password."})
             return
+        if not bool(student["is_approved"]):
+            self.send_json(403, {"code": "pending_approval", "error": "Waiting for admin permission."})
+            return
 
         token = secrets.token_urlsafe(32)
         token_hash = hashlib.sha256(token.encode("ascii")).hexdigest()
@@ -1467,8 +1530,22 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         )
 
     def handle_admin_setup(self, body):
+        admin_id = clean_text(body.get("adminId"), 20).upper()
         name = clean_text(body.get("name"), 80) or "School Administrator"
         password = str(body.get("password", ""))
+        setup_secret = str(body.get("setupSecret", ""))
+        if IS_POSTGRES and (not ADMIN_SETUP_SECRET or not hmac.compare_digest(setup_secret, ADMIN_SETUP_SECRET)):
+            self.send_json(403, {"code": "setup_secret_required", "error": "Administrator setup requires the private setup secret."})
+            return
+        if not valid_setup_admin_id(admin_id):
+            self.send_json(
+                400,
+                {
+                    "code": "admin_id_rule",
+                    "error": "Choose a private administrator ID in the format ADM-0000.",
+                },
+            )
+            return
         if not valid_admin_password(password):
             self.send_json(
                 400,
@@ -1489,13 +1566,13 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             connection.execute(
                 """
                 INSERT INTO administrators (admin_id, full_name, password_salt, password_hash)
-                VALUES ('ADM-1', ?, ?, ?)
+                VALUES (?, ?, ?, ?)
                 """,
-                (name, salt, hashed),
+                (admin_id, name, salt, hashed),
             )
-            connection.execute("UPDATE sequences SET value = 1 WHERE name = 'admin_id'")
+            connection.execute("UPDATE sequences SET value = ? WHERE name = 'admin_id'", (int(admin_id[4:]),))
             connection.commit()
-        self.send_json(201, {"adminId": "ADM-1"})
+        self.send_json(201, {"adminId": admin_id})
 
     def handle_admin_login(self, body):
         admin_id = clean_text(body.get("adminId"), 20).upper()
@@ -1860,7 +1937,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             return
         with db_connection() as connection:
             student = connection.execute(
-                "SELECT 1 FROM students WHERE student_id = ? AND class_id = ?",
+                "SELECT 1 FROM students WHERE student_id = ? AND class_id = ? AND is_approved = TRUE",
                 (student_id, assignment["class_id"]),
             ).fetchone()
             if not student:
@@ -1883,7 +1960,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             return
         with db_connection() as connection:
             members = connection.execute(
-                "SELECT student_id FROM students WHERE class_id = ? ORDER BY student_id",
+                "SELECT student_id FROM students WHERE class_id = ? AND is_approved = TRUE ORDER BY student_id",
                 (assignment["class_id"],),
             ).fetchall()
             member_ids = {member["student_id"] for member in members}
@@ -2049,10 +2126,34 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 (grade, section),
             ).fetchone()
             connection.execute(
-                "UPDATE students SET class_id = ?, grade = ? WHERE student_id = ?",
-                (class_row["id"], grade, student_id),
+                """
+                UPDATE students
+                SET class_id = ?, requested_class_id = ?, grade = ?,
+                    is_approved = TRUE, approved_at = CURRENT_TIMESTAMP
+                WHERE student_id = ?
+                """,
+                (class_row["id"], class_row["id"], grade, student_id),
             )
         self.send_json(200, {"class": public_class(class_row)})
+
+    def handle_student_decline(self, body):
+        if not self.require_admin():
+            return
+        student_id = clean_text(body.get("studentId"), 20).upper()
+        with db_connection() as connection:
+            student = connection.execute(
+                "SELECT is_approved FROM students WHERE student_id = ?",
+                (student_id,),
+            ).fetchone()
+            if not student:
+                self.send_json(404, {"code": "student_not_found", "error": "Student not found."})
+                return
+            if bool(student["is_approved"]):
+                self.send_json(409, {"code": "student_verified", "error": "Verified students cannot be declined."})
+                return
+            connection.execute("DELETE FROM sessions WHERE student_id = ?", (student_id,))
+            connection.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
+        self.send_json(200, {"ok": True})
 
     def handle_class_removal(self, body):
         if not self.require_admin():
@@ -2074,7 +2175,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 self.send_json(409, {"code": "not_in_class", "error": "Student is not in this class."})
                 return
             connection.execute(
-                "UPDATE students SET class_id = NULL WHERE student_id = ?",
+                "UPDATE students SET class_id = NULL, is_approved = FALSE, approved_at = NULL WHERE student_id = ?",
                 (student_id,),
             )
         self.send_json(200, {"ok": True})
@@ -2213,7 +2314,10 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         self.send_json(200, {"user": public_student(updated)})
 
     def serve_static(self, request_path):
-        pathname = "/index.html" if request_path == "/" else request_path
+        if request_path in LEGACY_ROUTE_REDIRECTS:
+            self.redirect_clean_route(LEGACY_ROUTE_REDIRECTS[request_path])
+            return
+        pathname = CLEAN_ROUTES.get(request_path, "/index.html" if request_path == "/" else request_path)
         if pathname not in STATIC_FILES:
             self.send_error(404, "Not found")
             return

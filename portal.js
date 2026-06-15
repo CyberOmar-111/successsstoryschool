@@ -20,13 +20,14 @@ const translations = {
     portalTitle: "Your school account starts here.",
     portalText: "Create your password and receive your own Success Story School student ID. Use it to sign in securely and access school services.",
     studentPathOne: "Create account",
-    studentPathOneText: "Choose your homeroom and receive your student ID.",
+    studentPathOneText: "Request the correct homeroom and receive your student ID.",
     studentPathTwo: "Sign in securely",
     studentPathTwoText: "Use your student ID and private password.",
     studentPathThree: "Follow school records",
     studentPathThreeText: "View posts, attendance, grades, fees, and bus requests.",
     accountStatus: "Account status",
     activeAccount: "Active",
+    pendingApproval: "Pending school approval",
     homeroom: "Homeroom",
     schoolUpdates: "School updates",
     grades: "Grades",
@@ -41,7 +42,7 @@ const translations = {
     createAccount: "Create account",
     signIn: "Sign in",
     createTitle: "Create a student account",
-    createText: "Enter the student's name, choose the correct homeroom, and create a private password. The school system will issue the student ID.",
+    createText: "Enter the student's name, request the correct homeroom, and create a private password. School staff approve class access after review.",
     studentName: "Student full name",
     classSection: "Class / section",
     chooseClass: "Choose your class",
@@ -74,10 +75,11 @@ const translations = {
     accountReady: "Account ready",
     accountReadyText: "School records will appear here as soon as staff publish them.",
     accountActiveText: "Latest school records are now live in this overview.",
-    classRoster: "Class roster",
-    noClass: "You have not been placed in a class yet.",
+    classRoster: "Class placement",
+    noClass: "Your class access is waiting for school approval.",
     yourClass: "Your class",
     classMembers: "Class members",
+    classPrivacyNote: "Class rosters are managed privately by the school office.",
     portalDashboard: "Student dashboard",
     welcome: "Welcome,",
     logout: "Log out",
@@ -116,7 +118,7 @@ const translations = {
     schoolDeparture: "School departure",
     busNote: "Routes and pickup times will appear after confirmation by school administration.",
     registrationProfile: "Student registration details",
-    classManagedNote: "Your homeroom is selected during account creation. Please contact administration to change it.",
+    classManagedNote: "Your requested grade is saved here. Class access appears after school approval.",
     requestedGrade: "Student grade",
     chooseGrade: "Choose a grade",
     grade1: "Grade 1",
@@ -135,8 +137,9 @@ const translations = {
     noBus: "No bus required",
     saveDetails: "Save details",
     passwordsDoNotMatch: "Passwords do not match.",
-    accountCreated: "Account created. Your student ID is shown below.",
+    accountCreated: "Account created. Your student ID is shown below. You can sign in after admin permission.",
     invalidLogin: "The student ID or password is incorrect.",
+    waitingPermission: "Waiting for admin permission.",
     loginLocked: "Too many failed attempts. Sign-in is locked for 15 minutes.",
     genericError: "Something went wrong. Please try again.",
     registerLimited: "Too many account requests. Please try again later.",
@@ -146,7 +149,6 @@ const translations = {
     detailsSaved: "Registration details saved.",
     busValue: "Bus requested",
     noBusValue: "No bus required",
-    administratorLogin: "Administrator login",
     teacherLogin: "Teacher login",
     classPost: "Class post",
     dueDate: "Due",
@@ -263,8 +265,9 @@ const translations = {
     noBus: "لا يلزم باص",
     saveDetails: "حفظ البيانات",
     passwordsDoNotMatch: "كلمتا المرور غير متطابقتين.",
-    accountCreated: "تم إنشاء الحساب. رقم الطالب ظاهر أدناه.",
+    accountCreated: "Account created. Your student ID is shown below. You can sign in after admin permission.",
     invalidLogin: "رقم الطالب أو كلمة المرور غير صحيحة.",
+    waitingPermission: "Waiting for admin permission.",
     loginLocked: "محاولات كثيرة غير صحيحة. تم إيقاف تسجيل الدخول لمدة 15 دقيقة.",
     genericError: "حدث خطأ. يرجى المحاولة مرة أخرى.",
     registerLimited: "طلبات حسابات كثيرة جدا. يرجى المحاولة لاحقا.",
@@ -309,6 +312,7 @@ async function api(url, options = {}) {
 function messageForError(error) {
   const keys = {
     invalid_login: "invalidLogin",
+    pending_approval: "waitingPermission",
     login_locked: "loginLocked",
     register_limited: "registerLimited",
     name_required: "nameRequired",
@@ -348,6 +352,11 @@ function refreshUserDetails() {
   document.querySelector("[data-student-name]").textContent = currentUser.name;
   document.querySelector("[data-welcome-name]").textContent = currentUser.name;
   document.querySelector("[data-student-id]").textContent = currentUser.studentId;
+  const accountState = document.querySelector("[data-student-account-state]");
+  if (accountState) {
+    accountState.removeAttribute("data-i18n");
+    accountState.textContent = currentUser.approvalStatus === "approved" ? text("activeAccount") : text("pendingApproval");
+  }
   document.querySelector("[data-avatar]").textContent = currentUser.name
     .split(" ")
     .slice(0, 2)
@@ -393,13 +402,6 @@ function renderClass() {
   if (summaryClass) {
     summaryClass.textContent = className;
   }
-  const members = document.querySelector("[data-class-members]");
-  members.replaceChildren();
-  currentClass.members.forEach((member) => {
-    const item = document.createElement("span");
-    item.textContent = member.name;
-    members.appendChild(item);
-  });
 }
 
 function classroomName(classroom) {

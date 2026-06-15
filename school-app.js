@@ -159,7 +159,7 @@ const copy = {
     heroText:
       "Arabic-first learning, strong English education, Collins Curriculum, safe routines, school activities, and online school accounts for families and staff.",
     beginEnrollment: "Begin enrollment",
-    openPortals: "Open accounts",
+    openPortals: "Portal Login",
     callOffice: "Call office",
     grades: "Grades 1-10",
     curriculum: "Collins Curriculum",
@@ -167,16 +167,16 @@ const copy = {
     transport: "Bus transportation",
     quickPortalTitle: "School accounts",
     quickPortalText:
-      "Students, teachers, and administrators sign in from one polished account hub.",
+      "Students and authorized staff sign in through protected school account paths.",
     studentPortal: "Student Account",
     studentPortalText:
       "Create a student account, view class details, grades, attendance, homework, announcements, fees, and bus requests.",
     teacherPortal: "Teacher Account",
     teacherPortalText:
       "Teachers manage assigned classes, attendance, homework, announcements, and grades.",
-    adminPortal: "Administration",
+    adminPortal: "Staff Access",
     adminPortalText:
-      "School staff manage accounts, class rosters, records, teacher assignments, and class posts.",
+      "Authorized staff use private access provided by the school.",
     open: "Open",
     overviewEyebrow: "School experience",
     overviewTitle: "A modern school rhythm for families",
@@ -246,10 +246,10 @@ const copy = {
     heroCardTitle: "A clear path from inquiry to first day.",
     heroCardText: "Families can contact the office, visit the campus, and then use secure school accounts once access is issued.",
     heroCardPointOne: "One school account system",
-    heroCardPointTwo: "Student, teacher, and admin accounts",
+    heroCardPointTwo: "Student and staff account access",
     heroCardPointThree: "Class records connected to school accounts",
     heroStatGrades: "Grade 1 to Grade 10",
-    heroStatPortal: "student, teacher, admin",
+    heroStatPortal: "school accounts",
     heroStatLocation: "Irbid campus",
     heroStatLanguage: "Arabic + English",
     proofEyebrow: "Built for Success Story School",
@@ -258,14 +258,14 @@ const copy = {
     proofAcademicsTitle: "School-ready clarity",
     proofAcademicsText: "The live site puts public school information and private account workflows into one calm path instead of separate links and messages.",
     proofPortalTitle: "Protected school accounts",
-    proofPortalText: "Students, teachers, and administrators each have a clear sign-in path with tools made for their role.",
+    proofPortalText: "Students and authorized staff each have a protected sign-in path with tools made for their role.",
     proofCareTitle: "Real records only",
     proofCareText: "Grades, attendance, homework, announcements, fees, and bus requests begin empty and appear only when school staff publish real data.",
     proofAccessTitle: "Direct contact paths",
     proofAccessText: "Families can call, message, email, open directions, or start a prepared Gmail inquiry from the same page.",
     portalPreviewEyebrow: "School account system",
     portalPreviewTitle: "Secure accounts for real school operations.",
-    portalPreviewText: "The site introduces the record areas used by students, teachers, and administrators. Personal values appear only after authorized school staff publish them inside protected accounts.",
+    portalPreviewText: "The site introduces protected account areas without exposing private staff tools on the public homepage. Personal values appear only after authorized school staff publish them.",
     previewStudent: "Student record",
     previewClass: "Grade 8 B",
     previewAttendance: "Attendance",
@@ -274,7 +274,7 @@ const copy = {
     previewStatusPosted: "When posted",
     previewStatusReady: "Ready",
     previewStatusSecure: "Secure",
-    previewRoster: "Class roster",
+    previewRoster: "Approval status",
     previewAverage: "Grades",
     previewAnnouncement: "Announcements",
     howWorksEyebrow: "How it works",
@@ -283,9 +283,9 @@ const copy = {
     howWorksInquiryTitle: "Start with a real inquiry",
     howWorksInquiryText: "Families share the student grade, contact details, and questions so the school can respond directly.",
     howWorksAccountTitle: "Issue protected accounts",
-    howWorksAccountText: "Students, teachers, and administrators use separate sign-in paths with server-backed sessions and role-specific tools.",
+    howWorksAccountText: "Students and authorized staff use separate sign-in paths with server-backed sessions, clean account URLs, and role-specific tools.",
     howWorksRecordsTitle: "Post records from staff dashboards",
-    howWorksRecordsText: "Attendance, grades, homework, announcements, fees, and class rosters come from teacher or administrator actions.",
+    howWorksRecordsText: "Attendance, grades, homework, announcements, fees, and class access come from teacher or administrator actions.",
     howWorksFollowupTitle: "Keep the family view clean",
     howWorksFollowupText: "The student overview removes waiting labels as soon as school data is posted, so the page stays useful.",
     feedbackEyebrow: "School feedback",
@@ -313,7 +313,7 @@ const copy = {
     faqThreeQ: "Does the portal invent academic results?",
     faqThreeA: "No. Account pages show only values posted by authorized school staff.",
     faqFourQ: "Who updates student information?",
-    faqFourA: "Teachers and administrators update class records, homework, announcements, attendance, and grades from their protected accounts.",
+    faqFourA: "Authorized school staff update class records, homework, announcements, attendance, and grades from protected accounts.",
     footerText: "Success Story School. Building the new generation."
   },
   ar: {
@@ -353,9 +353,9 @@ const copy = {
     teacherPortal: "حساب المعلم",
     teacherPortalText:
       "يدير المعلم الصفوف المسندة، الحضور، الواجبات، الإعلانات، والعلامات.",
-    adminPortal: "الإدارة",
+    adminPortal: "Staff Access",
     adminPortalText:
-      "تدير الإدارة الحسابات، الشعب، السجلات، إسناد المعلمين، ومنشورات الصفوف.",
+      "Authorized staff use private access provided by the school.",
     open: "فتح",
     overviewEyebrow: "تجربة المدرسة",
     overviewTitle: "نظام مدرسي حديث للعائلات",
@@ -619,20 +619,14 @@ const portals = [
   {
     title: "studentPortal",
     text: "studentPortalText",
-    href: "portal.html",
+    href: "/student",
     icon: GraduationCap
   },
   {
     title: "teacherPortal",
     text: "teacherPortalText",
-    href: "teacher.html",
+    href: "/teacher",
     icon: ClipboardList
-  },
-  {
-    title: "adminPortal",
-    text: "adminPortalText",
-    href: "admin.html",
-    icon: LayoutDashboard
   }
 ];
 
@@ -1002,8 +996,8 @@ function App() {
             h(
               "div",
               { className: "portal-preview-actions" },
-              h(ActionLink, { href: "portal.html", variant: "primary", icon: GraduationCap }, t.studentPortal),
-              h(ActionLink, { href: "teacher.html", variant: "secondary", icon: ClipboardList }, t.teacherPortal)
+              h(ActionLink, { href: "/student", variant: "primary", icon: GraduationCap }, t.studentPortal),
+              h(ActionLink, { href: "/teacher", variant: "secondary", icon: ClipboardList }, t.teacherPortal)
             )
           ),
           h(

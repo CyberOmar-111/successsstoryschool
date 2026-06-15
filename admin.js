@@ -8,26 +8,30 @@ const loginStatus = document.querySelector("[data-login-status]");
 
 const translations = {
   en: {
-    pageTitle: "Success Story School | Administration",
-    brandAdmin: "Administration",
+    pageTitle: "Success Story School | Staff Login",
+    brandAdmin: "Staff Portal",
     studentPortal: "Student Account",
     teacherPortal: "Teacher Account",
-    eyebrow: "School Administration",
-    title: "Manage real student records and classrooms.",
-    intro: "Assign students to one classroom roster, enter their records, and publish assignments or announcements once for the whole class.",
-    securityTitle: "Protected records",
-    securityText: "Passwords are never shown. The administrator can only replace a student's password when needed.",
-    protectedAdmin: "Protected administrator account",
+    backWebsite: "Back to website",
+    eyebrow: "School Office",
+    title: "Administration Login",
+    intro: "Authorized staff can access school tools after sign-in.",
+    securityTitle: "Authorized access",
+    securityText: "For authorized school staff only.",
+    protectedAdmin: "Staff sign-in",
     setupTitle: "Set up administrator access",
-    setupText: "The administrator ID is fixed. Choose a private strong password now; it will not be viewable later.",
+    setupText: "For authorized school staff only. Choose a private strong password; it will not be viewable later.",
     adminId: "Administrator ID",
     adminName: "Administrator name",
+    setupSecret: "Private setup secret",
+    setupSecretNote: "Required only on the public production server.",
     newPassword: "New password",
     confirmPassword: "Confirm password",
+    adminIdRule: "Enter a private administrator ID in the format ADM-0000.",
     adminPasswordRule: "Use at least 8 characters with a letter, number, and symbol.",
-    createAdmin: "Create ADM-1 account",
-    signInTitle: "Administrator sign in",
-    signInText: "Use your issued administrator ID to access records and classroom tools.",
+    createAdmin: "Create account",
+    signInTitle: "Administration Login",
+    signInText: "For authorized school staff only.",
     password: "Password",
     rateLimit: "Five failed attempts lock sign-in for 15 minutes.",
     signIn: "Sign in",
@@ -63,7 +67,8 @@ const translations = {
     chooseStudentText: "Select a student to update records, or select a class to publish work for everyone in that classroom.",
     studentRecord: "Student record",
     noClass: "No class assigned",
-    placeClass: "Place in classroom",
+    placeClass: "Student verification",
+    studentVerification: "Student verification",
     approvedHomeroom: "Approved homeroom",
     chooseClass: "Choose a class",
     class10ABoys: "Grade 10 A - Boys",
@@ -75,7 +80,11 @@ const translations = {
     class8BBoys: "Grade 8 B - Boys",
     class8CGirls: "Grade 8 C - Girls",
     class8DGirls: "Grade 8 D - Girls",
-    assignClass: "Assign class",
+    assignClass: "Verify",
+    verifyStudent: "Verify",
+    declineStudent: "Decline",
+    pendingApproval: "Pending approval",
+    approved: "Approved",
     addGrade: "Add grades",
     subject: "Subject",
     termOne: "Term 1",
@@ -115,8 +124,11 @@ const translations = {
     noRecords: "No records entered yet.",
     noPosts: "No classroom posts yet.",
     noMembers: "No students are currently in this class.",
-    setupDone: "Administrator account created. Sign in with ADM-1.",
-    setupAlreadyComplete: "ADM-1 already exists. Sign in below.",
+    studentVerified: "Student verified.",
+    studentDeclined: "Student account request declined.",
+    setupDone: "Administrator account created. Sign in below.",
+    setupAlreadyComplete: "Administrator setup is complete. Sign in below.",
+    setupSecretRequired: "Enter the private setup secret configured on the server.",
     adminCreated: "Administrator account created.",
     teacherCreated: "Teacher account created.",
     passwordChanged: "Password changed. Sign in again with your new password.",
@@ -160,7 +172,7 @@ const translations = {
     brandAdmin: "الإدارة",
     studentPortal: "حساب الطالب",
     eyebrow: "إدارة المدرسة",
-    title: "إدارة سجلات الطلاب والصفوف الفعلية.",
+    title: "Administration Login",
     intro: "ضع الطلاب في شعبة صفية واحدة، وأدخل سجلاتهم، وانشر الواجبات أو الإعلانات مرة واحدة لكل الصف.",
     securityTitle: "سجلات محمية",
     securityText: "لا تظهر كلمات المرور أبدا. يمكن للإدارة استبدال كلمة مرور الطالب عند الحاجة فقط.",
@@ -172,9 +184,9 @@ const translations = {
     newPassword: "كلمة المرور الجديدة",
     confirmPassword: "تأكيد كلمة المرور",
     adminPasswordRule: "استخدم 8 خانات على الأقل وتحتوي على حرف ورقم ورمز.",
-    createAdmin: "إنشاء حساب ADM-1",
+    createAdmin: "إنشاء حساب",
     signInTitle: "دخول الإدارة",
-    signInText: "استخدم رقم الإدارة الصادر لك للوصول إلى السجلات وأدوات الصفوف.",
+    signInText: "For authorized school staff only.",
     password: "كلمة المرور",
     rateLimit: "بعد خمس محاولات خاطئة يتوقف الدخول لمدة 15 دقيقة.",
     signIn: "تسجيل الدخول",
@@ -198,7 +210,8 @@ const translations = {
     chooseStudentText: "اختر طالبا لتحديث سجله أو صفا لنشر العمل لجميع الطلاب في الغرفة الصفية.",
     studentRecord: "سجل الطالب",
     noClass: "لم يحدد صف",
-    placeClass: "وضع الطالب في الصف",
+    placeClass: "Student verification",
+    studentVerification: "Student verification",
     approvedHomeroom: "الشعبة المعتمدة",
     chooseClass: "اختر الشعبة",
     class10ABoys: "الصف العاشر أ - بنين",
@@ -210,7 +223,9 @@ const translations = {
     class8BBoys: "الصف الثامن ب - بنين",
     class8CGirls: "الصف الثامن ج - بنات",
     class8DGirls: "الصف الثامن د - بنات",
-    assignClass: "تعيين الصف",
+    assignClass: "Verify",
+    verifyStudent: "Verify",
+    declineStudent: "Decline",
     addGrade: "إضافة علامات",
     subject: "المادة",
     termOne: "الفصل الأول",
@@ -249,8 +264,10 @@ const translations = {
     noRecords: "لا توجد سجلات مدخلة بعد.",
     noPosts: "لا توجد منشورات صفية بعد.",
     noMembers: "لا يوجد طلاب في هذا الصف حاليا.",
-    setupDone: "تم إنشاء حساب الإدارة. سجل الدخول بالرقم ADM-1.",
-    setupAlreadyComplete: "حساب ADM-1 موجود بالفعل. سجل الدخول أدناه.",
+    studentVerified: "Student verified.",
+    studentDeclined: "Student account request declined.",
+    setupDone: "تم إنشاء حساب الإدارة. سجل الدخول أدناه.",
+    setupAlreadyComplete: "تم إعداد حساب الإدارة. سجل الدخول أدناه.",
     adminCreated: "تم إنشاء حساب الإداري.",
     passwordChanged: "تم تغيير كلمة المرور. سجل الدخول مرة أخرى بكلمة المرور الجديدة.",
     saved: "تم الحفظ.",
@@ -270,6 +287,37 @@ const translations = {
     fees: "الرسوم"
   }
 };
+
+Object.assign(translations.ar, {
+  pageTitle: "Success Story School | Staff Login",
+  brandAdmin: "Staff Portal",
+  studentPortal: "Student Account",
+  teacherPortal: "Teacher Account",
+  backWebsite: "Back to website",
+  eyebrow: "School Office",
+  title: "Administration Login",
+  intro: "Authorized staff can access school tools after sign-in.",
+  securityTitle: "Authorized access",
+  securityText: "For authorized school staff only.",
+  protectedAdmin: "Staff sign-in",
+  setupTitle: "Set up administrator access",
+  setupText: "For authorized school staff only. Choose a private strong password; it will not be viewable later.",
+  setupSecret: "Private setup secret",
+  setupSecretNote: "Required only on the public production server.",
+  adminIdRule: "Enter a private administrator ID in the format ADM-0000.",
+  createAdmin: "Create account",
+  signInTitle: "Administration Login",
+  signInText: "For authorized school staff only.",
+  studentVerification: "Student verification",
+  verifyStudent: "Verify",
+  declineStudent: "Decline",
+  dashboardBanner: "Administration area. Changes here appear in student accounts.",
+  studentVerified: "Student verified.",
+  studentDeclined: "Student account request declined.",
+  setupDone: "Administrator account created. Sign in below.",
+  setupAlreadyComplete: "Administrator setup is complete. Sign in below.",
+  setupSecretRequired: "Enter the private setup secret configured on the server."
+});
 
 let language = "en";
 let admin = null;
@@ -300,13 +348,15 @@ function errorText(error) {
   const errors = {
     invalid_login: "invalidLogin",
     login_locked: "loginLocked",
+    admin_id_rule: "adminIdRule",
     admin_password_rule: "adminPasswordError",
     teacher_password_rule: "teacherPasswordError",
     assignment_required: "subjectRequired",
     invalid_class: "invalidClass",
     name_required: "nameRequired",
     invalid_current_password: "invalidCurrentPassword",
-    setup_complete: "setupAlreadyComplete"
+    setup_complete: "setupAlreadyComplete",
+    setup_secret_required: "setupSecretRequired"
   };
   return text(errors[error.code] || "genericError");
 }
@@ -402,9 +452,11 @@ function renderLists() {
   }
   students.forEach((student) => {
     const classroom = classes.find((group) => group.id === student.classId);
+    const approval = student.approvalStatus === "approved" ? text("approved") : text("pendingApproval");
+    const homeroom = classroom ? className(classroom) : student.requestedClassName || text("noClass");
     studentList.appendChild(createListButton(
       student.name,
-      `${student.studentId} - ${classroom ? className(classroom) : text("noClass")}`,
+      `${student.studentId} - ${approval} - ${homeroom}`,
       () => loadStudent(student.studentId),
       studentDetails && studentDetails.student.studentId === student.studentId
     ));
@@ -468,15 +520,19 @@ function renderStudent(result) {
   const student = result.student;
   document.querySelector("[data-selected-student-name]").textContent = student.name;
   document.querySelector("[data-selected-student-id]").textContent = student.studentId;
+  document.querySelector("[data-selected-student-status]").textContent =
+    student.approvalStatus === "approved" ? text("approved") : text("pendingApproval");
   document.querySelector("[data-selected-student-class]").textContent =
-    result.class ? className(result.class) : text("noClass");
+    result.class ? className(result.class) : student.requestedClassName || text("noClass");
   document.querySelectorAll("[data-student-editor] input[name=studentId]").forEach((input) => {
     input.value = student.studentId;
   });
   const assignment = document.querySelector("[data-class-assignment-form]");
   assignment.elements.classCode.value = result.class
     ? `${result.class.grade}-${result.class.section}`
-    : "";
+    : student.requestedClassCode || "";
+  const declineButton = document.querySelector("[data-decline-student]");
+  declineButton.hidden = student.approvalStatus === "approved";
   const records = document.querySelector("[data-student-records]");
   records.replaceChildren();
   result.records.grades.forEach((grade) => {
@@ -514,7 +570,7 @@ function renderClass(result) {
     const option = document.createElement("option");
     option.value = student.studentId;
     const currentClass = classes.find((group) => group.id === student.classId);
-    option.textContent = `${student.name} (${student.studentId}) - ${currentClass ? className(currentClass) : text("noClass")}`;
+    option.textContent = `${student.name} (${student.studentId}) - ${currentClass ? className(currentClass) : student.requestedClassName || text("noClass")}`;
     choices.appendChild(option);
   });
   const members = document.querySelector("[data-admin-class-members]");
@@ -684,7 +740,12 @@ setupForm.addEventListener("submit", async (event) => {
   try {
     await api("/api/admin/setup", {
       method: "POST",
-      body: JSON.stringify({ name: values.get("name"), password })
+      body: JSON.stringify({
+        adminId: values.get("adminId"),
+        name: values.get("name"),
+        password,
+        setupSecret: values.get("setupSecret")
+      })
     });
     setAuthMode("login");
     loginStatus.textContent = text("setupDone");
@@ -704,7 +765,6 @@ loginForm.addEventListener("submit", async (event) => {
     });
     admin = result.admin;
     loginForm.reset();
-    loginForm.elements.adminId.value = "ADM-1";
     await openDashboard();
   } catch (error) {
     loginStatus.textContent = errorText(error);
@@ -818,9 +878,31 @@ document.querySelector("[data-class-assignment-form]").addEventListener("submit"
   try {
     const values = Object.fromEntries(new FormData(form));
     await api("/api/admin/class-assignment", { method: "POST", body: JSON.stringify(values) });
-    status.textContent = text("saved");
+    status.textContent = text("studentVerified");
     await loadLists();
     await loadStudent(values.studentId);
+  } catch (error) {
+    status.textContent = errorText(error);
+  }
+});
+
+document.querySelector("[data-decline-student]").addEventListener("click", async () => {
+  if (!studentDetails) {
+    return;
+  }
+  const form = document.querySelector("[data-class-assignment-form]");
+  const status = form.querySelector("[data-class-assignment-status]");
+  const studentId = studentDetails.student.studentId;
+  try {
+    await api("/api/admin/student-decline", {
+      method: "POST",
+      body: JSON.stringify({ studentId })
+    });
+    status.textContent = text("studentDeclined");
+    studentDetails = null;
+    document.querySelector("[data-student-editor]").hidden = true;
+    document.querySelector("[data-placeholder]").hidden = false;
+    await loadLists();
   } catch (error) {
     status.textContent = errorText(error);
   }

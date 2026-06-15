@@ -17,6 +17,7 @@ const adminCss = fs.readFileSync(path.join(root, "admin.css"), "utf8");
 const homepageJs = fs.readFileSync(path.join(root, "school-app.js"), "utf8");
 const homepageCss = fs.readFileSync(path.join(root, "school-react.css"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
+const server = fs.readFileSync(path.join(root, "server.py"), "utf8");
 
 test("overview metrics expose status hooks instead of permanent Not posted text", () => {
   assert.match(html, /data-metric-status="attendance"/);
@@ -43,6 +44,69 @@ test("student posts can be dismissed through the real portal API", () => {
   assert.match(js, /postId: post\.id/);
   assert.match(js, /function addDismissButton\(item, type, post\)/);
   assert.match(js, /text\("markRead"\)/);
+});
+
+test("student registration is pending until school approval", () => {
+  assert.match(server, /requested_class_id/);
+  assert.match(server, /is_approved/);
+  assert.match(server, /VALUES \(\?, \?, \?, \?, \?, NULL, \?, \?\)/);
+  assert.match(server, /\(student_id, name, salt, hashed, grade, class_row\["id"\], False\)/);
+  assert.match(server, /if is_approved and student\["class_id"\]:/);
+  const portalRecordsBlock = server.slice(
+    server.indexOf("def portal_records"),
+    server.indexOf("def do_GET")
+  );
+  assert.doesNotMatch(portalRecordsBlock, /"members"/);
+  assert.match(server, /"code": "pending_approval"/);
+  assert.match(server, /Waiting for admin permission\./);
+  assert.match(js, /pending_approval: "waitingPermission"/);
+  assert.match(js, /Waiting for admin permission\./);
+  assert.match(html, /Class placement/);
+  assert.match(js, /Pending school approval/);
+  assert.match(adminJs, /pendingApproval/);
+  assert.match(adminHtml, /data-decline-student/);
+  assert.match(adminJs, /Student verification/);
+  assert.match(adminJs, /Verify/);
+  assert.match(adminJs, /Decline/);
+  assert.match(adminJs, /"\/api\/admin\/student-decline"/);
+  assert.match(server, /def handle_student_decline/);
+});
+
+test("production admin setup requires private setup secret", () => {
+  assert.match(server, /ADMIN_SETUP_SECRET = os\.environ\.get\("ADMIN_SETUP_SECRET"/);
+  assert.match(server, /IS_POSTGRES and \(not ADMIN_SETUP_SECRET or not hmac\.compare_digest\(setup_secret, ADMIN_SETUP_SECRET\)\)/);
+  assert.match(server, /setup_secret_required/);
+  assert.match(adminHtml, /name="setupSecret"/);
+  assert.match(adminJs, /setupSecret: values\.get\("setupSecret"\)/);
+});
+
+test("account navigation uses clean routes instead of file names", () => {
+  assert.match(server, /CLEAN_ROUTES = \{/);
+  assert.match(server, /"\/student": "\/portal\.html"/);
+  assert.match(server, /"\/teacher": "\/teacher\.html"/);
+  assert.match(server, /"\/office-access": "\/admin\.html"/);
+  assert.doesNotMatch(server, /"\/admin": "\/admin\.html"/);
+  const navSurface = `${indexHtml}\n${html}\n${teacherHtml}\n${adminHtml}\n${homepageJs}`;
+  assert.doesNotMatch(navSurface, /href="(?:portal|teacher|admin|index)\.html"/);
+  assert.doesNotMatch(navSurface, /href: "(?:portal|teacher|admin)\.html"/);
+  assert.doesNotMatch(navSurface, /href="\/admin"/);
+  assert.match(navSurface, /href="\/student"|href: "\/student"/);
+  assert.match(navSurface, /href="\/teacher"|href: "\/teacher"/);
+  assert.match(server, /"\/admin\.html": "\/office-access"/);
+});
+
+test("administration login is quiet and does not reveal a default account", () => {
+  assert.match(adminHtml, /Administration Login/);
+  assert.match(adminHtml, /For authorized school staff only/);
+  assert.match(adminHtml, /placeholder="Administrator ID"/);
+  assert.match(adminHtml, /pattern="ADM-\[0-9\]\{4,8\}"/);
+  assert.match(adminCss, /\.admin-login-shell/);
+  assert.match(adminCss, /backdrop-filter: none/);
+  assert.match(server, /"setupRequired": setup_required/);
+  assert.match(server, /valid_setup_admin_id\(admin_id\)/);
+  assert.match(adminJs, /adminId: values\.get\("adminId"\)/);
+  const publicAdminSurface = `${adminHtml}\n${adminJs}`;
+  assert.doesNotMatch(publicAdminSurface, /value="ADM-1"|placeholder="ADM-1"|Create ADM-1 account|Manage real student records|real student records|records and classrooms/);
 });
 
 test("student overview has premium responsive visual states", () => {

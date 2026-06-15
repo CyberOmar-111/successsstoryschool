@@ -4,6 +4,37 @@
     linear-gradient(180deg, color-mix(in srgb, var(--paper) 90%, var(--neutral)), color-mix(in srgb, var(--neutral) 96%, white));
 }
 
+.admin-auth {
+  min-height: calc(100vh - 88px);
+  padding: 56px 0;
+  background: #fff;
+}
+
+.admin-login-shell {
+  min-height: calc(100vh - 200px);
+  display: grid;
+  place-items: center;
+}
+
+.admin-login-card {
+  width: min(100%, 430px);
+  border: 1px solid #d8e3e0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.admin-login-card h2 {
+  font-family: "Segoe UI", "Aptos", Arial, sans-serif;
+  font-size: 1.65rem;
+  letter-spacing: 0;
+}
+
+.admin-login-card .login-form p {
+  color: var(--muted);
+}
+
 .admin-auth .security-callout {
   margin-top: 32px;
   max-width: 470px;
@@ -292,6 +323,26 @@
 
 .assignment-form h3 {
   grid-column: 1 / -1;
+}
+
+.verification-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.portal-button.danger {
+  border-color: #f2c9cd;
+  color: #9f3038;
+  background: #fff5f6;
+}
+
+.portal-button.danger:hover,
+.portal-button.danger:focus-visible {
+  border-color: #e89ba4;
+  color: #7f1d1d;
+  background: #ffe8ea;
 }
 
 .editor-grid {

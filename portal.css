@@ -1051,6 +1051,16 @@ html[dir="rtl"] .module-tabs button.active {
   font-size: 1.15rem;
 }
 
+.class-privacy-note {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--neutral);
+  color: var(--muted);
+  font-weight: 650;
+}
+
 .class-members-title {
   margin-bottom: 16px;
   font: 700 1.05rem "Segoe UI", "Aptos", Arial, sans-serif;
