@@ -1,6 +1,5 @@
-﻿import { phoneHref } from "./data/site-config.js";
+import { phoneHref } from "./data/site-config.js";
 import { useSchoolSiteState } from "./hooks/useSchoolSiteState.js";
-import { AnnouncementBar } from "./components/layout/AnnouncementBar.jsx";
 import { SiteFooter } from "./components/layout/SiteFooter.jsx";
 import { SiteHeader } from "./components/layout/SiteHeader.jsx";
 import { AcademicsSection } from "./components/sections/AcademicsSection.jsx";
@@ -38,7 +37,6 @@ export function App() {
   return (
     <>
       <a className="skip-link" href="#main-content">{t.skip}</a>
-      <AnnouncementBar t={t} closeMenu={closeMenu} />
       <SiteHeader
         t={t}
         menuOpen={menuOpen}

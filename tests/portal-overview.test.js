@@ -1,4 +1,4 @@
-﻿const assert = require("node:assert/strict");
+const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
@@ -143,7 +143,7 @@ test("teacher and administration dashboards expose live command centers", () => 
 
 test("palette is role-based and context-aware", () => {
   const paletteCss = `${css}\n${homepageCss}`;
-  assert.match(indexHtml, /<link rel="stylesheet" href="school-react\.css">/);
+  assert.match(indexHtml, /<link rel="stylesheet" href="school-react\.css(?:\?v=[^\"]+)?">/);
   assert.match(indexHtml, /<meta name="theme-color" content="#12324A">/);
   assert.match(html, /<meta name="theme-color" content="#12324A">/);
   assert.match(teacherHtml, /<meta name="theme-color" content="#12324A">/);
@@ -222,7 +222,7 @@ test("homepage gallery uses separate Watermelon-inspired carousel files", () => 
   const slideSource = fs.readFileSync(path.join(root, "src", "carousel", "school-gallery-slides.js"), "utf8");
   const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
 
-  assert.match(indexHtml, /<script defer src="school-carousel\.js"><\/script>/);
+  assert.match(indexHtml, /<script defer src="school-carousel\.js(?:\?v=[^\"]+)?"><\/script>/);
   assert.match(packageJson, /"build:carousel": "node scripts[\\\\/]build-carousel\.mjs"/);
   assert.match(packageJson, /"motion":/);
   assert.match(packageJson, /"lucide-react":/);
@@ -254,7 +254,7 @@ test("homepage source is componentized into modular React files", () => {
 
   assert.match(packageJson, /"build:site": "node scripts[\\/]build-site\.mjs"/);
   assert.match(packageJson, /"build": "npm run build:site && npm run build:carousel"/);
-  assert.match(appSource, /AnnouncementBar/);
+  assert.doesNotMatch(appSource, /AnnouncementBar/);
   assert.match(appSource, /SiteHeader/);
   assert.match(appSource, /PortalHubSection/);
   assert.match(appSource, /GallerySection/);

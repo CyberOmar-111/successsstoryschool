@@ -807,6 +807,11 @@
     };
   }
 
+  // src/site/utils/cx.js
+  function cx(...classes) {
+    return classes.filter(Boolean).join(" ");
+  }
+
   // src/carousel/react-jsx-runtime.js
   var Fragment2 = react_global_default.Fragment;
   function createJsxElement(type, props, key) {
@@ -818,23 +823,6 @@
   }
   var jsx = createJsxElement;
   var jsxs = createJsxElement;
-
-  // src/site/components/layout/AnnouncementBar.jsx
-  function AnnouncementBar({ t, closeMenu }) {
-    return /* @__PURE__ */ jsx("div", { className: "announcement", children: /* @__PURE__ */ jsxs("div", { className: "shell announcement-inner", children: [
-      /* @__PURE__ */ jsxs("p", { children: [
-        /* @__PURE__ */ jsx("strong", { children: t.announcementStrong }),
-        " ",
-        t.announcementText
-      ] }),
-      /* @__PURE__ */ jsx("a", { href: "#contact", onClick: closeMenu, children: t.applyToday })
-    ] }) });
-  }
-
-  // src/site/utils/cx.js
-  function cx(...classes) {
-    return classes.filter(Boolean).join(" ");
-  }
 
   // src/site/components/primitives.jsx
   function BrandLockup({ href = "#top", onClick, className = "", ariaLabel = "Success Story School home", size = 52 }) {
@@ -1377,7 +1365,6 @@
     } = useSchoolSiteState();
     return /* @__PURE__ */ jsxs(Fragment2, { children: [
       /* @__PURE__ */ jsx("a", { className: "skip-link", href: "#main-content", children: t.skip }),
-      /* @__PURE__ */ jsx(AnnouncementBar, { t, closeMenu }),
       /* @__PURE__ */ jsx(
         SiteHeader,
         {

@@ -3011,3 +3011,109 @@ html {
     display: flex;
   }
 }
+
+/* === Figma type scale correction === */
+.hero-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(396px, 548px);
+  gap: clamp(56px, 6vw, 112px);
+  padding: clamp(46px, 5vw, 76px) 0 clamp(42px, 4vw, 66px);
+}
+
+.hero-title {
+  font-size: clamp(3.9rem, 4.9vw, 5.85rem);
+  line-height: 1.01;
+}
+
+.hero-text {
+  max-width: 720px;
+  margin-top: 24px;
+  font-size: clamp(1rem, 1.15vw, 1.18rem);
+  line-height: 1.72;
+}
+
+.hero-eyebrow-pill {
+  margin-bottom: 28px;
+  font-size: 0.78rem;
+}
+
+.hero-card {
+  min-height: 390px;
+  max-width: 548px;
+  padding: clamp(30px, 3vw, 42px);
+}
+
+.hero-card img {
+  width: 82px;
+  height: 82px;
+}
+
+.hero-card-kicker {
+  margin-top: 22px;
+  font-size: 0.74rem;
+}
+
+.hero-card h2 {
+  font-size: clamp(2rem, 2.45vw, 3rem);
+  line-height: 1.08;
+}
+
+.hero-card p {
+  font-size: 0.98rem;
+  line-height: 1.72;
+}
+
+.hero-card ul {
+  margin-top: 22px;
+}
+
+.split-heading h2,
+.section-heading h2,
+.section-copy h2,
+.faq-layout h2,
+.overview-shell h2 {
+  font-size: clamp(2.65rem, 3.75vw, 4.2rem);
+  line-height: 1.08;
+}
+
+.split-heading > p,
+.section-heading p:last-child,
+.section-copy > p,
+.overview-copy-column > p:not(.eyebrow),
+.feedback-layout .section-copy > p,
+.trust-layout .section-copy > p,
+.faq-layout .section-copy > p {
+  font-size: 1.08rem;
+}
+
+.portal-card h3,
+.stage-card h3,
+.how-step h3,
+.overview-mode-card h3 {
+  font-size: clamp(1.35rem, 1.65vw, 1.72rem);
+}
+
+.card-number,
+.how-step > span,
+.overview-mode-number {
+  font-size: clamp(3rem, 3.7vw, 3.6rem);
+}
+
+@media (max-width: 1180px) {
+  .hero-title {
+    font-size: clamp(3.3rem, 8vw, 5rem);
+  }
+}
+
+@media (max-width: 680px) {
+  .hero-title {
+    font-size: clamp(2.65rem, 13vw, 3.55rem);
+  }
+
+  .split-heading h2,
+  .section-heading h2,
+  .section-copy h2,
+  .faq-layout h2,
+  .overview-shell h2 {
+    font-size: clamp(2.2rem, 10vw, 3rem);
+  }
+}
