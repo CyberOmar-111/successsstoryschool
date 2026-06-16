@@ -47,7 +47,7 @@ export function App() {
         toggleLanguage={toggleLanguage}
       />
       <main id="main-content">
-        <HeroSection t={t} phoneHref={phoneHref} />
+        <HeroSection t={t} phoneHref={phoneHref} isArabic={isArabic} />
         <HighlightsSection t={t} />
         <ProofSection t={t} />
         <PortalHubSection t={t} />
@@ -56,14 +56,14 @@ export function App() {
         <FeedbackSection t={t} />
         <TrustSection t={t} />
         <FaqSection t={t} />
-        <OverviewSection t={t} mode={mode} setMode={setMode} activeMode={activeMode} />
+        <OverviewSection t={t} mode={mode} setMode={setMode} activeMode={activeMode} isArabic={isArabic} />
         <AcademicsSection t={t} />
         <StudentLifeSection t={t} />
         <GallerySection galleryCopy={galleryCopy} isArabic={isArabic} />
         <AdmissionsSection t={t} />
         <ContactSection t={t} isArabic={isArabic} formStatus={formStatus} handleInquiry={handleInquiry} />
       </main>
-      <SiteFooter t={t} />
+      <SiteFooter t={t} isArabic={isArabic} />
     </>
   );
 }

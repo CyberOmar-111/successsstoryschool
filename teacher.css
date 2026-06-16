@@ -266,3 +266,35 @@
     flex-direction: column;
   }
 }
+
+/* === 2026 teacher portal refinements === */
+.teacher-sidebar {
+  top: 118px;
+}
+
+.teacher-sidebar h2,
+.class-header h2,
+.teacher-card h3,
+.recent-posts h3 {
+  color: #1a2b4c;
+}
+
+.assignment-list button.active {
+  border-color: rgba(211, 161, 69, 0.22);
+  background: #1a2b4c;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.assignment-list button.active small,
+.assignment-list button.active strong {
+  color: #ffffff;
+}
+
+.class-header {
+  border-color: rgba(26, 43, 76, 0.08);
+}
+
+.teacher-cards {
+  gap: 20px;
+}

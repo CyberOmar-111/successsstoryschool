@@ -548,12 +548,6 @@
     ["language", Globe2],
     ["transport", Bus]
   ];
-  var heroStats = [
-    ["Grades", "heroStatGrades"],
-    ["Accounts", "heroStatPortal"],
-    ["Irbid", "heroStatLocation"],
-    ["AR/EN", "heroStatLanguage"]
-  ];
   var proofPoints = [
     {
       icon: BookOpen,
@@ -873,25 +867,50 @@
       action ?? /* @__PURE__ */ jsx("p", { children: text })
     ] });
   }
-  function SectionHeading({ eyebrow, title, text }) {
-    return /* @__PURE__ */ jsxs("div", { className: "shell section-heading", children: [
-      /* @__PURE__ */ jsx("p", { className: "eyebrow", children: eyebrow }),
-      /* @__PURE__ */ jsx("h2", { children: title }),
-      text ? /* @__PURE__ */ jsx("p", { children: text }) : null
-    ] });
-  }
 
   // src/site/components/layout/SiteFooter.jsx
-  function SiteFooter({ t }) {
-    return /* @__PURE__ */ jsx("footer", { className: "site-footer", children: /* @__PURE__ */ jsxs("div", { className: "shell footer-inner", children: [
-      /* @__PURE__ */ jsx(BrandLockup, { className: "footer-brand", size: 48 }),
-      /* @__PURE__ */ jsx("p", { children: t.footerText }),
-      /* @__PURE__ */ jsxs("div", { className: "footer-icons", "aria-label": "School values", children: [
-        /* @__PURE__ */ jsx(School, { size: 20, "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx(Trophy, { size: 20, "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx(BookOpen, { size: 20, "aria-hidden": "true" })
+  function SiteFooter({ t, isArabic }) {
+    const feedbackLabel = isArabic ? "\u0627\u0644\u0623\u0633\u0626\u0644\u0629 \u0627\u0644\u0634\u0627\u0626\u0639\u0629" : "FAQ";
+    const officeLabel = isArabic ? "\u0627\u062A\u0635\u0644 \u0628\u0627\u0644\u0625\u062F\u0627\u0631\u0629" : "Call the office";
+    const locationLabel = isArabic ? "\u0625\u0631\u0628\u062F\u060C \u0627\u0644\u0623\u0631\u062F\u0646" : "Irbid, Jordan";
+    const copyrightLabel = isArabic ? "\xA9 2026 \u0645\u062F\u0631\u0633\u0629 \u0642\u0635\u0629 \u0646\u062C\u0627\u062D. \u062C\u0645\u064A\u0639 \u0627\u0644\u062D\u0642\u0648\u0642 \u0645\u062D\u0641\u0648\u0638\u0629." : "\xA9 2026 Success Story School. All rights reserved.";
+    const arabicSchoolName = "\u0645\u062F\u0631\u0633\u0629 \u0642\u0635\u0629 \u0646\u062C\u0627\u062D - \u0625\u0631\u0628\u062F\u060C \u0627\u0644\u0623\u0631\u062F\u0646";
+    return /* @__PURE__ */ jsxs("footer", { className: "site-footer", children: [
+      /* @__PURE__ */ jsxs("div", { className: "shell footer-grid", children: [
+        /* @__PURE__ */ jsxs("div", { className: "footer-column footer-primary", children: [
+          /* @__PURE__ */ jsx(BrandLockup, { className: "footer-brand", size: 56 }),
+          /* @__PURE__ */ jsx("p", { children: t.heroText }),
+          /* @__PURE__ */ jsx(ActionLink, { href: "#contact", variant: "primary", children: t.beginEnrollment })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "footer-column footer-links-column", children: [
+          /* @__PURE__ */ jsx("span", { className: "footer-label", children: isArabic ? "\u0627\u0644\u062A\u0646\u0642\u0644" : "Navigation" }),
+          /* @__PURE__ */ jsx("a", { href: "#academics", children: t.navAcademics }),
+          /* @__PURE__ */ jsx("a", { href: "#life", children: t.navLife }),
+          /* @__PURE__ */ jsx("a", { href: "#portals", children: t.navPortals }),
+          /* @__PURE__ */ jsx("a", { href: "#admissions", children: t.navAdmissions }),
+          /* @__PURE__ */ jsx("a", { href: "#faq", children: feedbackLabel })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "footer-column footer-links-column", children: [
+          /* @__PURE__ */ jsx("span", { className: "footer-label", children: t.navContact }),
+          /* @__PURE__ */ jsxs("a", { href: phoneHref, children: [
+            /* @__PURE__ */ jsx(Phone, { size: 18, "aria-hidden": "true" }),
+            officeLabel
+          ] }),
+          /* @__PURE__ */ jsxs("a", { href: `mailto:${schoolEmail}`, children: [
+            /* @__PURE__ */ jsx(Globe2, { size: 18, "aria-hidden": "true" }),
+            schoolEmail
+          ] }),
+          /* @__PURE__ */ jsxs("a", { href: mapsHref, target: "_blank", rel: "noreferrer", children: [
+            /* @__PURE__ */ jsx(MapPin, { size: 18, "aria-hidden": "true" }),
+            locationLabel
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "shell footer-meta", children: [
+        /* @__PURE__ */ jsx("span", { children: copyrightLabel }),
+        /* @__PURE__ */ jsx("span", { children: arabicSchoolName })
       ] })
-    ] }) });
+    ] });
   }
 
   // src/site/components/layout/SiteHeader.jsx
@@ -925,7 +944,7 @@
   // src/site/components/sections/AcademicsSection.jsx
   function AcademicsSection({ t }) {
     return /* @__PURE__ */ jsxs("section", { className: "section academics", id: "academics", children: [
-      /* @__PURE__ */ jsx(SectionHeading, { eyebrow: t.academicsEyebrow, title: t.academicsTitle, text: t.academicsText }),
+      /* @__PURE__ */ jsx(SplitHeading, { eyebrow: t.academicsEyebrow, title: t.academicsTitle, text: t.academicsText }),
       /* @__PURE__ */ jsx("div", { className: "shell card-grid four", children: stages.map(([number, title, text, gradeRange]) => /* @__PURE__ */ jsxs("article", { className: "info-card stage-card", "data-reveal-card": true, children: [
         /* @__PURE__ */ jsx("span", { className: "card-number", children: number }),
         /* @__PURE__ */ jsx("h3", { children: t[title] }),
@@ -1011,28 +1030,39 @@
 
   // src/site/components/sections/FaqSection.jsx
   function FaqSection({ t }) {
-    return /* @__PURE__ */ jsxs("section", { className: "section faq-section", children: [
-      /* @__PURE__ */ jsx(SectionHeading, { eyebrow: t.faqEyebrow, title: t.faqTitle }),
-      /* @__PURE__ */ jsx("div", { className: "shell faq-grid", children: faqItems.map(([question, answer]) => /* @__PURE__ */ jsxs("article", { className: "faq-card", "data-reveal-card": true, children: [
-        /* @__PURE__ */ jsx("h3", { children: t[question] }),
-        /* @__PURE__ */ jsx("p", { children: t[answer] })
+    return /* @__PURE__ */ jsx("section", { className: "section faq-section", id: "faq", children: /* @__PURE__ */ jsxs("div", { className: "shell faq-layout", children: [
+      /* @__PURE__ */ jsxs("div", { className: "section-copy", children: [
+        /* @__PURE__ */ jsx("p", { className: "eyebrow", children: t.faqEyebrow }),
+        /* @__PURE__ */ jsx("h2", { children: t.faqTitle })
+      ] }),
+      /* @__PURE__ */ jsx("div", { className: "faq-stack", children: faqItems.map(([question, answer], index) => /* @__PURE__ */ jsxs("details", { className: "faq-item", open: index === 1, children: [
+        /* @__PURE__ */ jsxs("summary", { children: [
+          /* @__PURE__ */ jsx("span", { children: t[question] }),
+          /* @__PURE__ */ jsx("span", { className: "faq-toggle", "aria-hidden": "true", children: "+" })
+        ] }),
+        /* @__PURE__ */ jsx("div", { className: "faq-answer", children: /* @__PURE__ */ jsx("p", { children: t[answer] }) })
       ] }, question)) })
-    ] });
+    ] }) });
   }
 
   // src/site/components/sections/FeedbackSection.jsx
   function FeedbackSection({ t }) {
-    return /* @__PURE__ */ jsx("section", { className: "section feedback-section", "aria-labelledby": "school-feedback-title", children: /* @__PURE__ */ jsxs("div", { className: "shell feedback-layout", children: [
+    return /* @__PURE__ */ jsx("section", { className: "section feedback-section", id: "feedback", "aria-labelledby": "school-feedback-title", children: /* @__PURE__ */ jsxs("div", { className: "shell feedback-layout", children: [
       /* @__PURE__ */ jsxs("div", { className: "section-copy", children: [
         /* @__PURE__ */ jsx("p", { className: "eyebrow", children: t.feedbackEyebrow }),
         /* @__PURE__ */ jsx("h2", { id: "school-feedback-title", children: t.feedbackTitle }),
         /* @__PURE__ */ jsx("p", { children: t.feedbackText })
       ] }),
       /* @__PURE__ */ jsx("div", { className: "feedback-grid", children: feedbackSlots.map((slot) => /* @__PURE__ */ jsxs("article", { className: "feedback-slot", children: [
-        /* @__PURE__ */ jsx("span", { className: "feedback-slot-label", children: t[slot] }),
-        /* @__PURE__ */ jsx("span", { className: "skeleton-line wide", "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx("span", { className: "skeleton-line", "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx("strong", { children: t.feedbackEmpty })
+        /* @__PURE__ */ jsxs("div", { className: "feedback-slot-top", children: [
+          /* @__PURE__ */ jsx("span", { className: "feedback-slot-label", children: t[slot] }),
+          /* @__PURE__ */ jsx("strong", { className: "feedback-status", children: t.feedbackEmpty })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "feedback-placeholder", "aria-hidden": "true", children: [
+          /* @__PURE__ */ jsx("span", { className: "skeleton-line wide" }),
+          /* @__PURE__ */ jsx("span", { className: "skeleton-line" }),
+          /* @__PURE__ */ jsx("span", { className: "skeleton-line short" })
+        ] })
       ] }, slot)) })
     ] }) });
   }
@@ -1056,33 +1086,35 @@
   }
 
   // src/site/components/sections/HeroSection.jsx
-  function HeroSection({ t, phoneHref: phoneHref2 }) {
-    return /* @__PURE__ */ jsx("section", { className: "hero", id: "top", children: /* @__PURE__ */ jsxs("div", { className: "shell hero-layout", children: [
-      /* @__PURE__ */ jsxs("div", { className: "hero-content", children: [
-        /* @__PURE__ */ jsx("p", { className: "eyebrow", children: t.heroEyebrow }),
-        /* @__PURE__ */ jsx("h1", { children: t.heroTitle }),
-        /* @__PURE__ */ jsx("p", { className: "hero-text", children: t.heroText }),
-        /* @__PURE__ */ jsxs("div", { className: "hero-actions", children: [
-          /* @__PURE__ */ jsx(ActionLink, { href: "#contact", variant: "primary", children: t.beginEnrollment }),
-          /* @__PURE__ */ jsx(ActionLink, { href: "#portals", variant: "secondary", icon: LayoutDashboard, children: t.openPortals }),
-          /* @__PURE__ */ jsx(ActionLink, { href: phoneHref2, variant: "ghost", icon: Phone, children: t.callOffice })
+  function HeroSection({ t, phoneHref: phoneHref2, isArabic }) {
+    return /* @__PURE__ */ jsxs("section", { className: "hero", id: "top", children: [
+      /* @__PURE__ */ jsx("div", { className: "hero-grid", "aria-hidden": "true" }),
+      /* @__PURE__ */ jsxs("div", { className: "shell hero-layout", children: [
+        /* @__PURE__ */ jsxs("div", { className: "hero-content", children: [
+          /* @__PURE__ */ jsx("p", { className: "eyebrow hero-eyebrow-pill", children: t.heroEyebrow }),
+          /* @__PURE__ */ jsx("h1", { className: "hero-title", children: isArabic ? /* @__PURE__ */ jsx("span", { children: t.heroTitle }) : /* @__PURE__ */ jsxs(Fragment2, { children: [
+            /* @__PURE__ */ jsx("span", { children: "Success Story" }),
+            /* @__PURE__ */ jsx("span", { className: "hero-title-accent", children: "School" })
+          ] }) }),
+          /* @__PURE__ */ jsx("p", { className: "hero-text", children: t.heroText }),
+          /* @__PURE__ */ jsxs("div", { className: "hero-actions", children: [
+            /* @__PURE__ */ jsx(ActionLink, { href: "#contact", variant: "primary", children: t.beginEnrollment }),
+            /* @__PURE__ */ jsx(ActionLink, { href: "#portals", variant: "secondary", icon: LayoutDashboard, children: t.openPortals }),
+            /* @__PURE__ */ jsx(ActionLink, { href: phoneHref2, variant: "ghost", icon: Phone, children: t.callOffice })
+          ] })
         ] }),
-        /* @__PURE__ */ jsx("dl", { className: "hero-stats", "aria-label": "School quick facts", children: heroStats.map(([value, label]) => /* @__PURE__ */ jsxs("div", { children: [
-          /* @__PURE__ */ jsx("dt", { children: value }),
-          /* @__PURE__ */ jsx("dd", { children: t[label] })
-        ] }, label)) })
-      ] }),
-      /* @__PURE__ */ jsxs("aside", { className: "hero-card", "aria-label": t.heroCardKicker, children: [
-        /* @__PURE__ */ jsx("img", { src: "assets/success-story-logo.jpg", alt: "", width: 78, height: 78 }),
-        /* @__PURE__ */ jsx("span", { className: "hero-card-kicker", children: t.heroCardKicker }),
-        /* @__PURE__ */ jsx("h2", { children: t.heroCardTitle }),
-        /* @__PURE__ */ jsx("p", { children: t.heroCardText }),
-        /* @__PURE__ */ jsx("ul", { children: [t.heroCardPointOne, t.heroCardPointTwo, t.heroCardPointThree].map((item) => /* @__PURE__ */ jsxs("li", { children: [
-          /* @__PURE__ */ jsx(CheckCircle2, { size: 17, "aria-hidden": "true" }),
-          /* @__PURE__ */ jsx("span", { children: item })
-        ] }, item)) })
+        /* @__PURE__ */ jsxs("aside", { className: "hero-card", "aria-label": t.heroCardKicker, children: [
+          /* @__PURE__ */ jsx("img", { src: "assets/success-story-logo.jpg", alt: "", width: 84, height: 84 }),
+          /* @__PURE__ */ jsx("span", { className: "hero-card-kicker", children: t.heroCardKicker }),
+          /* @__PURE__ */ jsx("h2", { children: t.heroCardTitle }),
+          /* @__PURE__ */ jsx("p", { children: t.heroCardText }),
+          /* @__PURE__ */ jsx("ul", { children: [t.heroCardPointOne, t.heroCardPointTwo, t.heroCardPointThree].map((item) => /* @__PURE__ */ jsxs("li", { children: [
+            /* @__PURE__ */ jsx(CheckCircle2, { size: 18, "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx("span", { children: item })
+          ] }, item)) })
+        ] })
       ] })
-    ] }) });
+    ] });
   }
 
   // src/site/components/sections/HighlightsSection.jsx
@@ -1103,31 +1135,132 @@
   }
 
   // src/site/components/sections/OverviewSection.jsx
-  function OverviewSection({ t, mode, setMode, activeMode }) {
-    const ActiveIcon = activeMode.icon;
-    return /* @__PURE__ */ jsx("section", { className: "section overview", children: /* @__PURE__ */ jsxs("div", { className: "shell overview-grid", children: [
-      /* @__PURE__ */ jsxs("div", { className: "section-copy", children: [
+  var MODE_CARDS = {
+    en: {
+      parents: [
+        {
+          number: "01",
+          title: "Simple enrollment path",
+          text: "Families can understand grades, transport, campus location, and school contact in one clear visit."
+        },
+        {
+          number: "02",
+          title: "Public school information",
+          text: "Academics, student life, admissions, and contact stay visible before any account is issued."
+        },
+        {
+          number: "03",
+          title: "Direct office follow-up",
+          text: "Questions go to the school office directly instead of being lost across separate links and messages."
+        }
+      ],
+      students: [
+        {
+          number: "01",
+          title: "Issued school ID",
+          text: "Each student signs in with a school-issued ID and a private password after access is approved."
+        },
+        {
+          number: "02",
+          title: "Records when posted",
+          text: "Attendance, grades, homework, announcements, fees, and transport appear only after staff publish them."
+        },
+        {
+          number: "03",
+          title: "Clean daily overview",
+          text: "The student view stays calm, readable, and useful as soon as real information becomes available."
+        }
+      ],
+      staff: [
+        {
+          number: "01",
+          title: "Protected sign-in paths",
+          text: "Teachers and administrators use role-based access instead of public-facing pages or shared passwords."
+        },
+        {
+          number: "02",
+          title: "Real class operations",
+          text: "Homework, attendance, announcements, verification, and records are managed from secure school dashboards."
+        },
+        {
+          number: "03",
+          title: "One connected system",
+          text: "Public information, account issuance, and student records stay connected without scattered admin work."
+        }
+      ]
+    },
+    ar: {
+      parents: [
+        {
+          number: "01",
+          title: "\u0645\u0633\u0627\u0631 \u062A\u0633\u062C\u064A\u0644 \u0648\u0627\u0636\u062D",
+          text: "\u062A\u0633\u062A\u0637\u064A\u0639 \u0627\u0644\u0639\u0627\u0626\u0644\u0629 \u0641\u0647\u0645 \u0627\u0644\u0635\u0641\u0648\u0641 \u0648\u0627\u0644\u0645\u0648\u0627\u0635\u0644\u0627\u062A \u0648\u0627\u0644\u0645\u0648\u0642\u0639 \u0648\u0637\u0631\u0642 \u0627\u0644\u062A\u0648\u0627\u0635\u0644 \u0641\u064A \u0632\u064A\u0627\u0631\u0629 \u0631\u0642\u0645\u064A\u0629 \u0648\u0627\u062D\u062F\u0629 \u0648\u0627\u0636\u062D\u0629."
+        },
+        {
+          number: "02",
+          title: "\u0645\u0639\u0644\u0648\u0645\u0627\u062A \u0627\u0644\u0645\u062F\u0631\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629",
+          text: "\u062A\u0628\u0642\u0649 \u0627\u0644\u0623\u0643\u0627\u062F\u064A\u0645\u064A\u0627\u062A \u0648\u062D\u064A\u0627\u0629 \u0627\u0644\u0637\u0644\u0627\u0628 \u0648\u0627\u0644\u062A\u0633\u062C\u064A\u0644 \u0648\u0648\u0633\u0627\u0626\u0644 \u0627\u0644\u062A\u0648\u0627\u0635\u0644 \u0645\u062A\u0627\u062D\u0629 \u0642\u0628\u0644 \u0625\u0635\u062F\u0627\u0631 \u0623\u064A \u062D\u0633\u0627\u0628."
+        },
+        {
+          number: "03",
+          title: "\u0645\u062A\u0627\u0628\u0639\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 \u0627\u0644\u0625\u062F\u0627\u0631\u0629",
+          text: "\u062A\u0635\u0644 \u0627\u0644\u0623\u0633\u0626\u0644\u0629 \u0625\u0644\u0649 \u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u0645\u062F\u0631\u0633\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0628\u062F\u0644 \u0623\u0646 \u062A\u0636\u064A\u0639 \u0628\u064A\u0646 \u0631\u0648\u0627\u0628\u0637 \u0648\u0631\u0633\u0627\u0626\u0644 \u0645\u062A\u0641\u0631\u0642\u0629."
+        }
+      ],
+      students: [
+        {
+          number: "01",
+          title: "\u0631\u0642\u0645 \u0645\u062F\u0631\u0633\u064A \u0645\u0639\u062A\u0645\u062F",
+          text: "\u064A\u0633\u062C\u0644 \u0643\u0644 \u0637\u0627\u0644\u0628 \u0627\u0644\u062F\u062E\u0648\u0644 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0631\u0642\u0645 \u0645\u062F\u0631\u0633\u064A \u062A\u0635\u062F\u0631\u0647 \u0627\u0644\u0645\u062F\u0631\u0633\u0629 \u0648\u0643\u0644\u0645\u0629 \u0645\u0631\u0648\u0631 \u062E\u0627\u0635\u0629 \u0628\u0639\u062F \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629."
+        },
+        {
+          number: "02",
+          title: "\u0627\u0644\u0633\u062C\u0644\u0627\u062A \u0639\u0646\u062F \u0627\u0644\u0646\u0634\u0631",
+          text: "\u064A\u0638\u0647\u0631 \u0627\u0644\u062D\u0636\u0648\u0631 \u0648\u0627\u0644\u0639\u0644\u0627\u0645\u0627\u062A \u0648\u0627\u0644\u0648\u0627\u062C\u0628\u0627\u062A \u0648\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u0631\u0633\u0648\u0645 \u0648\u0627\u0644\u0645\u0648\u0627\u0635\u0644\u0627\u062A \u0641\u0642\u0637 \u0628\u0639\u062F \u0623\u0646 \u064A\u0646\u0634\u0631\u0647\u0627 \u0627\u0644\u0643\u0627\u062F\u0631."
+        },
+        {
+          number: "03",
+          title: "\u0648\u0627\u062C\u0647\u0629 \u064A\u0648\u0645\u064A\u0629 \u0647\u0627\u062F\u0626\u0629",
+          text: "\u062A\u0628\u0642\u0649 \u0648\u0627\u062C\u0647\u0629 \u0627\u0644\u0637\u0627\u0644\u0628 \u0648\u0627\u0636\u062D\u0629 \u0648\u0633\u0647\u0644\u0629 \u0648\u062A\u0635\u0628\u062D \u0645\u0641\u064A\u062F\u0629 \u0641\u0648\u0631 \u062A\u0648\u0641\u0631 \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062A \u0627\u0644\u062D\u0642\u064A\u0642\u064A\u0629."
+        }
+      ],
+      staff: [
+        {
+          number: "01",
+          title: "\u0645\u0633\u0627\u0631\u0627\u062A \u062F\u062E\u0648\u0644 \u0645\u062D\u0645\u064A\u0629",
+          text: "\u064A\u0633\u062A\u062E\u062F\u0645 \u0627\u0644\u0645\u0639\u0644\u0645\u0648\u0646 \u0648\u0627\u0644\u0625\u062F\u0627\u0631\u064A\u0648\u0646 \u0648\u0635\u0648\u0644\u0627\u064B \u0645\u0628\u0646\u064A\u0627\u064B \u0639\u0644\u0649 \u0627\u0644\u062F\u0648\u0631 \u0628\u062F\u0644\u0627\u064B \u0645\u0646 \u0635\u0641\u062D\u0627\u062A \u0639\u0627\u0645\u0629 \u0623\u0648 \u0643\u0644\u0645\u0627\u062A \u0645\u0631\u0648\u0631 \u0645\u0634\u062A\u0631\u0643\u0629."
+        },
+        {
+          number: "02",
+          title: "\u0639\u0645\u0644\u064A\u0627\u062A \u0635\u0641\u064A\u0629 \u062D\u0642\u064A\u0642\u064A\u0629",
+          text: "\u062A\u062F\u0627\u0631 \u0627\u0644\u0648\u0627\u062C\u0628\u0627\u062A \u0648\u0627\u0644\u062D\u0636\u0648\u0631 \u0648\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u062A\u062D\u0642\u0642 \u0648\u0627\u0644\u0633\u062C\u0644\u0627\u062A \u0645\u0646 \u0644\u0648\u062D\u0627\u062A \u0645\u062F\u0631\u0633\u064A\u0629 \u0622\u0645\u0646\u0629."
+        },
+        {
+          number: "03",
+          title: "\u0646\u0638\u0627\u0645 \u0648\u0627\u062D\u062F \u0645\u062A\u0631\u0627\u0628\u0637",
+          text: "\u062A\u0628\u0642\u0649 \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062A \u0627\u0644\u0639\u0627\u0645\u0629 \u0648\u0625\u0635\u062F\u0627\u0631 \u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0648\u0627\u0644\u0633\u062C\u0644\u0627\u062A \u0627\u0644\u0637\u0644\u0627\u0628\u064A\u0629 \u0636\u0645\u0646 \u0646\u0638\u0627\u0645 \u0648\u0627\u062D\u062F \u0628\u062F\u0648\u0646 \u0639\u0645\u0644 \u0645\u0634\u062A\u062A."
+        }
+      ]
+    }
+  };
+  function OverviewSection({ t, mode, setMode, isArabic }) {
+    const cards = MODE_CARDS[isArabic ? "ar" : "en"][mode];
+    return /* @__PURE__ */ jsx("section", { className: "section overview", id: "overview", children: /* @__PURE__ */ jsxs("div", { className: "shell overview-shell", children: [
+      /* @__PURE__ */ jsxs("div", { className: "overview-copy-column", children: [
         /* @__PURE__ */ jsx("p", { className: "eyebrow", children: t.overviewEyebrow }),
         /* @__PURE__ */ jsx("h2", { children: t.overviewTitle }),
         /* @__PURE__ */ jsx("p", { children: t.overviewText }),
-        /* @__PURE__ */ jsx("div", { className: "segmented", role: "tablist", "aria-label": "School audience", children: profileModes.map((item) => /* @__PURE__ */ jsx(
-          "button",
-          {
-            type: "button",
-            className: item.id === mode ? "active" : "",
-            role: "tab",
-            "aria-selected": item.id === mode,
-            onClick: () => setMode(item.id),
-            children: t[item.label]
-          },
-          item.id
-        )) })
+        /* @__PURE__ */ jsxs("div", { className: "segmented segmented-vertical", role: "tablist", "aria-label": "School audience", children: [
+          /* @__PURE__ */ jsx("button", { type: "button", className: mode === "parents" ? "active" : "", role: "tab", "aria-selected": mode === "parents", onClick: () => setMode("parents"), children: t.parentMode }),
+          /* @__PURE__ */ jsx("button", { type: "button", className: mode === "students" ? "active" : "", role: "tab", "aria-selected": mode === "students", onClick: () => setMode("students"), children: t.studentMode }),
+          /* @__PURE__ */ jsx("button", { type: "button", className: mode === "staff" ? "active" : "", role: "tab", "aria-selected": mode === "staff", onClick: () => setMode("staff"), children: t.staffMode })
+        ] })
       ] }),
-      /* @__PURE__ */ jsxs("article", { className: "feature-panel", children: [
-        /* @__PURE__ */ jsx(ActiveIcon, { size: 34, strokeWidth: 2.1, "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx("h3", { children: t[activeMode.title] }),
-        /* @__PURE__ */ jsx("p", { children: t[activeMode.text] })
-      ] })
+      /* @__PURE__ */ jsx("div", { className: "overview-rail", role: "tabpanel", "aria-label": t[`${mode === "parents" ? "parentMode" : mode === "students" ? "studentMode" : "staffMode"}`], children: cards.map((card) => /* @__PURE__ */ jsxs("article", { className: "overview-mode-card", "data-reveal-card": true, children: [
+        /* @__PURE__ */ jsx("span", { className: "overview-mode-number", children: card.number }),
+        /* @__PURE__ */ jsx("h3", { children: card.title }),
+        /* @__PURE__ */ jsx("p", { children: card.text })
+      ] }, card.number)) })
     ] }) });
   }
 
@@ -1256,7 +1389,7 @@
         }
       ),
       /* @__PURE__ */ jsxs("main", { id: "main-content", children: [
-        /* @__PURE__ */ jsx(HeroSection, { t, phoneHref }),
+        /* @__PURE__ */ jsx(HeroSection, { t, phoneHref, isArabic }),
         /* @__PURE__ */ jsx(HighlightsSection, { t }),
         /* @__PURE__ */ jsx(ProofSection, { t }),
         /* @__PURE__ */ jsx(PortalHubSection, { t }),
@@ -1265,14 +1398,14 @@
         /* @__PURE__ */ jsx(FeedbackSection, { t }),
         /* @__PURE__ */ jsx(TrustSection, { t }),
         /* @__PURE__ */ jsx(FaqSection, { t }),
-        /* @__PURE__ */ jsx(OverviewSection, { t, mode, setMode, activeMode }),
+        /* @__PURE__ */ jsx(OverviewSection, { t, mode, setMode, activeMode, isArabic }),
         /* @__PURE__ */ jsx(AcademicsSection, { t }),
         /* @__PURE__ */ jsx(StudentLifeSection, { t }),
         /* @__PURE__ */ jsx(GallerySection, { galleryCopy, isArabic }),
         /* @__PURE__ */ jsx(AdmissionsSection, { t }),
         /* @__PURE__ */ jsx(ContactSection, { t, isArabic, formStatus, handleInquiry })
       ] }),
-      /* @__PURE__ */ jsx(SiteFooter, { t })
+      /* @__PURE__ */ jsx(SiteFooter, { t, isArabic })
     ] });
   }
 

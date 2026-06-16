@@ -1448,3 +1448,464 @@ html[dir="rtl"] .portal-brand {
     min-height: 0;
   }
 }
+
+/* === 2026 portal visual alignment overrides === */
+body {
+  background: #f7f4ed;
+  color: #1a2744;
+}
+
+.portal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(26, 43, 76, 0.97);
+  backdrop-filter: blur(16px);
+}
+
+.portal-nav {
+  min-height: 92px;
+}
+
+.portal-brand {
+  color: #ffffff;
+}
+
+.portal-brand img {
+  width: 64px;
+  height: 64px;
+  padding: 4px;
+  border-radius: 18px;
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+}
+
+.portal-brand strong {
+  color: #ffffff;
+  font-size: 1.22rem;
+}
+
+.portal-brand small {
+  color: #d3a145;
+  font-size: 0.78rem;
+}
+
+.back-link {
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.back-link:hover,
+.back-link:focus-visible {
+  border-color: rgba(211, 161, 69, 0.24);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lang-button {
+  min-height: 52px;
+  padding: 0 18px;
+  border-color: rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lang-button:hover,
+.lang-button:focus-visible {
+  border-color: rgba(211, 161, 69, 0.28);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.login-section {
+  position: relative;
+  overflow: hidden;
+  padding: 74px 0 68px;
+  background:
+    linear-gradient(100deg, rgba(15, 26, 49, 0.93) 0%, rgba(18, 43, 76, 0.82) 50%, rgba(18, 43, 76, 0.58) 100%),
+    url("assets/success-story-campus.jpg") center center / cover no-repeat;
+}
+
+.login-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 120px 120px;
+  opacity: 0.12;
+}
+
+.login-grid,
+.admin-login-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.login-grid {
+  grid-template-columns: minmax(0, 1fr) 470px;
+  gap: 76px;
+}
+
+.portal-intro h1 {
+  max-width: 760px;
+  font-size: clamp(3.2rem, 6.2vw, 5.8rem);
+  line-height: 0.96;
+}
+
+.intro-text {
+  margin: 26px 0 34px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1.14rem;
+}
+
+.account-path article,
+.feature-grid span {
+  border-color: rgba(255, 255, 255, 0.16);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+.account-path article {
+  min-height: 154px;
+  padding: 20px;
+}
+
+.account-path span {
+  color: #ffffff;
+  background: #d3a145;
+}
+
+.feature-grid span {
+  padding: 14px 18px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 700;
+}
+
+.login-card {
+  padding: 38px;
+  border-color: rgba(255, 255, 255, 0.12);
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 28px 80px rgba(8, 14, 24, 0.24);
+  backdrop-filter: blur(18px);
+}
+
+.login-card h2 {
+  color: #1a2b4c;
+  font-size: 2.1rem;
+}
+
+.secure-badge {
+  color: #1a2b4c;
+  background: #f8f5ee;
+}
+
+.auth-tabs {
+  padding: 6px;
+  border-radius: 999px;
+  background: #eef2f6;
+}
+
+.auth-tabs button.active {
+  color: #1a2b4c;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+input,
+select,
+textarea {
+  border-color: rgba(26, 43, 76, 0.14);
+  border-radius: 16px;
+  padding: 14px 15px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgba(211, 161, 69, 0.2);
+  border-color: #d3a145;
+}
+
+.portal-button {
+  min-height: 54px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.portal-button.primary {
+  color: #ffffff;
+  background: #d3a145;
+  box-shadow: none;
+}
+
+.portal-button.primary:hover,
+.portal-button.primary:focus-visible {
+  background: #b98634;
+  box-shadow: none;
+}
+
+.portal-button.secondary {
+  border-color: rgba(26, 43, 76, 0.12);
+  color: #1a2b4c;
+  background: #ffffff;
+}
+
+.portal-button.secondary:hover,
+.portal-button.secondary:focus-visible {
+  background: #f8f5ee;
+}
+
+.portal-button.danger {
+  color: #8e2b35;
+  background: #fff6f7;
+}
+
+.staff-link {
+  color: #1a2b4c;
+}
+
+.secure-banner {
+  padding: 15px 22px;
+  color: #ffffff;
+  background: #1a2b4c;
+  font-weight: 700;
+}
+
+.dashboard,
+.teacher-dashboard,
+.admin-dashboard {
+  background: #f7f4ed;
+}
+
+.dashboard-grid,
+.teacher-grid,
+.admin-grid {
+  gap: 28px;
+  padding-top: 30px;
+}
+
+.portal-sidebar,
+.teacher-sidebar,
+.admin-list-card,
+.portal-panel,
+.command-center article,
+.record-form,
+.teacher-card,
+.recent-posts article,
+.summary-records article,
+.admin-account,
+.admin-list button,
+.assignment-list button,
+.attendance-grid article,
+.bus-grid article,
+.assignment-list article,
+.notices article,
+.member-grid span,
+.class-heading,
+.fees-card {
+  border-color: rgba(26, 43, 76, 0.08);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 16px 46px rgba(16, 31, 58, 0.08);
+}
+
+.portal-sidebar,
+.teacher-sidebar {
+  top: 118px;
+}
+
+.profile-avatar {
+  background: #1a2b4c;
+}
+
+.role-chip,
+.locked-subject,
+.panel-note,
+.class-heading,
+.empty-state,
+.id-result,
+.auth-tabs,
+.account-list .admin-account,
+.record-form input,
+.record-form select,
+.record-form textarea,
+.admin-list button,
+.assignment-list button {
+  background: #f8f5ee;
+}
+
+.module-tabs button,
+.assignment-list button,
+.admin-list button {
+  border-radius: 18px;
+}
+
+.module-tabs button {
+  color: #6f7280;
+}
+
+.module-tabs button:hover,
+.module-tabs button.active {
+  color: #ffffff;
+  background: #1a2b4c;
+  box-shadow: none;
+}
+
+.module-tabs button.active {
+  border-left: 0;
+}
+
+.dashboard-header,
+.workspace-header,
+.admin-dashboard-header {
+  padding: 28px;
+  border-color: rgba(26, 43, 76, 0.08);
+  border-radius: 30px;
+  background: #1a2b4c;
+  box-shadow: 0 24px 64px rgba(11, 18, 31, 0.18);
+}
+
+.dashboard-header h2,
+.dashboard-header .eyebrow,
+.workspace-header h1,
+.workspace-header .eyebrow,
+.admin-dashboard-header h1,
+.admin-dashboard-header .eyebrow {
+  color: #ffffff;
+}
+
+.dashboard-header .eyebrow,
+.workspace-header .eyebrow,
+.admin-dashboard-header .eyebrow {
+  color: #d3a145;
+}
+
+.command-center article {
+  min-height: 132px;
+  border-top: 4px solid #d3a145;
+}
+
+.command-center article:nth-child(even) {
+  border-top-color: #1a2b4c;
+}
+
+.command-center strong,
+.dashboard-preview-top strong,
+.metrics strong,
+.class-heading strong,
+.bus-grid strong,
+.fees-card strong {
+  color: #1a2b4c;
+}
+
+.logout {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+.logout:hover,
+.logout:focus-visible {
+  border-color: rgba(211, 161, 69, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.overview-snapshot {
+  border-color: rgba(26, 43, 76, 0.08);
+  border-radius: 28px;
+  background:
+    linear-gradient(110deg, rgba(15, 26, 49, 0.95) 0%, rgba(26, 43, 76, 0.82) 52%, rgba(26, 43, 76, 0.58) 100%),
+    url("assets/success-story-campus.jpg") center center / cover no-repeat;
+  box-shadow: 0 26px 70px rgba(10, 16, 29, 0.18);
+}
+
+.overview-quick article {
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.metrics article,
+.content-card {
+  border-radius: 22px;
+  box-shadow: 0 14px 38px rgba(16, 31, 58, 0.08);
+}
+
+.text-action {
+  border-radius: 999px;
+  color: #1a2b4c;
+  background: #f8f5ee;
+}
+
+.text-action:hover,
+.text-action:focus-visible {
+  color: #ffffff;
+  background: #1a2b4c;
+}
+
+.class-header {
+  padding: 24px;
+  border-radius: 24px;
+  background: #ffffff;
+}
+
+.recent-posts article,
+.summary-records article {
+  border-radius: 20px;
+}
+
+@media (max-width: 980px) {
+  .login-grid {
+    grid-template-columns: 1fr;
+    gap: 42px;
+  }
+
+  .teacher-grid,
+  .admin-grid,
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-nav {
+    min-height: 80px;
+  }
+
+  .login-section {
+    padding: 50px 0;
+  }
+
+  .login-card,
+  .dashboard-header,
+  .workspace-header,
+  .admin-dashboard-header,
+  .portal-panel,
+  .teacher-sidebar,
+  .portal-sidebar,
+  .admin-list-card {
+    padding: 22px;
+  }
+
+  .portal-intro h1 {
+    font-size: 2.7rem;
+  }
+
+  .account-path,
+  .command-center,
+  .overview-quick,
+  .metrics,
+  .overview-cards,
+  .attendance-grid,
+  .bus-grid,
+  .registration-form {
+    grid-template-columns: 1fr;
+  }
+}

@@ -462,3 +462,52 @@
     flex-direction: column;
   }
 }
+
+/* === 2026 admin portal refinements === */
+.admin-auth {
+  padding: 74px 0;
+  background: #f7f4ed;
+}
+
+.admin-login-card {
+  width: min(100%, 500px);
+  border-radius: 30px;
+  border-color: rgba(26, 43, 76, 0.08);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 22px 64px rgba(16, 31, 58, 0.12);
+}
+
+.admin-login-card h2 {
+  color: #1a2b4c;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+}
+
+.admin-sidebar {
+  top: 118px;
+  gap: 18px;
+}
+
+.admin-list-card h2,
+.editor-header h2,
+.record-form h3,
+.records-view > h3 {
+  color: #1a2b4c;
+}
+
+.teacher-assignment-row,
+.assignment-form,
+.roster-add-form {
+  border-color: rgba(26, 43, 76, 0.08);
+  border-radius: 22px;
+  background: #f8f5ee;
+}
+
+.class-chip {
+  color: #1a2b4c;
+  background: #f8f5ee;
+}
+
+.remove-member {
+  border-radius: 999px;
+}

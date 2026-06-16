@@ -2,7 +2,7 @@
 
 export function FeedbackSection({ t }) {
   return (
-    <section className="section feedback-section" aria-labelledby="school-feedback-title">
+    <section className="section feedback-section" id="feedback" aria-labelledby="school-feedback-title">
       <div className="shell feedback-layout">
         <div className="section-copy">
           <p className="eyebrow">{t.feedbackEyebrow}</p>
@@ -12,10 +12,15 @@ export function FeedbackSection({ t }) {
         <div className="feedback-grid">
           {feedbackSlots.map((slot) => (
             <article className="feedback-slot" key={slot}>
-              <span className="feedback-slot-label">{t[slot]}</span>
-              <span className="skeleton-line wide" aria-hidden="true" />
-              <span className="skeleton-line" aria-hidden="true" />
-              <strong>{t.feedbackEmpty}</strong>
+              <div className="feedback-slot-top">
+                <span className="feedback-slot-label">{t[slot]}</span>
+                <strong className="feedback-status">{t.feedbackEmpty}</strong>
+              </div>
+              <div className="feedback-placeholder" aria-hidden="true">
+                <span className="skeleton-line wide" />
+                <span className="skeleton-line" />
+                <span className="skeleton-line short" />
+              </div>
             </article>
           ))}
         </div>
