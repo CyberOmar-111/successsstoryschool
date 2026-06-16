@@ -169,8 +169,12 @@ test("palette is role-based and context-aware", () => {
   assert.match(css, /\.post-item\[data-kind="announcement"\]/);
   assert.match(js, /item\.dataset\.kind = "homework"/);
   assert.match(js, /item\.dataset\.kind = "announcement"/);
-  assert.match(homepageCss, /linear-gradient\(90deg, var\(--primary\), var\(--accent\)\)/);
-  assert.match(readme, /premium teal and gold\s+academic palette/);
+  assert.match(homepageCss, /background: var\(--primary\)/);
+  assert.doesNotMatch(homepageCss, /\.action-link\.primary,[\s\S]*?linear-gradient\(135deg, var\(--teal\), var\(--accent\)\)/);
+  assert.doesNotMatch(homepageCss, /\.portal-preview-section[\s\S]*?linear-gradient\(135deg, var\(--navy\) 0%, var\(--accent\) 54%, var\(--teal\) 100%\)/);
+  assert.doesNotMatch(homepageCss, /\.portal-hub[\s\S]*?color-mix\(in srgb, var\(--accent\) 12%, white\)/);
+  assert.match(readme, /premium teal-led\s+academic palette/);
+  assert.match(readme, /Buttons use solid teal/);
   assert.match(readme, /no purple,\s+indigo, or violet accents/);
 });
 

@@ -291,7 +291,7 @@ textarea {
   margin-bottom: 16px;
   border-radius: 999px;
   color: var(--paper);
-  background: linear-gradient(135deg, var(--teal), var(--accent));
+  background: var(--primary);
   font-size: 0.78rem;
   font-weight: 850;
 }
@@ -424,15 +424,15 @@ textarea {
 
 .portal-button.primary {
   color: var(--paper);
-  background: linear-gradient(135deg, var(--teal), var(--accent));
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 20%, transparent);
+  background: var(--primary);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--primary) 20%, transparent);
   transition: background 180ms ease, box-shadow 180ms ease;
 }
 
 .portal-button.primary:hover,
 .portal-button.primary:focus-visible {
-  background: linear-gradient(135deg, var(--teal-dark), var(--navy));
-  box-shadow: 0 16px 34px color-mix(in srgb, var(--accent) 25%, transparent);
+  background: var(--teal-dark);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
 .portal-button.secondary {
@@ -560,7 +560,7 @@ code {
   height: 48px;
   border-radius: 50%;
   color: var(--paper);
-  background: linear-gradient(135deg, var(--teal), var(--accent));
+  background: var(--primary);
   font-weight: 750;
 }
 

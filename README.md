@@ -69,20 +69,20 @@ by the same portal data used by the record forms and lists.
 
 ## Color System
 
-The public website and all school account pages use a premium teal and gold
+The public website and all school account pages use a premium teal-led
 academic palette with no purple, indigo, or violet accents.
 
 - Primary: `#0f766e` - confident teal for account actions, active states,
   secure panels, and school-service highlights.
 - Neutral: `#f4f8f7` - calm institutional blue-white for page backgrounds,
   quiet cards, empty states, and readable surface contrast.
-- Accent: `#d59a2b` - warm school gold for emphasis, dashboard depth,
-  premium headers, and important account highlights.
+- Accent: `#d59a2b` - reserved for small admission and institutional emphasis,
+  not for primary buttons or large section backgrounds.
 
-Buttons use a teal-to-gold treatment for action and contrast. Backgrounds use
+Buttons use solid teal for primary action and contrast. Backgrounds use
 neutral surfaces with deep slate structure and teal highlights. Headings use
 deep academic navy, body text uses slate ink, and cards use neutral backgrounds
-with teal or gold borders, badges, and section markers.
+with restrained teal detailing and only small warm accents where needed.
 
 ## Motion System
 
