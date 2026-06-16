@@ -1,4 +1,4 @@
-# Success Story School Website
+﻿# Success Story School Website
 
 A new responsive landing page for Success Story School. The site includes academics,
 student life, admissions steps, school-approved feedback slots, a school system story,
@@ -135,6 +135,24 @@ Keep the Render build command as `pip install -r requirements.txt` and use
 Supabase tables automatically on first start. Production session cookies become
 HTTPS-only when `DATABASE_URL` is set.
 
+## Frontend Architecture
+
+The public homepage is no longer maintained as a hand-edited monolith. Its source now lives in a modular React tree under `src/site/`:
+
+- `App.jsx` composes the homepage from section components.
+- `components/layout/` contains the announcement bar, header, and footer.
+- `components/sections/` contains focused page sections such as hero, portals, FAQ, gallery, admissions, and contact.
+- `hooks/useSchoolSiteState.js` owns language, menu, reveal-state, and inquiry form behavior.
+- `services/api.js` isolates the inquiry composer logic from the JSX tree.
+- `data/homepage-content.js` stores the copy and section configuration.
+- `icons/index.jsx` stores the shared icon set instead of redefining icons inside the main app file.
+- `scripts/build-site.mjs` bundles the modular source back into the deployed `school-app.js` asset.
+
+Rebuild the homepage bundle with:
+
+```powershell
+npm run build:site
+```
 ## Quality Checks
 
 Run these before deploying:
@@ -162,3 +180,4 @@ Get-Content -Raw .\tests\portal-overview.test.js | node
 - `server.py` - SQLite or Supabase Postgres-backed account and protected portal API server
 - `assets/success-story-logo.jpg` - supplied Success Story School reference logo
 - `assets/success-story-mark.png` - icon-only logo used alongside the live wordmark
+

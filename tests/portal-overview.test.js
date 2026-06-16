@@ -239,3 +239,36 @@ test("homepage gallery uses separate Watermelon-inspired carousel files", () => 
   assert.match(carouselBundle, /SchoolPhotoCarousel/);
 });
 
+
+test("homepage source is componentized into modular React files", () => {
+  const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
+  const appSource = fs.readFileSync(path.join(root, "src", "site", "App.jsx"), "utf8");
+  const headerSource = fs.readFileSync(path.join(root, "src", "site", "components", "layout", "SiteHeader.jsx"), "utf8");
+  const heroSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "HeroSection.jsx"), "utf8");
+  const contactSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "ContactSection.jsx"), "utf8");
+  const hookSource = fs.readFileSync(path.join(root, "src", "site", "hooks", "useSchoolSiteState.js"), "utf8");
+  const apiSource = fs.readFileSync(path.join(root, "src", "site", "services", "api.js"), "utf8");
+  const dataSource = fs.readFileSync(path.join(root, "src", "site", "data", "homepage-content.js"), "utf8");
+  const iconSource = fs.readFileSync(path.join(root, "src", "site", "icons", "index.jsx"), "utf8");
+  const buildSource = fs.readFileSync(path.join(root, "scripts", "build-site.mjs"), "utf8");
+
+  assert.match(packageJson, /"build:site": "node scripts[\\/]build-site\.mjs"/);
+  assert.match(packageJson, /"build": "npm run build:site && npm run build:carousel"/);
+  assert.match(appSource, /AnnouncementBar/);
+  assert.match(appSource, /SiteHeader/);
+  assert.match(appSource, /PortalHubSection/);
+  assert.match(appSource, /GallerySection/);
+  assert.match(headerSource, /export function SiteHeader/);
+  assert.match(heroSource, /export function HeroSection/);
+  assert.match(contactSource, /export function ContactSection/);
+  assert.match(hookSource, /export function useSchoolSiteState/);
+  assert.match(hookSource, /IntersectionObserver/);
+  assert.match(apiSource, /export function openInquiryComposer/);
+  assert.match(apiSource, /buildInquiryDraft/);
+  assert.match(dataSource, /export const copy =/);
+  assert.match(dataSource, /export const portals =/);
+  assert.match(iconSource, /export const ArrowRight =/);
+  assert.match(iconSource, /export const GraduationCap =/);
+  assert.match(buildSource, /outfile: path\.join\(root, "school-app\.js"\)/);
+  assert.match(homepageJs, /src\/site\/hooks\/useSchoolSiteState\.js/);
+});

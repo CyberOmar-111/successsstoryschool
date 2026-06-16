@@ -8,7 +8,9 @@
   },
   "scripts": {
     "test": "node --test .\\\\tests\\\\portal-overview.test.js",
-    "build:carousel": "node scripts/build-carousel.mjs"
+    "build:carousel": "node scripts/build-carousel.mjs",
+    "build:site": "node scripts/build-site.mjs",
+    "build": "npm run build:site && npm run build:carousel"
   },
   "keywords": [],
   "author": "",
