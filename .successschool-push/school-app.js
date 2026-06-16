@@ -129,7 +129,6 @@ const X = svgIcon([
   ["path", { d: "m6 6 12 12" }]
 ]);
 
-const SchoolPhotoCarousel = window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null;
 const schoolEmail = "abrar.rashdan84@gmail.com";
 const phoneNumber = "07 9946 4848";
 const phoneHref = "tel:+962799464848";
@@ -160,7 +159,7 @@ const copy = {
     heroText:
       "Arabic-first learning, strong English education, Collins Curriculum, safe routines, school activities, and online school accounts for families and staff.",
     beginEnrollment: "Begin enrollment",
-    openPortals: "Portal Login",
+    openPortals: "Open accounts",
     callOffice: "Call office",
     grades: "Grades 1-10",
     curriculum: "Collins Curriculum",
@@ -168,16 +167,16 @@ const copy = {
     transport: "Bus transportation",
     quickPortalTitle: "School accounts",
     quickPortalText:
-      "Students and authorized staff sign in through protected school account paths.",
+      "Students, teachers, and administrators sign in from one polished account hub.",
     studentPortal: "Student Account",
     studentPortalText:
       "Create a student account, view class details, grades, attendance, homework, announcements, fees, and bus requests.",
     teacherPortal: "Teacher Account",
     teacherPortalText:
       "Teachers manage assigned classes, attendance, homework, announcements, and grades.",
-    adminPortal: "Staff Access",
+    adminPortal: "Administration",
     adminPortalText:
-      "Authorized staff use private access provided by the school.",
+      "School staff manage accounts, class rosters, records, teacher assignments, and class posts.",
     open: "Open",
     overviewEyebrow: "School experience",
     overviewTitle: "A modern school rhythm for families",
@@ -247,10 +246,10 @@ const copy = {
     heroCardTitle: "A clear path from inquiry to first day.",
     heroCardText: "Families can contact the office, visit the campus, and then use secure school accounts once access is issued.",
     heroCardPointOne: "One school account system",
-    heroCardPointTwo: "Student and staff account access",
+    heroCardPointTwo: "Student, teacher, and admin accounts",
     heroCardPointThree: "Class records connected to school accounts",
     heroStatGrades: "Grade 1 to Grade 10",
-    heroStatPortal: "school accounts",
+    heroStatPortal: "student, teacher, admin",
     heroStatLocation: "Irbid campus",
     heroStatLanguage: "Arabic + English",
     proofEyebrow: "Built for Success Story School",
@@ -259,14 +258,14 @@ const copy = {
     proofAcademicsTitle: "School-ready clarity",
     proofAcademicsText: "The live site puts public school information and private account workflows into one calm path instead of separate links and messages.",
     proofPortalTitle: "Protected school accounts",
-    proofPortalText: "Students and authorized staff each have a protected sign-in path with tools made for their role.",
+    proofPortalText: "Students, teachers, and administrators each have a clear sign-in path with tools made for their role.",
     proofCareTitle: "Real records only",
     proofCareText: "Grades, attendance, homework, announcements, fees, and bus requests begin empty and appear only when school staff publish real data.",
     proofAccessTitle: "Direct contact paths",
     proofAccessText: "Families can call, message, email, open directions, or start a prepared Gmail inquiry from the same page.",
     portalPreviewEyebrow: "School account system",
     portalPreviewTitle: "Secure accounts for real school operations.",
-    portalPreviewText: "The site introduces protected account areas without exposing private staff tools on the public homepage. Personal values appear only after authorized school staff publish them.",
+    portalPreviewText: "The site introduces the record areas used by students, teachers, and administrators. Personal values appear only after authorized school staff publish them inside protected accounts.",
     previewStudent: "Student record",
     previewClass: "Grade 8 B",
     previewAttendance: "Attendance",
@@ -275,7 +274,7 @@ const copy = {
     previewStatusPosted: "When posted",
     previewStatusReady: "Ready",
     previewStatusSecure: "Secure",
-    previewRoster: "Approval status",
+    previewRoster: "Class roster",
     previewAverage: "Grades",
     previewAnnouncement: "Announcements",
     howWorksEyebrow: "How it works",
@@ -284,9 +283,9 @@ const copy = {
     howWorksInquiryTitle: "Start with a real inquiry",
     howWorksInquiryText: "Families share the student grade, contact details, and questions so the school can respond directly.",
     howWorksAccountTitle: "Issue protected accounts",
-    howWorksAccountText: "Students and authorized staff use separate sign-in paths with server-backed sessions, clean account URLs, and role-specific tools.",
+    howWorksAccountText: "Students, teachers, and administrators use separate sign-in paths with server-backed sessions and role-specific tools.",
     howWorksRecordsTitle: "Post records from staff dashboards",
-    howWorksRecordsText: "Attendance, grades, homework, announcements, fees, and class access come from teacher or administrator actions.",
+    howWorksRecordsText: "Attendance, grades, homework, announcements, fees, and class rosters come from teacher or administrator actions.",
     howWorksFollowupTitle: "Keep the family view clean",
     howWorksFollowupText: "The student overview removes waiting labels as soon as school data is posted, so the page stays useful.",
     feedbackEyebrow: "School feedback",
@@ -314,7 +313,7 @@ const copy = {
     faqThreeQ: "Does the portal invent academic results?",
     faqThreeA: "No. Account pages show only values posted by authorized school staff.",
     faqFourQ: "Who updates student information?",
-    faqFourA: "Authorized school staff update class records, homework, announcements, attendance, and grades from protected accounts.",
+    faqFourA: "Teachers and administrators update class records, homework, announcements, attendance, and grades from their protected accounts.",
     footerText: "Success Story School. Building the new generation."
   },
   ar: {
@@ -354,9 +353,9 @@ const copy = {
     teacherPortal: "حساب المعلم",
     teacherPortalText:
       "يدير المعلم الصفوف المسندة، الحضور، الواجبات، الإعلانات، والعلامات.",
-    adminPortal: "Staff Access",
+    adminPortal: "الإدارة",
     adminPortalText:
-      "Authorized staff use private access provided by the school.",
+      "تدير الإدارة الحسابات، الشعب، السجلات، إسناد المعلمين، ومنشورات الصفوف.",
     open: "فتح",
     overviewEyebrow: "تجربة المدرسة",
     overviewTitle: "نظام مدرسي حديث للعائلات",
@@ -620,14 +619,20 @@ const portals = [
   {
     title: "studentPortal",
     text: "studentPortalText",
-    href: "/student",
+    href: "portal.html",
     icon: GraduationCap
   },
   {
     title: "teacherPortal",
     text: "teacherPortalText",
-    href: "/teacher",
+    href: "teacher.html",
     icon: ClipboardList
+  },
+  {
+    title: "adminPortal",
+    text: "adminPortalText",
+    href: "admin.html",
+    icon: LayoutDashboard
   }
 ];
 
@@ -706,17 +711,6 @@ function App() {
   const t = useMemo(() => ({ ...copy[language], ...truthCopy }), [language]);
   const isArabic = language === "ar";
   const activeMode = profileModes.find((item) => item.id === mode) ?? profileModes[0];
-  const galleryCopy = isArabic
-    ? {
-        eyebrow: "\u062C\u0648\u0644\u0629 \u0628\u0627\u0644\u0635\u0648\u0631",
-        title: "\u0646\u0638\u0631\u0629 \u0623\u0642\u0631\u0628 \u0625\u0644\u0649 \u0627\u0644\u062D\u0631\u0645 \u0648\u0627\u0644\u062D\u064A\u0627\u0629 \u0627\u0644\u0645\u062F\u0631\u0633\u064A\u0629.",
-        text: "\u0645\u0639\u0631\u0636 \u062F\u0627\u0643\u0646 \u064A\u0639\u0631\u0636 \u0627\u0644\u062D\u0631\u0645 \u0648\u0627\u0644\u0645\u0633\u0627\u062D\u0627\u062A \u0648\u0628\u0639\u0636 \u0627\u0644\u0645\u0634\u0627\u0647\u062F \u0627\u0644\u064A\u0648\u0645\u064A\u0629 \u0628\u062A\u0646\u0642\u0644 \u0633\u0644\u0633 \u0648\u0648\u0627\u0636\u062D."
-      }
-    : {
-        eyebrow: "Photo gallery",
-        title: "A closer look at campus spaces and school life.",
-        text: "A dark gallery surface with the real school photos, scaled for large screens and paired with a Watermelon-style navigator."
-      };
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -1008,8 +1002,8 @@ function App() {
             h(
               "div",
               { className: "portal-preview-actions" },
-              h(ActionLink, { href: "/student", variant: "primary", icon: GraduationCap }, t.studentPortal),
-              h(ActionLink, { href: "/teacher", variant: "secondary", icon: ClipboardList }, t.teacherPortal)
+              h(ActionLink, { href: "portal.html", variant: "primary", icon: GraduationCap }, t.studentPortal),
+              h(ActionLink, { href: "teacher.html", variant: "secondary", icon: ClipboardList }, t.teacherPortal)
             )
           ),
           h(
@@ -1230,19 +1224,6 @@ function App() {
           )
         )
       ),
-      SchoolPhotoCarousel
-        ? h(
-            "section",
-            { className: "section gallery-section", id: "gallery" },
-            h(
-              "div",
-              { className: "shell split-heading gallery-heading" },
-              h("div", null, h("p", { className: "eyebrow" }, galleryCopy.eyebrow), h("h2", null, galleryCopy.title)),
-              h("p", null, galleryCopy.text)
-            ),
-            h("div", { className: "shell" }, h(SchoolPhotoCarousel, { locale: isArabic ? "ar" : "en" }))
-          )
-        : null,
       h(
         "section",
         { className: "section admissions", id: "admissions" },

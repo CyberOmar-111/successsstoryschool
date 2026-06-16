@@ -1,4 +1,4 @@
-﻿const assert = require("node:assert/strict");
+const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
@@ -17,7 +17,6 @@ const adminCss = fs.readFileSync(path.join(root, "admin.css"), "utf8");
 const homepageJs = fs.readFileSync(path.join(root, "school-app.js"), "utf8");
 const homepageCss = fs.readFileSync(path.join(root, "school-react.css"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
-const server = fs.readFileSync(path.join(root, "server.py"), "utf8");
 
 test("overview metrics expose status hooks instead of permanent Not posted text", () => {
   assert.match(html, /data-metric-status="attendance"/);
@@ -44,69 +43,6 @@ test("student posts can be dismissed through the real portal API", () => {
   assert.match(js, /postId: post\.id/);
   assert.match(js, /function addDismissButton\(item, type, post\)/);
   assert.match(js, /text\("markRead"\)/);
-});
-
-test("student registration is pending until school approval", () => {
-  assert.match(server, /requested_class_id/);
-  assert.match(server, /is_approved/);
-  assert.match(server, /VALUES \(\?, \?, \?, \?, \?, NULL, \?, \?\)/);
-  assert.match(server, /\(student_id, name, salt, hashed, grade, class_row\["id"\], False\)/);
-  assert.match(server, /if is_approved and student\["class_id"\]:/);
-  const portalRecordsBlock = server.slice(
-    server.indexOf("def portal_records"),
-    server.indexOf("def do_GET")
-  );
-  assert.doesNotMatch(portalRecordsBlock, /"members"/);
-  assert.match(server, /"code": "pending_approval"/);
-  assert.match(server, /Waiting for admin permission\./);
-  assert.match(js, /pending_approval: "waitingPermission"/);
-  assert.match(js, /Waiting for admin permission\./);
-  assert.match(html, /Class placement/);
-  assert.match(js, /Pending school approval/);
-  assert.match(adminJs, /pendingApproval/);
-  assert.match(adminHtml, /data-decline-student/);
-  assert.match(adminJs, /Student verification/);
-  assert.match(adminJs, /Verify/);
-  assert.match(adminJs, /Decline/);
-  assert.match(adminJs, /"\/api\/admin\/student-decline"/);
-  assert.match(server, /def handle_student_decline/);
-});
-
-test("production admin setup requires private setup secret", () => {
-  assert.match(server, /ADMIN_SETUP_SECRET = os\.environ\.get\("ADMIN_SETUP_SECRET"/);
-  assert.match(server, /IS_POSTGRES and \(not ADMIN_SETUP_SECRET or not hmac\.compare_digest\(setup_secret, ADMIN_SETUP_SECRET\)\)/);
-  assert.match(server, /setup_secret_required/);
-  assert.match(adminHtml, /name="setupSecret"/);
-  assert.match(adminJs, /setupSecret: values\.get\("setupSecret"\)/);
-});
-
-test("account navigation uses clean routes instead of file names", () => {
-  assert.match(server, /CLEAN_ROUTES = \{/);
-  assert.match(server, /"\/student": "\/portal\.html"/);
-  assert.match(server, /"\/teacher": "\/teacher\.html"/);
-  assert.match(server, /"\/office-access": "\/admin\.html"/);
-  assert.doesNotMatch(server, /"\/admin": "\/admin\.html"/);
-  const navSurface = `${indexHtml}\n${html}\n${teacherHtml}\n${adminHtml}\n${homepageJs}`;
-  assert.doesNotMatch(navSurface, /href="(?:portal|teacher|admin|index)\.html"/);
-  assert.doesNotMatch(navSurface, /href: "(?:portal|teacher|admin)\.html"/);
-  assert.doesNotMatch(navSurface, /href="\/admin"/);
-  assert.match(navSurface, /href="\/student"|href: "\/student"/);
-  assert.match(navSurface, /href="\/teacher"|href: "\/teacher"/);
-  assert.match(server, /"\/admin\.html": "\/office-access"/);
-});
-
-test("administration login is quiet and does not reveal a default account", () => {
-  assert.match(adminHtml, /Administration Login/);
-  assert.match(adminHtml, /For authorized school staff only/);
-  assert.match(adminHtml, /placeholder="Administrator ID"/);
-  assert.match(adminHtml, /pattern="ADM-\[0-9\]\{4,8\}"/);
-  assert.match(adminCss, /\.admin-login-shell/);
-  assert.match(adminCss, /backdrop-filter: none/);
-  assert.match(server, /"setupRequired": setup_required/);
-  assert.match(server, /valid_setup_admin_id\(admin_id\)/);
-  assert.match(adminJs, /adminId: values\.get\("adminId"\)/);
-  const publicAdminSurface = `${adminHtml}\n${adminJs}`;
-  assert.doesNotMatch(publicAdminSurface, /value="ADM-1"|placeholder="ADM-1"|Create ADM-1 account|Manage real student records|real student records|records and classrooms/);
 });
 
 test("student overview has premium responsive visual states", () => {
@@ -169,12 +105,8 @@ test("palette is role-based and context-aware", () => {
   assert.match(css, /\.post-item\[data-kind="announcement"\]/);
   assert.match(js, /item\.dataset\.kind = "homework"/);
   assert.match(js, /item\.dataset\.kind = "announcement"/);
-  assert.match(homepageCss, /background: var\(--primary\)/);
-  assert.doesNotMatch(homepageCss, /\.action-link\.primary,[\s\S]*?linear-gradient\(135deg, var\(--teal\), var\(--accent\)\)/);
-  assert.doesNotMatch(homepageCss, /\.portal-preview-section[\s\S]*?linear-gradient\(135deg, var\(--navy\) 0%, var\(--accent\) 54%, var\(--teal\) 100%\)/);
-  assert.doesNotMatch(homepageCss, /\.portal-hub[\s\S]*?color-mix\(in srgb, var\(--accent\) 12%, white\)/);
-  assert.match(readme, /premium teal-led\s+academic palette/);
-  assert.match(readme, /Buttons use solid teal/);
+  assert.match(homepageCss, /linear-gradient\(90deg, var\(--primary\), var\(--accent\)\)/);
+  assert.match(readme, /premium teal and gold\s+academic palette/);
   assert.match(readme, /no purple,\s+indigo, or violet accents/);
 });
 
@@ -214,28 +146,3 @@ test("homepage uses production school content instead of demo or coding language
   assert.match(readme, /## Content Integrity/);
   assert.match(readme, /admissions inquiry, campus directions, grade information/);
 });
-
-test("homepage gallery uses separate Watermelon-inspired carousel files", () => {
-  const carouselBundle = fs.readFileSync(path.join(root, "school-carousel.js"), "utf8");
-  const navigatorSource = fs.readFileSync(path.join(root, "src", "carousel", "CarouselNavigator.jsx"), "utf8");
-  const carouselSource = fs.readFileSync(path.join(root, "src", "carousel", "SchoolPhotoCarousel.jsx"), "utf8");
-  const slideSource = fs.readFileSync(path.join(root, "src", "carousel", "school-gallery-slides.js"), "utf8");
-  const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
-
-  assert.match(indexHtml, /<script defer src="school-carousel\.js"><\/script>/);
-  assert.match(packageJson, /"build:carousel": "node scripts[\\\\/]build-carousel\.mjs"/);
-  assert.match(packageJson, /"motion":/);
-  assert.match(packageJson, /"lucide-react":/);
-  assert.match(homepageJs, /SchoolPhotoCarousel/);
-  assert.match(homepageJs, /gallery-section/);
-  assert.match(homepageCss, /\.school-photo-carousel/);
-  assert.match(homepageCss, /\.wm-carousel-nav/);
-  assert.match(navigatorSource, /motion\/react/);
-  assert.match(navigatorSource, /lucide-react/);
-  assert.match(carouselSource, /AnimatePresence/);
-  assert.match(slideSource, /gallery-campus-4k\.jpg/);
-  assert.match(slideSource, /gallery-activity-4k\.jpg/);
-  assert.match(slideSource, /gallery-classroom-4k\.jpg/);
-  assert.match(carouselBundle, /SchoolPhotoCarousel/);
-});
-

@@ -1,0 +1,23 @@
+{
+  "name": "sss",
+  "version": "1.0.0",
+  "description": "A new responsive landing page for Success Story School. The site includes academics,\r student life, admissions steps, school-approved feedback slots, a school system story,\r family support points, FAQ content, and an inquiry form interaction.\r It also includes bilingual student, teacher, and administrator portals with\r server-backed accounts, classroom rosters, grades, attendance, homework,\r announcements, fees, bus information, and registration screens.",
+  "main": "admin.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node --test .\\\\tests\\\\portal-overview.test.js",
+    "build:carousel": "node scripts/build-carousel.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.28.1",
+    "lucide-react": "^1.18.0",
+    "motion": "^12.40.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  }
+}
