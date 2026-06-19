@@ -135,6 +135,11 @@ Keep the Render build command as `pip install -r requirements.txt` and use
 Supabase tables automatically on first start. Production session cookies become
 HTTPS-only when `DATABASE_URL` is set.
 
+Rate limits use the direct client address by default and ignore
+`X-Forwarded-For`, because that header can be spoofed when a proxy does not
+overwrite it. Set `SSS_TRUST_PROXY_HEADERS=1` only when the public deployment is
+behind a trusted proxy that replaces client-supplied forwarded headers.
+
 ## Frontend Architecture
 
 The public homepage is no longer maintained as a hand-edited monolith. Its source now lives in a modular React tree under `src/site/`:

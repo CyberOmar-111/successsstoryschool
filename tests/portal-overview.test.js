@@ -80,6 +80,20 @@ test("production admin setup requires private setup secret", () => {
   assert.match(adminJs, /setupSecret: values\.get\("setupSecret"\)/);
 });
 
+test("rate limits ignore spoofable forwarded headers by default", () => {
+  assert.match(server, /import ipaddress/);
+  assert.match(server, /TRUST_PROXY_HEADERS = os\.environ\.get\("SSS_TRUST_PROXY_HEADERS"/);
+  const requestIpBlock = server.slice(
+    server.indexOf("def request_ip"),
+    server.indexOf("@staticmethod", server.indexOf("def request_ip"))
+  );
+  assert.match(requestIpBlock, /if TRUST_PROXY_HEADERS:/);
+  assert.match(requestIpBlock, /X-Forwarded-For/);
+  assert.match(requestIpBlock, /ipaddress\.ip_address\(candidate\)/);
+  assert.match(requestIpBlock, /return self\.client_address\[0\]/);
+  assert.doesNotMatch(requestIpBlock, /forwarded or self\.client_address/);
+});
+
 test("account navigation uses clean routes instead of file names", () => {
   assert.match(server, /CLEAN_ROUTES = \{/);
   assert.match(server, /"\/student": "\/portal\.html"/);

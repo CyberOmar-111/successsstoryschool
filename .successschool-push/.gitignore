@@ -1,5 +1,0 @@
-.data/
-.test-data*/
-__pycache__/
-portal.db
-*.pyc
