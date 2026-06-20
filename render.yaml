@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: success-story-school
+    runtime: python
+    buildCommand: npm ci && npm run build && python -m pip install -r requirements.txt
+    startCommand: python server.py
+    healthCheckPath: /api/admin/setup-status
+    autoDeployTrigger: off
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: NODE_VERSION
+        value: 24.14.1
+      - key: SSS_REQUIRE_ADMIN_SETUP_SECRET
+        value: "1"
+      - key: ADMIN_SETUP_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false

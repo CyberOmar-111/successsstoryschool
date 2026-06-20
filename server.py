@@ -97,6 +97,18 @@ CONTENT_TYPES = {
     ".jpg": "image/jpeg",
     ".svg": "image/svg+xml; charset=utf-8",
 }
+STRICT_TRANSPORT_SECURITY = "max-age=31536000; includeSubDomains; preload"
+CONTENT_SECURITY_POLICY = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "connect-src 'self'; "
+    "img-src 'self'; "
+    "style-src 'self'; "
+    "form-action 'self'; "
+    "base-uri 'none'; "
+    "object-src 'none'; "
+    "frame-ancestors 'none'"
+)
 ERROR_PAGE_COPY = {
     404: {
         "code": "404",
@@ -790,22 +802,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
     server_version = "SuccessStoryPortal/1.0"
 
     def end_headers(self):
-        request_path = urlparse(self.path).path
-        script_src = "script-src 'self'"
-        connect_src = "connect-src 'self'"
-        if request_path in {"/", "/index.html"}:
-            script_src = "script-src 'self' https://unpkg.com"
-            connect_src = "connect-src 'self' https://unpkg.com"
-
+        self.send_header("Strict-Transport-Security", STRICT_TRANSPORT_SECURITY)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "same-origin")
-        self.send_header(
-            "Content-Security-Policy",
-            "default-src 'self'; img-src 'self' data:; style-src 'self'; "
-            f"{script_src}; {connect_src}; form-action 'self'; "
-            "base-uri 'none'; frame-ancestors 'none'",
-        )
+        self.send_header("Content-Security-Policy", CONTENT_SECURITY_POLICY)
         super().end_headers()
 
     def send_error_page(self, status, message=None):

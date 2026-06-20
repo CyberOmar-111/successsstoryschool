@@ -180,6 +180,9 @@ waiting states for student records.
   business logic runs.
 - Full student reset requires the signed-in administrator to re-enter their
   current password.
+- All responses include HSTS with a 1-year max age, subdomains, and preload,
+  plus a strict Content Security Policy that keeps scripts and images on
+  `self`.
 - User-facing navigation uses clean routes: `/student`, `/teacher`, and `/office-access`.
 
 Local development uses SQLite by default. For public deployment on Render, connect
@@ -192,10 +195,18 @@ ADMIN_SETUP_SECRET=choose-a-long-private-one-time-secret
 HOST=0.0.0.0
 ```
 
-Keep the Render build command as `pip install -r requirements.txt` and use
-`python server.py` as the start command. The server will create the needed
-Supabase tables automatically on first start. Production session cookies become
-HTTPS-only when `DATABASE_URL` is set.
+Render also needs to build the React/Vite homepage bundle before the Python
+server starts. The committed `render.yaml` uses this setup:
+
+```text
+Build command: npm ci && npm run build && python -m pip install -r requirements.txt
+Start command: python server.py
+```
+
+Set `SSS_REQUIRE_ADMIN_SETUP_SECRET=1` and keep `ADMIN_SETUP_SECRET` and
+`DATABASE_URL` as secret environment variables in Render. The server will
+create the needed Supabase tables automatically on first start. Production
+session cookies become HTTPS-only when `DATABASE_URL` is set.
 
 Administrator setup requires the private setup secret whenever the app is using
 Postgres, running on Vercel, listening on a non-loopback host such as
@@ -206,6 +217,42 @@ Rate limits use the direct client address by default and ignore
 `X-Forwarded-For`, because that header can be spoofed when a proxy does not
 overwrite it. Set `SSS_TRUST_PROXY_HEADERS=1` only when the public deployment is
 behind a trusted proxy that replaces client-supplied forwarded headers.
+
+## Build Tools and Deployment
+
+The homepage React source is bundled with Vite from local npm dependencies. The
+browser no longer loads React or ReactDOM from a CDN; `src/site/index.jsx`
+imports `react-dom/client`. `scripts/build-site.mjs` runs Vite with
+`vite.config.mjs`, builds into `dist-site`, and copies the production bundle
+back to `school-app.js` so the existing Python static server and Vercel setup
+keep the same public asset path.
+
+Use the standard npm pipeline:
+
+```powershell
+npm ci
+npm run build
+npm test
+```
+
+`vercel.json` runs `npm run build` during Vercel deployment. `render.yaml`
+defines the matching Render web service, pins the Node and Python versions with
+`.node-version` and `.python-version`, and disables Render auto-deploys so
+GitHub Actions can deploy only after checks pass.
+
+The GitHub Actions workflow in `.github/workflows/vercel.yml` builds, checks,
+and tests every pull request and push to `main`. Pushes to `main` also deploy
+to Vercel and trigger Render through a deploy hook. Add these repository
+secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+- `RENDER_DEPLOY_HOOK_URL`
+
+Create the Render deploy hook from the Render service Settings page, then save
+that URL as `RENDER_DEPLOY_HOOK_URL` in GitHub. The hook URL is a secret; do
+not commit it.
 
 ## Frontend Architecture
 
@@ -218,7 +265,7 @@ The public homepage is no longer maintained as a hand-edited monolith. Its sourc
 - `services/api.js` isolates the inquiry composer logic from the JSX tree.
 - `data/homepage-content.js` stores the copy and section configuration.
 - `icons/index.jsx` stores the shared icon set instead of redefining icons inside the main app file.
-- `scripts/build-site.mjs` bundles the modular source back into the deployed `school-app.js` asset.
+- `scripts/build-site.mjs` invokes Vite using `vite.config.mjs` and writes the deployed `school-app.js` asset.
 
 Rebuild the homepage bundle with:
 
@@ -260,9 +307,10 @@ responses so students see clear copy instead of silent console failures.
 Run these before deploying:
 
 ```powershell
-python -m py_compile server.py
+npm run build
+python -m py_compile server.py api/index.py
 node --check portal.js
-Get-Content -Raw .\tests\portal-overview.test.js | node
+npm test
 ```
 
 ## Files

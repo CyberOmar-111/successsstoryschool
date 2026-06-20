@@ -7,4 +7,6 @@ portal.db
 *.pyc
 Guides/
 node_modules/
+.vercel/
+dist-site/
 .DS_Store

@@ -1,24 +1,22 @@
-﻿import { build } from "esbuild";
+import { build } from "vite";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const root = path.resolve(__dirname, "..");
-const reactGlobal = path.join(root, "src", "carousel", "react-global.js");
-const reactJsxRuntime = path.join(root, "src", "carousel", "react-jsx-runtime.js");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const outDir = path.join(root, "dist-site");
+const builtBundle = path.join(outDir, "school-app.js");
+const deployedBundle = path.join(root, "school-app.js");
 
+await fs.rm(outDir, { recursive: true, force: true });
 await build({
-  entryPoints: [path.join(root, "src", "site", "index.jsx")],
-  outfile: path.join(root, "school-app.js"),
-  bundle: true,
-  format: "iife",
-  jsx: "automatic",
-  platform: "browser",
-  target: ["es2020"],
-  alias: {
-    react: reactGlobal,
-    "react/jsx-runtime": reactJsxRuntime,
-    "react/jsx-dev-runtime": reactJsxRuntime
-  }
+  configFile: path.join(root, "vite.config.mjs"),
+  build: {
+    outDir,
+    emptyOutDir: true,
+  },
 });
+await fs.copyFile(builtBundle, deployedBundle);
+const bundle = await fs.readFile(deployedBundle, "utf8");
+await fs.writeFile(deployedBundle, bundle.replace(/[ \t]+$/gm, ""));
+await fs.rm(outDir, { recursive: true, force: true });

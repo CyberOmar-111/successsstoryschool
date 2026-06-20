@@ -11,7 +11,7 @@
     "build:tailwind": "npx @tailwindcss/cli -i ./src/site/styles/tailwind.css -o ./school-tailwind.css --minify",
     "build:carousel": "node scripts/build-carousel.mjs",
     "build:site": "node scripts/build-site.mjs",
-    "build": "npm run build:site && npm run build:carousel && npm run build:tailwind"
+    "build": "npm run build:site && npm run build:tailwind && npm run build:carousel"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +25,8 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.1",
-    "tailwindcss": "^4.3.1"
+    "@vitejs/plugin-react": "^6.0.2",
+    "tailwindcss": "^4.3.1",
+    "vite": "^8.0.16"
   }
 }

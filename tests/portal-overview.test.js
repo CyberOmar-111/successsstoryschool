@@ -23,6 +23,7 @@ const designSystemCss = fs.readFileSync(path.join(root, "design-system.css"), "u
 const tailwindCss = fs.readFileSync(path.join(root, "school-tailwind.css"), "utf8");
 const tailwindInputCss = fs.readFileSync(path.join(root, "src", "site", "styles", "tailwind.css"), "utf8");
 const homepageEntrySource = fs.readFileSync(path.join(root, "src", "site", "index.jsx"), "utf8");
+const homepageDataSource = fs.readFileSync(path.join(root, "src", "site", "data", "homepage-content.js"), "utf8");
 const errorBoundarySource = fs.readFileSync(path.join(root, "src", "site", "components", "ErrorBoundary.jsx"), "utf8");
 const tailwindConfig = fs.readFileSync(path.join(root, "tailwind.config.js"), "utf8");
 const tailwindCardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "TailwindCard.jsx"), "utf8");
@@ -30,6 +31,15 @@ const inspiredDashboardSource = fs.readFileSync(path.join(root, "src", "site", "
 const portalIcons = fs.readFileSync(path.join(root, "assets", "portal-icons.svg"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const server = fs.readFileSync(path.join(root, "server.py"), "utf8");
+const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
+const viteConfig = fs.readFileSync(path.join(root, "vite.config.mjs"), "utf8");
+const buildSiteSource = fs.readFileSync(path.join(root, "scripts", "build-site.mjs"), "utf8");
+const vercelConfig = fs.readFileSync(path.join(root, "vercel.json"), "utf8");
+const vercelWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "vercel.yml"), "utf8");
+const renderConfig = fs.readFileSync(path.join(root, "render.yaml"), "utf8");
+const nodeVersionFile = fs.readFileSync(path.join(root, ".node-version"), "utf8");
+const pythonVersionFile = fs.readFileSync(path.join(root, ".python-version"), "utf8");
+const gitignore = fs.readFileSync(path.join(root, ".gitignore"), "utf8");
 
 function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -183,6 +193,22 @@ test("POST bodies are validated as JSON objects before routing", () => {
   assert.match(server, /except RequestValidationError as error:/);
 });
 
+test("server sends HSTS and a strict self-hosted CSP", () => {
+  const endHeadersBlock = server.slice(
+    server.indexOf("def end_headers"),
+    server.indexOf("def send_error_page")
+  );
+  assert.match(server, /STRICT_TRANSPORT_SECURITY = "max-age=31536000; includeSubDomains; preload"/);
+  assert.match(server, /CONTENT_SECURITY_POLICY = \(/);
+  assert.match(server, /"script-src 'self'; "/);
+  assert.match(server, /"img-src 'self'; "/);
+  assert.match(server, /"object-src 'none'; "/);
+  assert.match(server, /"frame-ancestors 'none'"/);
+  assert.doesNotMatch(server, /img-src 'self' data:/);
+  assert.match(endHeadersBlock, /self\.send_header\("Strict-Transport-Security", STRICT_TRANSPORT_SECURITY\)/);
+  assert.match(endHeadersBlock, /self\.send_header\("Content-Security-Policy", CONTENT_SECURITY_POLICY\)/);
+});
+
 test("backend enforces setup secret, JSON validation, and reset re-auth", async (t) => {
   assert.equal(typeof fetch, "function");
   let port;
@@ -220,6 +246,14 @@ test("backend enforces setup secret, JSON validation, and reset re-auth", async 
     const missingPage = await fetch(`${baseUrl}/missing-page`);
     assert.equal(missingPage.status, 404);
     assert.match(missingPage.headers.get("content-type"), /text\/html/);
+    assert.equal(
+      missingPage.headers.get("strict-transport-security"),
+      "max-age=31536000; includeSubDomains; preload"
+    );
+    const contentSecurityPolicy = missingPage.headers.get("content-security-policy");
+    assert.match(contentSecurityPolicy, /script-src 'self'/);
+    assert.match(contentSecurityPolicy, /img-src 'self'/);
+    assert.doesNotMatch(contentSecurityPolicy, /img-src 'self' data:/);
     assert.match(await missingPage.text(), /class="error-page"/);
 
     const missingApi = await fetch(`${baseUrl}/api/missing`);
@@ -444,12 +478,10 @@ test("design system provides accessible hierarchy and 4-point framework utilitie
 });
 
 test("Tailwind CSS is integrated as a utility-only React build layer", () => {
-  const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
-
   assert.match(packageJson, /"tailwindcss": "\^4\./);
   assert.match(packageJson, /"@tailwindcss\/cli": "\^4\./);
   assert.match(packageJson, /"build:tailwind": "npx @tailwindcss\/cli -i \.\/src\/site\/styles\/tailwind\.css -o \.\/school-tailwind\.css --minify"/);
-  assert.match(packageJson, /"build": "npm run build:site && npm run build:carousel && npm run build:tailwind"/);
+  assert.match(packageJson, /"build": "npm run build:site && npm run build:tailwind && npm run build:carousel"/);
   assert.match(indexHtml, /href="school-tailwind\.css\?v=20260620-tailwind"/);
   assert.match(server, /"\/school-tailwind\.css"/);
   assert.match(tailwindConfig, /content: \[/);
@@ -506,6 +538,8 @@ test("motion is subtle, accessible, and uses animated dashboard widgets", () => 
   const motionCss = `${css}\n${teacherCss}\n${adminCss}\n${homepageCss}\n${designSystemCss}`;
   const primitivesSource = fs.readFileSync(path.join(root, "src", "site", "components", "primitives.jsx"), "utf8");
   const portalPreviewSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "PortalPreviewSection.jsx"), "utf8");
+  const siteStateSource = fs.readFileSync(path.join(root, "src", "site", "hooks", "useSchoolSiteState.js"), "utf8");
+  const howWorksSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "HowItWorksSection.jsx"), "utf8");
 
   assert.doesNotMatch(motionCss, /@keyframes/);
   assert.doesNotMatch(motionCss, /animation\s*:/);
@@ -520,18 +554,84 @@ test("motion is subtle, accessible, and uses animated dashboard widgets", () => 
   assert.match(homepageCss, /\.action-link\.primary,[\s\S]*?\.form-submit[\s\S]*?transition: background 180ms ease, box-shadow 180ms ease/);
   assert.match(homepageCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(homepageJs, /IntersectionObserver/);
-  assert.match(homepageJs, /"data-reveal-card": true/);
+  assert.match(siteStateSource, /querySelectorAll\("\[data-reveal-card\]"\)/);
+  assert.match(howWorksSource, /data-reveal-card/);
   assert.match(primitivesSource, /motion\/react/);
   assert.match(primitivesSource, /useReducedMotion/);
   assert.match(primitivesSource, /export function AnimatedDashboardWidget/);
   assert.match(portalPreviewSource, /AnimatedDashboardWidget/);
-  assert.match(homepageJs, /AnimatedDashboardWidget/);
-  assert.match(homepageJs, /dashboard-preview-widget/);
+  assert.match(portalPreviewSource, /dashboard-preview-widget/);
+});
+
+test("build pipeline uses local React, Vite, Vercel, and Render CI/CD", () => {
+  assert.match(packageJson, /"react": "\^19\./);
+  assert.match(packageJson, /"react-dom": "\^19\./);
+  assert.match(packageJson, /"vite": "\^8\./);
+  assert.match(packageJson, /"@vitejs\/plugin-react": "\^6\./);
+  assert.match(packageJson, /"build:site": "node scripts\/build-site\.mjs"/);
+  assert.match(buildSiteSource, /import \{ build \} from "vite"/);
+  assert.match(buildSiteSource, /configFile: path\.join\(root, "vite\.config\.mjs"\)/);
+  assert.match(buildSiteSource, /fs\.copyFile\(builtBundle, deployedBundle\)/);
+  assert.match(buildSiteSource, /bundle\.replace\(\/\[ \\t\]\+\$\/gm, ""\)/);
+  assert.doesNotMatch(buildSiteSource, /esbuild/);
+  assert.match(viteConfig, /defineConfig/);
+  assert.match(viteConfig, /@vitejs\/plugin-react/);
+  assert.match(viteConfig, /"process\.env\.NODE_ENV": JSON\.stringify\("production"\)/);
+  assert.match(viteConfig, /entry: path\.resolve\(root, "src\/site\/index\.jsx"\)/);
+  assert.match(viteConfig, /formats: \["iife"\]/);
+  assert.match(viteConfig, /fileName: \(\) => "school-app\.js"/);
+  assert.match(viteConfig, /outDir: path\.resolve\(root, "dist-site"\)/);
+  assert.match(viteConfig, /emptyOutDir: true/);
+  assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-vite-bundle"><\/script>/);
+  assert.doesNotMatch(indexHtml, /unpkg\.com|react\.production\.min\.js|react-dom\.production\.min\.js/);
+  assert.doesNotMatch(server, /https:\/\/unpkg\.com/);
+  assert.match(server, /"script-src 'self'; "/);
+  assert.match(vercelConfig, /"installCommand": "npm ci"/);
+  assert.match(vercelConfig, /"buildCommand": "npm run build"/);
+  assert.match(vercelWorkflow, /name: Build, Test, and Deploy/);
+  assert.match(vercelWorkflow, /branches: \[main\]/);
+  assert.match(vercelWorkflow, /group: deploy-\$\{\{ github\.ref \}\}/);
+  assert.match(vercelWorkflow, /node-version: 24/);
+  assert.match(vercelWorkflow, /python-version: "3\.13"/);
+  assert.match(vercelWorkflow, /npm ci/);
+  assert.match(vercelWorkflow, /npm run build/);
+  assert.match(vercelWorkflow, /npm test/);
+  assert.match(vercelWorkflow, /VERCEL_TOKEN/);
+  assert.match(vercelWorkflow, /VERCEL_ORG_ID/);
+  assert.match(vercelWorkflow, /VERCEL_PROJECT_ID/);
+  assert.match(vercelWorkflow, /vercel@latest build --prod/);
+  assert.match(vercelWorkflow, /vercel@latest deploy --prebuilt --prod/);
+  assert.match(vercelWorkflow, /name: Deploy to Render/);
+  assert.match(vercelWorkflow, /RENDER_DEPLOY_HOOK_URL/);
+  assert.match(vercelWorkflow, /curl --fail --request POST "\$RENDER_DEPLOY_HOOK_URL"/);
+  assert.match(renderConfig, /type: web/);
+  assert.match(renderConfig, /name: success-story-school/);
+  assert.match(renderConfig, /runtime: python/);
+  assert.match(renderConfig, /buildCommand: npm ci && npm run build && python -m pip install -r requirements\.txt/);
+  assert.match(renderConfig, /startCommand: python server\.py/);
+  assert.match(renderConfig, /healthCheckPath: \/api\/admin\/setup-status/);
+  assert.match(renderConfig, /autoDeployTrigger: off/);
+  assert.match(renderConfig, /- key: HOST\n        value: 0\.0\.0\.0/);
+  assert.match(renderConfig, /- key: NODE_VERSION\n        value: 24\.14\.1/);
+  assert.match(renderConfig, /- key: SSS_REQUIRE_ADMIN_SETUP_SECRET\n        value: "1"/);
+  assert.match(renderConfig, /- key: ADMIN_SETUP_SECRET\n        sync: false/);
+  assert.match(renderConfig, /- key: DATABASE_URL\n        sync: false/);
+  assert.equal(nodeVersionFile.trim(), "24.14.1");
+  assert.equal(pythonVersionFile.trim(), "3.13");
+  assert.match(gitignore, /\.vercel\//);
+  assert.match(gitignore, /dist-site\//);
+  assert.match(readme, /## Build Tools and Deployment/);
+  assert.match(readme, /GitHub Actions/);
+  assert.match(readme, /VERCEL_TOKEN/);
+  assert.match(readme, /RENDER_DEPLOY_HOOK_URL/);
+  assert.match(readme, /npm ci && npm run build && python -m pip install -r requirements\.txt/);
 });
 
 test("React homepage is protected by a branded global error boundary", () => {
+  assert.match(homepageEntrySource, /import \{ createRoot \} from "react-dom\/client"/);
   assert.match(homepageEntrySource, /import \{ ErrorBoundary \} from "\.\/components\/ErrorBoundary\.jsx"/);
   assert.match(homepageEntrySource, /<ErrorBoundary>[\s\S]*<App \/>[\s\S]*<\/ErrorBoundary>/);
+  assert.doesNotMatch(homepageEntrySource, /window\.ReactDOM/);
   assert.match(errorBoundarySource, /export class ErrorBoundary extends Component/);
   assert.match(errorBoundarySource, /static getDerivedStateFromError/);
   assert.match(errorBoundarySource, /componentDidCatch/);
@@ -580,21 +680,21 @@ test("student portal shows loading skeletons and toast feedback around API work"
 });
 
 test("homepage uses production school content instead of demo or coding language", () => {
-  assert.doesNotMatch(homepageJs, /Why families trust us/);
-  assert.doesNotMatch(homepageJs, /\["previewRoster",\s*"28"/);
-  assert.doesNotMatch(homepageJs, /\["previewAverage",\s*"88%"/);
-  assert.doesNotMatch(homepageJs, /\["previewAttendance",\s*"96%"/);
-  assert.doesNotMatch(homepageJs, /Beta feedback|What early users are saying|fake demo|Technical transparency|HTML, CSS|JavaScript|React UI|Python backend|SQLite local|Supabase Postgres|DATABASE_URL|HTTP-only|scrypt/);
-  assert.match(homepageJs, /feedbackEyebrow: "School feedback"/);
-  assert.match(homepageJs, /feedbackTitle: "Feedback from the school community"/);
-  assert.match(homepageJs, /Published feedback will appear here after Success Story School approves real comments/);
-  assert.match(homepageJs, /howWorksTitle: "A clear path from inquiry to school account\."/);
-  assert.match(homepageJs, /trustEyebrow: "Family support"/);
-  assert.match(homepageJs, /trustTitle: "Helpful school information in one place\."/);
-  assert.match(homepageJs, /trustBadgeStack: "Admissions inquiry"/);
-  assert.match(homepageJs, /trustBadgeBackend: "Campus directions"/);
-  assert.match(homepageJs, /trustBadgeHonest: "School-approved feedback"/);
-  assert.match(homepageJs, /faqThreeQ: "Does the portal invent academic results\?"/);
+  assert.doesNotMatch(homepageDataSource, /Why families trust us/);
+  assert.doesNotMatch(homepageDataSource, /\["previewRoster",\s*"28"/);
+  assert.doesNotMatch(homepageDataSource, /\["previewAverage",\s*"88%"/);
+  assert.doesNotMatch(homepageDataSource, /\["previewAttendance",\s*"96%"/);
+  assert.doesNotMatch(homepageDataSource, /Beta feedback|What early users are saying|fake demo|Technical transparency|HTML, CSS|JavaScript|React UI|Python backend|SQLite local|Supabase Postgres|DATABASE_URL|HTTP-only|scrypt/);
+  assert.match(homepageDataSource, /feedbackEyebrow: "School feedback"/);
+  assert.match(homepageDataSource, /feedbackTitle: "Feedback from the school community"/);
+  assert.match(homepageDataSource, /Published feedback will appear here after Success Story School approves real comments/);
+  assert.match(homepageDataSource, /howWorksTitle: "A clear path from inquiry to school account\."/);
+  assert.match(homepageDataSource, /trustEyebrow: "Family support"/);
+  assert.match(homepageDataSource, /trustTitle: "Helpful school information in one place\."/);
+  assert.match(homepageDataSource, /trustBadgeStack: "Admissions inquiry"/);
+  assert.match(homepageDataSource, /trustBadgeBackend: "Campus directions"/);
+  assert.match(homepageDataSource, /trustBadgeHonest: "School-approved feedback"/);
+  assert.match(homepageDataSource, /faqThreeQ: "Does the portal invent academic results\?"/);
   assert.match(homepageCss, /\.feedback-slot/);
   assert.match(homepageCss, /\.skeleton-line/);
   assert.match(homepageCss, /\.trust-badge/);
@@ -609,16 +709,14 @@ test("homepage gallery bundles the Watermelon-inspired carousel directly", () =>
   const carouselSource = fs.readFileSync(path.join(root, "src", "carousel", "SchoolPhotoCarousel.jsx"), "utf8");
   const gallerySource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "GallerySection.jsx"), "utf8");
   const slideSource = fs.readFileSync(path.join(root, "src", "carousel", "school-gallery-slides.js"), "utf8");
-  const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
 
-  assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-carousel-inline"><\/script>/);
+  assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-vite-bundle"><\/script>/);
   assert.doesNotMatch(indexHtml, /school-carousel\.js/);
   assert.match(packageJson, /"build:carousel": "node scripts[\\\\/]build-carousel\.mjs"/);
   assert.match(packageJson, /"motion":/);
   assert.match(packageJson, /"lucide-react":/);
-  assert.match(homepageJs, /SchoolPhotoCarousel/);
   assert.match(homepageJs, /gallery-section/);
-  assert.match(homepageJs, /school-gallery-slides\.js/);
+  assert.match(homepageJs, /school-photo-carousel/);
   assert.match(homepageCss, /\.school-photo-carousel/);
   assert.match(homepageCss, /\.wm-carousel-nav/);
   assert.match(navigatorSource, /motion\/react/);
@@ -637,7 +735,6 @@ test("homepage gallery bundles the Watermelon-inspired carousel directly", () =>
 
 
 test("homepage source is componentized into modular React files", () => {
-  const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
   const appSource = fs.readFileSync(path.join(root, "src", "site", "App.jsx"), "utf8");
   const headerSource = fs.readFileSync(path.join(root, "src", "site", "components", "layout", "SiteHeader.jsx"), "utf8");
   const heroSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "HeroSection.jsx"), "utf8");
@@ -647,10 +744,9 @@ test("homepage source is componentized into modular React files", () => {
   const dataSource = fs.readFileSync(path.join(root, "src", "site", "data", "homepage-content.js"), "utf8");
   const iconSource = fs.readFileSync(path.join(root, "src", "site", "icons", "index.jsx"), "utf8");
   const primitivesSource = fs.readFileSync(path.join(root, "src", "site", "components", "primitives.jsx"), "utf8");
-  const buildSource = fs.readFileSync(path.join(root, "scripts", "build-site.mjs"), "utf8");
 
   assert.match(packageJson, /"build:site": "node scripts[\\/]build-site\.mjs"/);
-  assert.match(packageJson, /"build": "npm run build:site && npm run build:carousel && npm run build:tailwind"/);
+  assert.match(packageJson, /"build": "npm run build:site && npm run build:tailwind && npm run build:carousel"/);
   assert.doesNotMatch(appSource, /AnnouncementBar/);
   assert.match(appSource, /SiteHeader/);
   assert.match(appSource, /PortalHubSection/);
@@ -667,6 +763,7 @@ test("homepage source is componentized into modular React files", () => {
   assert.match(iconSource, /export const ArrowRight =/);
   assert.match(iconSource, /export const GraduationCap =/);
   assert.match(primitivesSource, /export function AnimatedDashboardWidget/);
-  assert.match(buildSource, /outfile: path\.join\(root, "school-app\.js"\)/);
-  assert.match(homepageJs, /src\/site\/hooks\/useSchoolSiteState\.js/);
+  assert.match(buildSiteSource, /fs\.copyFile\(builtBundle, deployedBundle\)/);
+  assert.match(viteConfig, /fileName: \(\) => "school-app\.js"/);
+  assert.match(homepageJs, /createRoot/);
 });
