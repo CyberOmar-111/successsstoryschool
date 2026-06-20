@@ -104,17 +104,44 @@ Portal feature icons live in `assets/portal-icons.svg` as minimalist SVG
 symbols for grades, attendance, homework, announcements, fees, bus details,
 registration, class overview, dashboard overview, and logout.
 
+## Tailwind CSS
+
+Tailwind CSS is available as an additive utility layer for the React homepage.
+The setup uses Tailwind v4's official CLI package and writes the compiled
+output to `school-tailwind.css`, which is loaded by `index.html` after the
+site's existing CSS. The Tailwind input file imports only `theme.css` and
+`utilities.css`, omitting Preflight so Tailwind does not reset the current
+school website and portal styles.
+
+- `tailwind.config.js` keeps the requested JavaScript theme extension for the
+  school colors, fonts, radius, and shadow.
+- `src/site/styles/tailwind.css` defines the same school tokens using v4
+  `@theme` variables and declares the source files Tailwind should scan.
+- `src/site/components/examples/TailwindCard.jsx` shows a modern minimalist
+  card styled with Tailwind utility classes such as `rounded-school`,
+  `shadow-school`, `font-heading`, and `bg-school-teal`.
+
+Build the Tailwind layer with:
+
+```powershell
+npm run build:tailwind
+```
+
 ## Motion System
 
-Animation is intentionally restrained. The hero renders instantly, cards do not
-lift or slide, and there are no decorative loops, particles, bounces, or animated
-backgrounds. Motion is limited to:
+Animation is intentionally restrained. The hero renders instantly, and there
+are no decorative loops, particles, bounces, or animated backgrounds. Motion is
+limited to purposeful interface feedback:
 
-- Primary CTA hover feedback through a subtle color and shadow transition.
+- Buttons and navigation links use a subtle hover/focus lift with a slight
+  scale-up, color change, and shadow transition through `design-system.css`.
 - One-time feature-card opacity reveals on scroll, lasting 200ms with a 100ms
   stagger and no transform movement.
+- Homepage dashboard widgets use the shared `AnimatedDashboardWidget` React
+  primitive powered by `motion/react` for a fade-in and slide-up entrance.
 
-Reduced-motion users receive the card content instantly.
+Reduced-motion users receive the card and dashboard content instantly, and
+hover transforms are disabled.
 
 ## Content Integrity
 
@@ -186,6 +213,12 @@ Rebuild the homepage bundle with:
 
 ```powershell
 npm run build:site
+```
+
+Rebuild all generated frontend assets with:
+
+```powershell
+npm run build
 ```
 ## Quality Checks
 

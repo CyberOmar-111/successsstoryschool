@@ -1,4 +1,5 @@
 ﻿import { ArrowRight } from "../icons/index.jsx";
+import { motion, useReducedMotion } from "motion/react";
 import { cx } from "../utils/cx.js";
 
 export function BrandLockup({ href = "#top", onClick, className = "", ariaLabel = "Success Story School home", size = 52 }) {
@@ -50,5 +51,26 @@ export function SectionHeading({ eyebrow, title, text }) {
       <h2>{title}</h2>
       {text ? <p>{text}</p> : null}
     </div>
+  );
+}
+
+export function AnimatedDashboardWidget({ children, className = "", index = 0, as = "article", ...props }) {
+  const shouldReduceMotion = useReducedMotion();
+  const MotionElement = as === "div" ? motion.div : motion.article;
+
+  return (
+    <MotionElement
+      className={className}
+      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: shouldReduceMotion ? 0 : 0.32,
+        delay: shouldReduceMotion ? 0 : index * 0.06,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      {...props}
+    >
+      {children}
+    </MotionElement>
   );
 }

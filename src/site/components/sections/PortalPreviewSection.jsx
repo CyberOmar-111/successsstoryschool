@@ -1,6 +1,6 @@
 ﻿import { portalPreviewRows } from "../../data/homepage-content.js";
 import { ClipboardList, GraduationCap } from "../../icons/index.jsx";
-import { ActionLink } from "../primitives.jsx";
+import { ActionLink, AnimatedDashboardWidget } from "../primitives.jsx";
 
 export function PortalPreviewSection({ t }) {
   return (
@@ -24,12 +24,12 @@ export function PortalPreviewSection({ t }) {
             <em>SSS</em>
           </div>
           <div className="dashboard-preview-grid">
-            {portalPreviewRows.map(([label, value, status]) => (
-              <article key={label}>
+            {portalPreviewRows.map(([label, value, status], index) => (
+              <AnimatedDashboardWidget className="dashboard-preview-widget" index={index} key={label}>
                 <span>{t[label]}</span>
                 <strong>{value}</strong>
                 <small>{t[status]}</small>
-              </article>
+              </AnimatedDashboardWidget>
             ))}
           </div>
         </div>

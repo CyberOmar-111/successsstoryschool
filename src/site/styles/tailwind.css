@@ -1,0 +1,26 @@
+@config "../../../tailwind.config.js";
+@source "../../../index.html";
+@source "../../../portal.html";
+@source "../../../teacher.html";
+@source "../../../admin.html";
+@source "../";
+
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --font-heading: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", "Segoe UI", "Aptos", Arial, sans-serif;
+
+  --color-school-navy: #12324a;
+  --color-school-teal: #0f766e;
+  --color-school-amber: #d59a2b;
+  --color-school-soft: #f4f8f7;
+  --color-school-ink: #1e293b;
+  --color-school-muted: #526474;
+  --color-school-line: #d8e3e0;
+
+  --radius-school: 8px;
+  --shadow-school: 0 18px 42px rgb(18 50 74 / 0.13);
+}

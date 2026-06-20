@@ -20,6 +20,10 @@ const adminCss = fs.readFileSync(path.join(root, "admin.css"), "utf8");
 const homepageJs = fs.readFileSync(path.join(root, "school-app.js"), "utf8");
 const homepageCss = fs.readFileSync(path.join(root, "school-react.css"), "utf8");
 const designSystemCss = fs.readFileSync(path.join(root, "design-system.css"), "utf8");
+const tailwindCss = fs.readFileSync(path.join(root, "school-tailwind.css"), "utf8");
+const tailwindInputCss = fs.readFileSync(path.join(root, "src", "site", "styles", "tailwind.css"), "utf8");
+const tailwindConfig = fs.readFileSync(path.join(root, "tailwind.config.js"), "utf8");
+const tailwindCardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "TailwindCard.jsx"), "utf8");
 const portalIcons = fs.readFileSync(path.join(root, "assets", "portal-icons.svg"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const server = fs.readFileSync(path.join(root, "server.py"), "utf8");
@@ -420,6 +424,38 @@ test("design system provides accessible hierarchy and 4-point framework utilitie
   assert.match(html, /portal-sidebar edu-dashboard-sidebar/);
 });
 
+test("Tailwind CSS is integrated as a utility-only React build layer", () => {
+  const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
+
+  assert.match(packageJson, /"tailwindcss": "\^4\./);
+  assert.match(packageJson, /"@tailwindcss\/cli": "\^4\./);
+  assert.match(packageJson, /"build:tailwind": "npx @tailwindcss\/cli -i \.\/src\/site\/styles\/tailwind\.css -o \.\/school-tailwind\.css --minify"/);
+  assert.match(packageJson, /"build": "npm run build:site && npm run build:carousel && npm run build:tailwind"/);
+  assert.match(indexHtml, /href="school-tailwind\.css\?v=20260620-tailwind"/);
+  assert.match(server, /"\/school-tailwind\.css"/);
+  assert.match(tailwindConfig, /content: \[/);
+  assert.match(tailwindConfig, /"\.\/src\/site\/\*\*\/\*\.\{js,jsx\}"/);
+  assert.match(tailwindConfig, /theme: \{[\s\S]*extend: \{/);
+  assert.match(tailwindConfig, /school: \{[\s\S]*navy: "#12324a"[\s\S]*teal: "#0f766e"[\s\S]*amber: "#d59a2b"/);
+  assert.match(tailwindConfig, /fontFamily: \{[\s\S]*heading:/);
+  assert.match(tailwindInputCss, /@config "\.\.\/\.\.\/\.\.\/tailwind\.config\.js";/);
+  assert.match(tailwindInputCss, /@source "\.\.\/\.\.\/\.\.\/index\.html";/);
+  assert.match(tailwindInputCss, /@import "tailwindcss\/theme\.css" layer\(theme\);/);
+  assert.match(tailwindInputCss, /@import "tailwindcss\/utilities\.css" layer\(utilities\);/);
+  assert.doesNotMatch(tailwindInputCss, /preflight\.css|@import "tailwindcss";/);
+  assert.match(tailwindInputCss, /--color-school-navy: #12324a/i);
+  assert.match(tailwindInputCss, /--font-heading: "Fraunces"/);
+  assert.match(tailwindCardSource, /export function TailwindCard/);
+  assert.match(tailwindCardSource, /rounded-school border border-school-line bg-white p-6 shadow-school/);
+  assert.match(tailwindCardSource, /font-heading text-2xl leading-tight text-school-navy/);
+  assert.match(tailwindCss, /tailwindcss v4\./);
+  assert.match(tailwindCss, /\.rounded-school/);
+  assert.match(tailwindCss, /\.bg-school-teal/);
+  assert.match(tailwindCss, /\.font-heading/);
+  assert.match(tailwindCss, /\.shadow-school/);
+  assert.doesNotMatch(tailwindCss, /h1,h2,h3,h4,h5,h6\{font-size:inherit;font-weight:inherit\}/);
+});
+
 test("student portal uses a consistent SVG icon set for key modules", () => {
   const expectedIcons = [
     "grades",
@@ -440,17 +476,31 @@ test("student portal uses a consistent SVG icon set for key modules", () => {
   assert.match(css, /\.module-tabs \.portal-icon/);
 });
 
-test("motion is bounded to CTA hover and one-shot feature-card opacity", () => {
-  const motionCss = `${css}\n${teacherCss}\n${adminCss}\n${homepageCss}`;
+test("motion is subtle, accessible, and uses animated dashboard widgets", () => {
+  const motionCss = `${css}\n${teacherCss}\n${adminCss}\n${homepageCss}\n${designSystemCss}`;
+  const primitivesSource = fs.readFileSync(path.join(root, "src", "site", "components", "primitives.jsx"), "utf8");
+  const portalPreviewSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "PortalPreviewSection.jsx"), "utf8");
+
   assert.doesNotMatch(motionCss, /@keyframes/);
   assert.doesNotMatch(motionCss, /animation\s*:/);
   assert.doesNotMatch(motionCss, /scroll-behavior:\s*smooth/);
-  assert.doesNotMatch(motionCss, /transition:\s*[^;]*transform/);
+  assert.match(designSystemCss, /--edu-motion-fast: 160ms/);
+  assert.match(designSystemCss, /transform var\(--edu-motion-fast\) var\(--edu-motion-ease\)/);
+  assert.match(designSystemCss, /scale\(1\.015\)/);
+  assert.match(designSystemCss, /prefers-reduced-motion: reduce/);
+  assert.match(designSystemCss, /transform: none !important/);
+  assert.match(designSystemCss, /\.dashboard-preview-widget/);
   assert.match(homepageCss, /\[data-reveal-card\]\s*\{[\s\S]*?transition: opacity 200ms ease/);
   assert.match(homepageCss, /\.action-link\.primary,[\s\S]*?\.form-submit[\s\S]*?transition: background 180ms ease, box-shadow 180ms ease/);
   assert.match(homepageCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(homepageJs, /IntersectionObserver/);
   assert.match(homepageJs, /"data-reveal-card": true/);
+  assert.match(primitivesSource, /motion\/react/);
+  assert.match(primitivesSource, /useReducedMotion/);
+  assert.match(primitivesSource, /export function AnimatedDashboardWidget/);
+  assert.match(portalPreviewSource, /AnimatedDashboardWidget/);
+  assert.match(homepageJs, /AnimatedDashboardWidget/);
+  assert.match(homepageJs, /dashboard-preview-widget/);
 });
 
 test("homepage uses production school content instead of demo or coding language", () => {
@@ -512,10 +562,11 @@ test("homepage source is componentized into modular React files", () => {
   const apiSource = fs.readFileSync(path.join(root, "src", "site", "services", "api.js"), "utf8");
   const dataSource = fs.readFileSync(path.join(root, "src", "site", "data", "homepage-content.js"), "utf8");
   const iconSource = fs.readFileSync(path.join(root, "src", "site", "icons", "index.jsx"), "utf8");
+  const primitivesSource = fs.readFileSync(path.join(root, "src", "site", "components", "primitives.jsx"), "utf8");
   const buildSource = fs.readFileSync(path.join(root, "scripts", "build-site.mjs"), "utf8");
 
   assert.match(packageJson, /"build:site": "node scripts[\\/]build-site\.mjs"/);
-  assert.match(packageJson, /"build": "npm run build:site && npm run build:carousel"/);
+  assert.match(packageJson, /"build": "npm run build:site && npm run build:carousel && npm run build:tailwind"/);
   assert.doesNotMatch(appSource, /AnnouncementBar/);
   assert.match(appSource, /SiteHeader/);
   assert.match(appSource, /PortalHubSection/);
@@ -531,6 +582,7 @@ test("homepage source is componentized into modular React files", () => {
   assert.match(dataSource, /export const portals =/);
   assert.match(iconSource, /export const ArrowRight =/);
   assert.match(iconSource, /export const GraduationCap =/);
+  assert.match(primitivesSource, /export function AnimatedDashboardWidget/);
   assert.match(buildSource, /outfile: path\.join\(root, "school-app\.js"\)/);
   assert.match(homepageJs, /src\/site\/hooks\/useSchoolSiteState\.js/);
 });

@@ -56,6 +56,7 @@ STATIC_FILES = {
     "/school-app.js",
     "/school-react.css",
     "/design-system.css",
+    "/school-tailwind.css",
     "/styles.css",
     "/script.js",
     "/portal.html",

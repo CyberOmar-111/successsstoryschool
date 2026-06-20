@@ -1,7 +1,10 @@
 .data/
 .test-data*/
+.successschool-push/
+assets/.successschool-push/
 __pycache__/
 portal.db
 *.pyc
 Guides/
 node_modules/
+.DS_Store

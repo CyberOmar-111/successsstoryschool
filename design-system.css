@@ -56,6 +56,9 @@
   --edu-focus-ring: 0 0 0 3px color-mix(in srgb, var(--edu-color-amber-600) 38%, transparent);
   --edu-shadow-sm: 0 8px 18px color-mix(in srgb, var(--edu-color-navy-800) 9%, transparent);
   --edu-shadow-md: 0 18px 42px color-mix(in srgb, var(--edu-color-navy-800) 13%, transparent);
+  --edu-motion-fast: 160ms;
+  --edu-motion-standard: 220ms;
+  --edu-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --edu-hero-gradient: linear-gradient(
     135deg,
     rgb(var(--edu-rgb-navy-900) / 0.92),
@@ -186,6 +189,73 @@ h6,
   stroke-linejoin: round;
 }
 
+:where(
+  .edu-button,
+  .button,
+  .btn,
+  .action-link,
+  .form-submit,
+  .portal-button,
+  .lang-button,
+  .language-button,
+  .menu-button,
+  .logout
+) {
+  transform-origin: center;
+  transition:
+    transform var(--edu-motion-fast) var(--edu-motion-ease),
+    background var(--edu-motion-standard) var(--edu-motion-ease),
+    border-color var(--edu-motion-standard) var(--edu-motion-ease),
+    box-shadow var(--edu-motion-standard) var(--edu-motion-ease),
+    color var(--edu-motion-standard) var(--edu-motion-ease);
+}
+
+:where(
+  .edu-button,
+  .button,
+  .btn,
+  .action-link,
+  .form-submit,
+  .portal-button,
+  .lang-button,
+  .language-button,
+  .menu-button,
+  .logout
+):where(:hover, :focus-visible):not(:disabled) {
+  transform: translateY(-1px) scale(1.015);
+}
+
+:where(
+  .edu-button,
+  .button,
+  .btn,
+  .action-link,
+  .form-submit,
+  .portal-button,
+  .lang-button,
+  .language-button,
+  .menu-button,
+  .logout
+):active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+:where(.nav-links a, .portal-actions a, .back-link, .module-tabs button, .admin-list button, .assignment-list button) {
+  transition:
+    transform var(--edu-motion-fast) var(--edu-motion-ease),
+    background var(--edu-motion-standard) var(--edu-motion-ease),
+    color var(--edu-motion-standard) var(--edu-motion-ease),
+    border-color var(--edu-motion-standard) var(--edu-motion-ease);
+}
+
+:where(.nav-links a, .portal-actions a, .back-link, .module-tabs button, .admin-list button, .assignment-list button):where(:hover, :focus-visible) {
+  transform: translateY(-1px);
+}
+
+.dashboard-preview-widget {
+  will-change: transform, opacity;
+}
+
 :where(.edu-button, .button, .btn) {
   min-height: 44px;
   display: inline-flex;
@@ -283,6 +353,31 @@ h6,
   :where(*, *::before, *::after) {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  :where(
+    .edu-button,
+    .button,
+    .btn,
+    .action-link,
+    .form-submit,
+    .portal-button,
+    .lang-button,
+    .language-button,
+    .menu-button,
+    .logout,
+    .nav-links a,
+    .portal-actions a,
+    .back-link,
+    .module-tabs button,
+    .admin-list button,
+    .assignment-list button
+  ):where(:hover, :focus-visible, :active) {
+    transform: none !important;
+  }
+
+  .dashboard-preview-widget {
+    will-change: auto;
   }
 }
 
