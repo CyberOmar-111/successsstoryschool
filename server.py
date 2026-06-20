@@ -72,6 +72,9 @@ STATIC_FILES = {
     "/assets/success-story-logo.jpg",
     "/assets/success-story-mark.png",
     "/assets/success-story-campus.jpg",
+    "/assets/gallery-campus-4k.jpg",
+    "/assets/gallery-activity-4k.jpg",
+    "/assets/gallery-classroom-4k.jpg",
     "/assets/portal-icons.svg",
 }
 CLEAN_ROUTES = {

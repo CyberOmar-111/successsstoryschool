@@ -568,6 +568,9 @@ test("homepage gallery bundles the Watermelon-inspired carousel directly", () =>
   assert.match(slideSource, /gallery-campus-4k\.jpg/);
   assert.match(slideSource, /gallery-activity-4k\.jpg/);
   assert.match(slideSource, /gallery-classroom-4k\.jpg/);
+  assert.match(server, /"\/assets\/gallery-campus-4k\.jpg"/);
+  assert.match(server, /"\/assets\/gallery-activity-4k\.jpg"/);
+  assert.match(server, /"\/assets\/gallery-classroom-4k\.jpg"/);
   assert.match(carouselBundle, /SchoolPhotoCarousel/);
 });
 
