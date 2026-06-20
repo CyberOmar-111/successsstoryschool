@@ -9531,7 +9531,23 @@
 
   // src/site/components/sections/GallerySection.jsx
   function GallerySection({ galleryCopy, isArabic }) {
-    const SchoolPhotoCarousel = window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null;
+    const [SchoolPhotoCarousel, setSchoolPhotoCarousel] = useState(
+      () => window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null
+    );
+    useEffect(() => {
+      if (SchoolPhotoCarousel) {
+        return void 0;
+      }
+      const handleCarouselReady = () => {
+        const carouselComponent = window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null;
+        if (carouselComponent) {
+          setSchoolPhotoCarousel(() => carouselComponent);
+        }
+      };
+      window.addEventListener("success-story-carousel-ready", handleCarouselReady);
+      handleCarouselReady();
+      return () => window.removeEventListener("success-story-carousel-ready", handleCarouselReady);
+    }, [SchoolPhotoCarousel]);
     if (!SchoolPhotoCarousel) {
       return null;
     }

@@ -24,6 +24,7 @@ const tailwindCss = fs.readFileSync(path.join(root, "school-tailwind.css"), "utf
 const tailwindInputCss = fs.readFileSync(path.join(root, "src", "site", "styles", "tailwind.css"), "utf8");
 const tailwindConfig = fs.readFileSync(path.join(root, "tailwind.config.js"), "utf8");
 const tailwindCardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "TailwindCard.jsx"), "utf8");
+const inspiredDashboardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "InspiredStudentDashboardCards.jsx"), "utf8");
 const portalIcons = fs.readFileSync(path.join(root, "assets", "portal-icons.svg"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const server = fs.readFileSync(path.join(root, "server.py"), "utf8");
@@ -323,6 +324,8 @@ test("administration login is quiet and does not reveal a default account", () =
 
 test("student overview has premium responsive visual states", () => {
   assert.match(html, /student-command-center/);
+  assert.match(html, /student-dashboard-shell/);
+  assert.match(html, /data-inspiration="stripe-clean"/);
   assert.match(html, /account-path/);
   assert.match(js, /data-summary-updates/);
   assert.match(js, /data-summary-transport/);
@@ -332,6 +335,11 @@ test("student overview has premium responsive visual states", () => {
   assert.match(css, /\.account-path/);
   assert.match(css, /\.metrics article\[data-state="ready"\]/);
   assert.match(css, /\.content-card\[data-state="ready"\]/);
+  assert.match(css, /Stripe-inspired student dashboard refinements/);
+  assert.match(css, /\.student-dashboard-shell \.metrics article:hover/);
+  assert.match(css, /backdrop-filter: blur\(22px\) saturate\(145%\)/);
+  assert.match(css, /\.student-dashboard-shell \.content-card\[data-state="ready"\]/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\.student-dashboard-shell/);
   assert.match(css, /@media \(max-width: 700px\)/);
 });
 
@@ -448,11 +456,18 @@ test("Tailwind CSS is integrated as a utility-only React build layer", () => {
   assert.match(tailwindCardSource, /export function TailwindCard/);
   assert.match(tailwindCardSource, /rounded-school border border-school-line bg-white p-6 shadow-school/);
   assert.match(tailwindCardSource, /font-heading text-2xl leading-tight text-school-navy/);
+  assert.match(inspiredDashboardSource, /export function InspiredStudentDashboardCards/);
+  assert.match(inspiredDashboardSource, /grid gap-4 md:grid-cols-3/);
+  assert.match(inspiredDashboardSource, /bg-white\/75 p-5 shadow-school backdrop-blur-xl/);
+  assert.match(inspiredDashboardSource, /hover:-translate-y-1 hover:shadow-lg/);
   assert.match(tailwindCss, /tailwindcss v4\./);
   assert.match(tailwindCss, /\.rounded-school/);
   assert.match(tailwindCss, /\.bg-school-teal/);
   assert.match(tailwindCss, /\.font-heading/);
   assert.match(tailwindCss, /\.shadow-school/);
+  assert.match(tailwindCss, /backdrop-blur-xl/);
+  assert.match(tailwindCss, /md\\:grid-cols-3/);
+  assert.match(tailwindCss, /bg-white\\\/75/);
   assert.doesNotMatch(tailwindCss, /h1,h2,h3,h4,h5,h6\{font-size:inherit;font-weight:inherit\}/);
 });
 
@@ -529,12 +544,15 @@ test("homepage uses production school content instead of demo or coding language
 
 test("homepage gallery uses separate Watermelon-inspired carousel files", () => {
   const carouselBundle = fs.readFileSync(path.join(root, "school-carousel.js"), "utf8");
+  const carouselEntrySource = fs.readFileSync(path.join(root, "src", "carousel", "index.jsx"), "utf8");
   const navigatorSource = fs.readFileSync(path.join(root, "src", "carousel", "CarouselNavigator.jsx"), "utf8");
   const carouselSource = fs.readFileSync(path.join(root, "src", "carousel", "SchoolPhotoCarousel.jsx"), "utf8");
+  const gallerySource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "GallerySection.jsx"), "utf8");
   const slideSource = fs.readFileSync(path.join(root, "src", "carousel", "school-gallery-slides.js"), "utf8");
   const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
 
-  assert.match(indexHtml, /<script defer src="school-carousel\.js(?:\?v=[^\"]+)?"><\/script>/);
+  assert.match(indexHtml, /<script defer src="school-carousel\.js\?v=20260620-react-src"><\/script>/);
+  assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-react-src"><\/script>/);
   assert.match(packageJson, /"build:carousel": "node scripts[\\\\/]build-carousel\.mjs"/);
   assert.match(packageJson, /"motion":/);
   assert.match(packageJson, /"lucide-react":/);
@@ -545,10 +563,15 @@ test("homepage gallery uses separate Watermelon-inspired carousel files", () => 
   assert.match(navigatorSource, /motion\/react/);
   assert.match(navigatorSource, /lucide-react/);
   assert.match(carouselSource, /AnimatePresence/);
+  assert.match(carouselEntrySource, /success-story-carousel-ready/);
+  assert.match(gallerySource, /useState/);
+  assert.match(gallerySource, /success-story-carousel-ready/);
+  assert.match(gallerySource, /setSchoolPhotoCarousel/);
   assert.match(slideSource, /gallery-campus-4k\.jpg/);
   assert.match(slideSource, /gallery-activity-4k\.jpg/);
   assert.match(slideSource, /gallery-classroom-4k\.jpg/);
   assert.match(carouselBundle, /SchoolPhotoCarousel/);
+  assert.match(carouselBundle, /success-story-carousel-ready/);
 });
 
 

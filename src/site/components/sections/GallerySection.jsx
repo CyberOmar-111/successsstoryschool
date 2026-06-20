@@ -1,5 +1,27 @@
-﻿export function GallerySection({ galleryCopy, isArabic }) {
-  const SchoolPhotoCarousel = window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null;
+﻿import { useEffect, useState } from "react";
+
+export function GallerySection({ galleryCopy, isArabic }) {
+  const [SchoolPhotoCarousel, setSchoolPhotoCarousel] = useState(
+    () => window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null
+  );
+
+  useEffect(() => {
+    if (SchoolPhotoCarousel) {
+      return undefined;
+    }
+
+    const handleCarouselReady = () => {
+      const carouselComponent = window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null;
+      if (carouselComponent) {
+        setSchoolPhotoCarousel(() => carouselComponent);
+      }
+    };
+
+    window.addEventListener("success-story-carousel-ready", handleCarouselReady);
+    handleCarouselReady();
+
+    return () => window.removeEventListener("success-story-carousel-ready", handleCarouselReady);
+  }, [SchoolPhotoCarousel]);
 
   if (!SchoolPhotoCarousel) {
     return null;

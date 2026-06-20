@@ -127,6 +127,17 @@ Build the Tailwind layer with:
 npm run build:tailwind
 ```
 
+## UI Inspiration Translation
+
+The student dashboard includes a Stripe-inspired interaction pass translated
+into the Success Story School brand: frosted card surfaces, dense metric cards,
+soft gradient depth, clear hierarchy, and subtle hover/focus lifts. The
+implementation is scoped to `.student-dashboard-shell` in `portal.css` so the
+teacher and administrator workspaces keep their current layouts. A matching
+React/Tailwind structure is available in
+`src/site/components/examples/InspiredStudentDashboardCards.jsx` for a future
+React portal migration.
+
 ## Motion System
 
 Animation is intentionally restrained. The hero renders instantly, and there
@@ -220,6 +231,17 @@ Rebuild all generated frontend assets with:
 ```powershell
 npm run build
 ```
+
+Files under `src/` are source files only. The browser loads the generated
+bundles (`school-app.js`, `school-carousel.js`, and `school-tailwind.css`), so
+changes in `src/site` or `src/carousel` appear on the website only after the
+build scripts run. Components in `src/site/components/examples` are reference
+examples and do not render unless they are imported into the homepage or portal
+entry point.
+
+The photo carousel is split into `src/carousel` and exposed through
+`school-carousel.js`; the homepage listens for the carousel-ready event so the
+gallery still renders if the bundles load in a slightly different order.
 ## Quality Checks
 
 Run these before deploying:
