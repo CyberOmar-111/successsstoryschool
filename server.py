@@ -14,20 +14,26 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 
+def env_flag(name):
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("SSS_DATA_DIR", str(ROOT / ".data")))
 DB_PATH = DATA_DIR / "portal.db"
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 ADMIN_SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "").strip()
 IS_POSTGRES = bool(DATABASE_URL)
-TRUST_PROXY_HEADERS = os.environ.get("SSS_TRUST_PROXY_HEADERS", "").strip().lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "4173"))
+TRUST_PROXY_HEADERS = env_flag("SSS_TRUST_PROXY_HEADERS")
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+ADMIN_SETUP_SECRET_REQUIRED = (
+    env_flag("SSS_REQUIRE_ADMIN_SETUP_SECRET")
+    or bool(os.environ.get("VERCEL"))
+    or IS_POSTGRES
+    or HOST not in LOCAL_HOSTS
+)
 SESSION_TTL_SECONDS = 8 * 60 * 60
 LOGIN_WINDOW_SECONDS = 15 * 60
 LOGIN_BLOCK_SECONDS = 15 * 60
@@ -49,6 +55,7 @@ STATIC_FILES = {
     "/index.html",
     "/school-app.js",
     "/school-react.css",
+    "/design-system.css",
     "/styles.css",
     "/script.js",
     "/portal.html",
@@ -64,6 +71,7 @@ STATIC_FILES = {
     "/assets/success-story-logo.jpg",
     "/assets/success-story-mark.png",
     "/assets/success-story-campus.jpg",
+    "/assets/portal-icons.svg",
 }
 CLEAN_ROUTES = {
     "/student": "/portal.html",
@@ -83,11 +91,19 @@ CONTENT_TYPES = {
     ".js": "application/javascript; charset=utf-8",
     ".png": "image/png",
     ".jpg": "image/jpeg",
+    ".svg": "image/svg+xml; charset=utf-8",
 }
 DUMMY_SALT = b"\x00" * 16
 DUMMY_PASSWORD_HASH = None
 POSTGRES_POOL = None
 POST_DISMISSALS_READY = False
+
+
+class RequestValidationError(ValueError):
+    def __init__(self, code, message):
+        super().__init__(message)
+        self.code = code
+        self.message = message
 
 
 class PostgresConnection:
@@ -618,6 +634,14 @@ def claim_sequence_number(connection, name):
 
 
 def password_hash(password, salt):
+    if not hasattr(hashlib, "scrypt"):
+        return hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt,
+            310_000,
+            dklen=64,
+        )
     return hashlib.scrypt(
         password.encode("utf-8"),
         salt=salt,
@@ -788,11 +812,20 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def read_json(self):
-        length = int(self.headers.get("Content-Length", "0"))
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError as exc:
+            raise RequestValidationError("bad_request", "Invalid request.") from exc
         if length > 20_000:
-            raise ValueError("Request is too large.")
+            raise RequestValidationError("request_too_large", "Request is too large.")
+        content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        if length and content_type != "application/json":
+            raise RequestValidationError("unsupported_media_type", "Send JSON request bodies.")
         raw = self.rfile.read(length)
-        return json.loads(raw.decode("utf-8")) if raw else {}
+        payload = json.loads(raw.decode("utf-8")) if raw else {}
+        if not isinstance(payload, dict):
+            raise RequestValidationError("bad_request", "JSON request body must be an object.")
+        return payload
 
     def request_origin_allowed(self):
         origin = self.headers.get("Origin")
@@ -1306,6 +1339,9 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             return
         try:
             body = self.read_json()
+        except RequestValidationError as error:
+            self.send_json(400, {"code": error.code, "error": error.message})
+            return
         except (ValueError, json.JSONDecodeError):
             self.send_json(400, {"code": "bad_request", "error": "Invalid request."})
             return
@@ -1550,7 +1586,9 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         name = clean_text(body.get("name"), 80) or "School Administrator"
         password = str(body.get("password", ""))
         setup_secret = str(body.get("setupSecret", ""))
-        if IS_POSTGRES and (not ADMIN_SETUP_SECRET or not hmac.compare_digest(setup_secret, ADMIN_SETUP_SECRET)):
+        if ADMIN_SETUP_SECRET_REQUIRED and (
+            not ADMIN_SETUP_SECRET or not hmac.compare_digest(setup_secret, ADMIN_SETUP_SECRET)
+        ):
             self.send_json(403, {"code": "setup_secret_required", "error": "Administrator setup requires the private setup secret."})
             return
         if not valid_setup_admin_id(admin_id):
@@ -1743,6 +1781,16 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             connection.commit()
         self.send_json(201, {"teacher": {"teacherId": teacher_id, "name": name}})
 
+    def admin_password_matches(self, connection, admin_id, password):
+        stored = connection.execute(
+            "SELECT password_salt, password_hash FROM administrators WHERE admin_id = ?",
+            (admin_id,),
+        ).fetchone()
+        return bool(stored) and hmac.compare_digest(
+            password_hash(password, stored["password_salt"]),
+            stored["password_hash"],
+        )
+
     def handle_admin_password_change(self, body):
         admin = self.require_admin()
         if not admin:
@@ -1759,14 +1807,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             )
             return
         with db_connection() as connection:
-            stored = connection.execute(
-                "SELECT password_salt, password_hash FROM administrators WHERE admin_id = ?",
-                (admin["admin_id"],),
-            ).fetchone()
-            if not stored or not hmac.compare_digest(
-                password_hash(current_password, stored["password_salt"]),
-                stored["password_hash"],
-            ):
+            if not self.admin_password_matches(connection, admin["admin_id"], current_password):
                 self.send_json(401, {"code": "invalid_current_password", "error": "Current password is incorrect."})
                 return
             salt = secrets.token_bytes(16)
@@ -2102,12 +2143,17 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         self.send_json(200, {"ok": True})
 
     def handle_admin_students_reset(self, body):
-        if not self.require_admin():
+        admin = self.require_admin()
+        if not admin:
             return
         if str(body.get("confirm", "")) != "RESET STUDENTS":
             self.send_json(400, {"code": "confirmation_required", "error": "Student reset confirmation required."})
             return
+        current_password = str(body.get("currentPassword", ""))
         with db_connection() as connection:
+            if not self.admin_password_matches(connection, admin["admin_id"], current_password):
+                self.send_json(401, {"code": "invalid_current_password", "error": "Current password is incorrect."})
+                return
             connection.execute("BEGIN IMMEDIATE")
             total = connection.execute("SELECT COUNT(*) AS total FROM students").fetchone()["total"]
             connection.execute("DELETE FROM students")

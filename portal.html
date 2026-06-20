@@ -9,6 +9,7 @@
     <link rel="icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="shortcut icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="stylesheet" href="portal.css">
+    <link rel="stylesheet" href="design-system.css?v=20260620-ui-system">
     <script src="portal.js" defer></script>
   </head>
   <body>
@@ -141,8 +142,8 @@
         <div class="secure-banner" data-i18n="secureBanner">
           Secure student account. Grades, attendance, and other records will appear when entered by the school.
         </div>
-        <div class="portal-container dashboard-grid">
-          <aside class="portal-sidebar">
+        <div class="portal-container dashboard-grid edu-dashboard-grid">
+          <aside class="portal-sidebar edu-dashboard-sidebar">
             <div class="profile">
               <div class="profile-avatar" data-avatar>ST</div>
               <div>
@@ -152,25 +153,25 @@
             </div>
             <div class="role-chip"><span data-i18n="gradeLabel">Grade:</span> <strong data-grade-label data-i18n="notSelected">Not selected</strong></div>
             <nav class="module-tabs" aria-label="Student account modules">
-              <button class="active" type="button" data-tab="overview" data-i18n="overview">Overview</button>
-              <button type="button" data-tab="class" data-i18n="myClass">My class</button>
-              <button type="button" data-tab="grades" data-i18n="grades">Grades</button>
-              <button type="button" data-tab="attendance" data-i18n="attendance">Attendance</button>
-              <button type="button" data-tab="homework" data-i18n="homework">Homework</button>
-              <button type="button" data-tab="announcements" data-i18n="announcements">Announcements</button>
-              <button type="button" data-tab="fees" data-i18n="fees">Fees</button>
-              <button type="button" data-tab="bus" data-i18n="bus">Bus details</button>
-              <button type="button" data-tab="registration" data-i18n="registration">Registration</button>
+              <button class="active" type="button" data-tab="overview"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-overview"></use></svg><span data-i18n="overview">Overview</span></button>
+              <button type="button" data-tab="class"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-class"></use></svg><span data-i18n="myClass">My class</span></button>
+              <button type="button" data-tab="grades"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-grades"></use></svg><span data-i18n="grades">Grades</span></button>
+              <button type="button" data-tab="attendance"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-attendance"></use></svg><span data-i18n="attendance">Attendance</span></button>
+              <button type="button" data-tab="homework"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-homework"></use></svg><span data-i18n="homework">Homework</span></button>
+              <button type="button" data-tab="announcements"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-announcements"></use></svg><span data-i18n="announcements">Announcements</span></button>
+              <button type="button" data-tab="fees"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-fees"></use></svg><span data-i18n="fees">Fees</span></button>
+              <button type="button" data-tab="bus"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-bus"></use></svg><span data-i18n="bus">Bus details</span></button>
+              <button type="button" data-tab="registration"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-registration"></use></svg><span data-i18n="registration">Registration</span></button>
             </nav>
           </aside>
 
-          <div class="dashboard-content">
+          <div class="dashboard-content edu-dashboard-main">
             <header class="dashboard-header">
               <div>
                 <p class="eyebrow" data-i18n="portalDashboard">Student dashboard</p>
                 <h2><span data-i18n="welcome">Welcome,</span> <span data-welcome-name></span></h2>
               </div>
-              <button class="logout" type="button" data-logout data-i18n="logout">Log out</button>
+              <button class="logout" type="button" data-logout><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-logout"></use></svg><span data-i18n="logout">Log out</span></button>
             </header>
             <section class="command-center student-command-center" aria-label="Student account summary">
               <article>

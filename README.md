@@ -84,6 +84,26 @@ neutral surfaces with deep slate structure and teal highlights. Headings use
 deep academic navy, body text uses slate ink, and cards use neutral backgrounds
 with restrained teal detailing and only small warm accents where needed.
 
+## Design System Framework
+
+The shared `design-system.css` layer provides Tailwind-style utility and
+component classes without requiring a new build step. It defines a 4-point
+spacing scale (`--edu-space-*`), accessible navy/teal/amber color tokens in HEX
+and RGB variable form, semantic colors, and a reusable `--edu-hero-gradient`
+for subtle hero depth. Typography tokens use the recommended Google-font
+pairing `Fraunces` for headings and `Inter` for body text, with safe local
+fallbacks when those fonts are not self-hosted. It also provides heading helpers
+(`.edu-h1` through `.edu-h6`), layout helpers (`.edu-stack`, `.edu-cluster`,
+`.edu-grid`), dashboard grid helpers (`.edu-dashboard-grid`,
+`.edu-dashboard-sidebar`, `.edu-dashboard-cards`), button styles (`.edu-button-primary`,
+`.edu-button-secondary`, `.edu-button-tertiary`), and form helpers
+(`.edu-field`, `.edu-input`, `.edu-help`). All entry pages load this layer so
+new UI work can use one consistent foundation across the website and portals.
+
+Portal feature icons live in `assets/portal-icons.svg` as minimalist SVG
+symbols for grades, attendance, homework, announcements, fees, bus details,
+registration, class overview, dashboard overview, and logout.
+
 ## Motion System
 
 Animation is intentionally restrained. The hero renders instantly, cards do not
@@ -116,8 +136,12 @@ waiting states for student records.
 - Student self-registration creates pending accounts only; students cannot sign
   in until an administrator verifies the account. Administrators can also
   decline account requests.
-- Production administrator setup requires `ADMIN_SETUP_SECRET` in addition to
-  the administrator password, so an empty database cannot be claimed publicly.
+- Public administrator setup requires `ADMIN_SETUP_SECRET` in addition to the
+  administrator password, so an empty database cannot be claimed publicly.
+- POST endpoints require JSON object bodies and validate server-side before
+  business logic runs.
+- Full student reset requires the signed-in administrator to re-enter their
+  current password.
 - User-facing navigation uses clean routes: `/student`, `/teacher`, and `/office-access`.
 
 Local development uses SQLite by default. For public deployment on Render, connect
@@ -134,6 +158,11 @@ Keep the Render build command as `pip install -r requirements.txt` and use
 `python server.py` as the start command. The server will create the needed
 Supabase tables automatically on first start. Production session cookies become
 HTTPS-only when `DATABASE_URL` is set.
+
+Administrator setup requires the private setup secret whenever the app is using
+Postgres, running on Vercel, listening on a non-loopback host such as
+`0.0.0.0`, or when `SSS_REQUIRE_ADMIN_SETUP_SECRET=1` is set. Local loopback
+SQLite development can still run without the setup secret.
 
 Rate limits use the direct client address by default and ignore
 `X-Forwarded-For`, because that header can be spoofed when a proxy does not

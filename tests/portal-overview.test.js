@@ -1,5 +1,8 @@
 const assert = require("node:assert/strict");
+const { spawn } = require("node:child_process");
 const fs = require("node:fs");
+const net = require("node:net");
+const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 
@@ -16,8 +19,60 @@ const adminJs = fs.readFileSync(path.join(root, "admin.js"), "utf8");
 const adminCss = fs.readFileSync(path.join(root, "admin.css"), "utf8");
 const homepageJs = fs.readFileSync(path.join(root, "school-app.js"), "utf8");
 const homepageCss = fs.readFileSync(path.join(root, "school-react.css"), "utf8");
+const designSystemCss = fs.readFileSync(path.join(root, "design-system.css"), "utf8");
+const portalIcons = fs.readFileSync(path.join(root, "assets", "portal-icons.svg"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const server = fs.readFileSync(path.join(root, "server.py"), "utf8");
+
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const listener = net.createServer();
+    listener.on("error", reject);
+    listener.listen(0, "127.0.0.1", () => {
+      const { port } = listener.address();
+      listener.close(() => resolve(port));
+    });
+  });
+}
+
+async function waitForServer(baseUrl, child) {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    if (child.exitCode !== null) {
+      throw new Error(`Server exited early with code ${child.exitCode}`);
+    }
+    try {
+      const response = await fetch(`${baseUrl}/api/admin/setup-status`);
+      if (response.ok) {
+        return;
+      }
+    } catch {
+      await delay(100);
+    }
+  }
+  throw new Error("Timed out waiting for the test server.");
+}
+
+async function postJson(baseUrl, pathname, body, cookie) {
+  const headers = { "Content-Type": "application/json" };
+  if (cookie) {
+    headers.Cookie = cookie;
+  }
+  const response = await fetch(`${baseUrl}${pathname}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json();
+  return {
+    response,
+    payload,
+    cookie: response.headers.get("set-cookie")?.split(";", 1)[0] || "",
+  };
+}
 
 test("overview metrics expose status hooks instead of permanent Not posted text", () => {
   assert.match(html, /data-metric-status="attendance"/);
@@ -74,15 +129,154 @@ test("student registration is pending until school approval", () => {
 
 test("production admin setup requires private setup secret", () => {
   assert.match(server, /ADMIN_SETUP_SECRET = os\.environ\.get\("ADMIN_SETUP_SECRET"/);
-  assert.match(server, /IS_POSTGRES and \(not ADMIN_SETUP_SECRET or not hmac\.compare_digest\(setup_secret, ADMIN_SETUP_SECRET\)\)/);
+  assert.match(server, /ADMIN_SETUP_SECRET_REQUIRED = \(/);
+  assert.match(server, /SSS_REQUIRE_ADMIN_SETUP_SECRET/);
+  assert.match(server, /HOST not in LOCAL_HOSTS/);
+  assert.match(server, /ADMIN_SETUP_SECRET_REQUIRED and \(/);
   assert.match(server, /setup_secret_required/);
   assert.match(adminHtml, /name="setupSecret"/);
   assert.match(adminJs, /setupSecret: values\.get\("setupSecret"\)/);
 });
 
+test("destructive student reset requires current admin password", () => {
+  assert.match(server, /def admin_password_matches\(self, connection, admin_id, password\):/);
+  const resetBlock = server.slice(
+    server.indexOf("def handle_admin_students_reset"),
+    server.indexOf("def handle_class_assignment")
+  );
+  assert.match(resetBlock, /admin = self\.require_admin\(\)/);
+  assert.match(resetBlock, /body\.get\("currentPassword"/);
+  assert.match(resetBlock, /self\.admin_password_matches\(connection, admin\["admin_id"\], current_password\)/);
+  assert.match(resetBlock, /"code": "invalid_current_password"/);
+  assert.match(resetBlock, /DELETE FROM students/);
+});
+
+test("password hashing has a secure fallback when scrypt is unavailable", () => {
+  const passwordHashStart = server.indexOf("def password_hash");
+  const passwordHashBlock = server.slice(
+    passwordHashStart,
+    server.indexOf("DUMMY_PASSWORD_HASH", passwordHashStart)
+  );
+  assert.match(passwordHashBlock, /hasattr\(hashlib, "scrypt"\)/);
+  assert.match(passwordHashBlock, /hashlib\.pbkdf2_hmac/);
+  assert.match(passwordHashBlock, /310_000/);
+  assert.match(passwordHashBlock, /hashlib\.scrypt/);
+});
+
+test("POST bodies are validated as JSON objects before routing", () => {
+  assert.match(server, /class RequestValidationError\(ValueError\):/);
+  const readJsonBlock = server.slice(
+    server.indexOf("def read_json"),
+    server.indexOf("def request_origin_allowed")
+  );
+  assert.match(readJsonBlock, /Content-Type/);
+  assert.match(readJsonBlock, /application\/json/);
+  assert.match(readJsonBlock, /isinstance\(payload, dict\)/);
+  assert.match(readJsonBlock, /request_too_large/);
+  assert.match(server, /except RequestValidationError as error:/);
+});
+
+test("backend enforces setup secret, JSON validation, and reset re-auth", async (t) => {
+  assert.equal(typeof fetch, "function");
+  let port;
+  try {
+    port = await freePort();
+  } catch (error) {
+    if (error.code === "EPERM") {
+      t.skip("local HTTP listeners are blocked in this sandbox");
+      return;
+    }
+    throw error;
+  }
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "sss-api-"));
+  const child = spawn("python3", ["server.py"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      SSS_DATA_DIR: dataDir,
+      SSS_REQUIRE_ADMIN_SETUP_SECRET: "1",
+      ADMIN_SETUP_SECRET: "setup-token",
+      HOST: "127.0.0.1",
+      PORT: String(port),
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let stderr = "";
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk.toString();
+  });
+  const baseUrl = `http://127.0.0.1:${port}`;
+
+  try {
+    await waitForServer(baseUrl, child);
+
+    const badJson = await fetch(`${baseUrl}/api/admin/setup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(["not", "an", "object"]),
+    });
+    assert.equal(badJson.status, 400);
+    assert.equal((await badJson.json()).code, "bad_request");
+
+    const setupWithoutSecret = await postJson(baseUrl, "/api/admin/setup", {
+      adminId: "ADM-0001",
+      name: "Office Admin",
+      password: "Adminpass1!",
+    });
+    assert.equal(setupWithoutSecret.response.status, 403);
+    assert.equal(setupWithoutSecret.payload.code, "setup_secret_required");
+
+    const setup = await postJson(baseUrl, "/api/admin/setup", {
+      adminId: "ADM-0001",
+      name: "Office Admin",
+      password: "Adminpass1!",
+      setupSecret: "setup-token",
+    });
+    assert.equal(setup.response.status, 201);
+
+    const login = await postJson(baseUrl, "/api/admin/login", {
+      adminId: "ADM-0001",
+      password: "Adminpass1!",
+    });
+    assert.equal(login.response.status, 200);
+    assert.match(login.cookie, /^sss_admin_session=/);
+
+    const register = await postJson(baseUrl, "/api/auth/register", {
+      name: "Pending Student",
+      classCode: "8-A",
+      password: "Studentpass1",
+    });
+    assert.equal(register.response.status, 201);
+    assert.equal(register.payload.studentId, "SSS-001");
+
+    const resetWithoutPassword = await postJson(baseUrl, "/api/admin/reset-students", {
+      confirm: "RESET STUDENTS",
+    }, login.cookie);
+    assert.equal(resetWithoutPassword.response.status, 401);
+    assert.equal(resetWithoutPassword.payload.code, "invalid_current_password");
+
+    const reset = await postJson(baseUrl, "/api/admin/reset-students", {
+      confirm: "RESET STUDENTS",
+      currentPassword: "Adminpass1!",
+    }, login.cookie);
+    assert.equal(reset.response.status, 200);
+    assert.equal(reset.payload.deletedStudents, 1);
+  } finally {
+    child.kill("SIGTERM");
+    await Promise.race([
+      new Promise((resolve) => child.once("exit", resolve)),
+      delay(1000),
+    ]);
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  }
+
+  assert.equal(stderr, "");
+});
+
 test("rate limits ignore spoofable forwarded headers by default", () => {
   assert.match(server, /import ipaddress/);
-  assert.match(server, /TRUST_PROXY_HEADERS = os\.environ\.get\("SSS_TRUST_PROXY_HEADERS"/);
+  assert.match(server, /def env_flag\(name\):/);
+  assert.match(server, /TRUST_PROXY_HEADERS = env_flag\("SSS_TRUST_PROXY_HEADERS"\)/);
   const requestIpBlock = server.slice(
     server.indexOf("def request_ip"),
     server.indexOf("@staticmethod", server.indexOf("def request_ip"))
@@ -190,6 +384,60 @@ test("palette is role-based and context-aware", () => {
   assert.match(readme, /premium teal-led\s+academic palette/);
   assert.match(readme, /Buttons use solid teal/);
   assert.match(readme, /no purple,\s+indigo, or violet accents/);
+});
+
+test("design system provides accessible hierarchy and 4-point framework utilities", () => {
+  const designLinks = `${indexHtml}\n${html}\n${teacherHtml}\n${adminHtml}`;
+  assert.match(designLinks, /href="design-system\.css\?v=20260620-ui-system"/);
+  assert.match(server, /"\/design-system\.css"/);
+  assert.match(designSystemCss, /--edu-space-1: 4px/);
+  assert.match(designSystemCss, /--edu-space-2: 8px/);
+  assert.match(designSystemCss, /--edu-space-4: 16px/);
+  assert.match(designSystemCss, /--edu-color-navy-800: #12324a/i);
+  assert.match(designSystemCss, /--edu-color-teal-700: #0f766e/i);
+  assert.match(designSystemCss, /--edu-rgb-navy-800: 18 50 74/);
+  assert.match(designSystemCss, /--edu-rgb-teal-700: 15 118 110/);
+  assert.match(designSystemCss, /--edu-rgb-danger: 180 35 24/);
+  assert.match(designSystemCss, /--edu-hero-gradient: linear-gradient/);
+  assert.match(designSystemCss, /:where\(:focus-visible\)/);
+  assert.match(designSystemCss, /outline-offset: 3px/);
+  assert.match(designSystemCss, /--edu-font-heading: "Fraunces"/);
+  assert.match(designSystemCss, /--edu-font-body: "Inter"/);
+  assert.match(designSystemCss, /h1,\n\.edu-h1/);
+  assert.match(designSystemCss, /h6,\n\.edu-h6/);
+  assert.match(designSystemCss, /\.edu-lead/);
+  assert.match(designSystemCss, /\.edu-grid/);
+  assert.match(designSystemCss, /\.edu-dashboard-grid/);
+  assert.match(designSystemCss, /grid-template-columns: minmax\(220px, 280px\) minmax\(0, 1fr\)/);
+  assert.match(designSystemCss, /repeat\(auto-fit, minmax\(min\(100%, 260px\), 1fr\)\)/);
+  assert.match(designSystemCss, /\.edu-dashboard-sidebar/);
+  assert.match(designSystemCss, /\.edu-button-primary/);
+  assert.match(designSystemCss, /\.edu-button-secondary/);
+  assert.match(designSystemCss, /\.edu-button-tertiary/);
+  assert.match(designSystemCss, /:where\(\.edu-input, \.form-input, input, select, textarea\)/);
+  assert.match(designSystemCss, /prefers-reduced-motion: reduce/);
+  assert.match(html, /dashboard-grid edu-dashboard-grid/);
+  assert.match(html, /portal-sidebar edu-dashboard-sidebar/);
+});
+
+test("student portal uses a consistent SVG icon set for key modules", () => {
+  const expectedIcons = [
+    "grades",
+    "attendance",
+    "homework",
+    "announcements",
+    "bus",
+    "registration",
+    "logout",
+  ];
+  expectedIcons.forEach((name) => {
+    assert.match(portalIcons, new RegExp(`<symbol id="icon-${name}"`));
+    assert.match(html, new RegExp(`/assets/portal-icons\\.svg#icon-${name}`));
+  });
+  assert.match(server, /"\/assets\/portal-icons\.svg"/);
+  assert.match(server, /"\.svg": "image\/svg\+xml; charset=utf-8"/);
+  assert.match(css, /\.portal-icon/);
+  assert.match(css, /\.module-tabs \.portal-icon/);
 });
 
 test("motion is bounded to CTA hover and one-shot feature-card opacity", () => {
