@@ -550,7 +550,7 @@ test("homepage gallery bundles the Watermelon-inspired carousel directly", () =>
   const slideSource = fs.readFileSync(path.join(root, "src", "carousel", "school-gallery-slides.js"), "utf8");
   const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
 
-  assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-react-src"><\/script>/);
+  assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-carousel-inline"><\/script>/);
   assert.doesNotMatch(indexHtml, /school-carousel\.js/);
   assert.match(packageJson, /"build:carousel": "node scripts[\\\\/]build-carousel\.mjs"/);
   assert.match(packageJson, /"motion":/);
