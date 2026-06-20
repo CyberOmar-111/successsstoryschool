@@ -243,6 +243,18 @@ The photo carousel source lives in `src/carousel` and is imported directly by
 the homepage gallery section, so rebuilding `school-app.js` is enough for the
 carousel to appear on the website. `school-carousel.js` can still be generated
 for standalone carousel work, but `index.html` does not depend on it.
+
+## Error Handling and UX
+
+The React homepage entry is wrapped in a global error boundary that displays a
+branded fallback if a component fails to render. The Python static handler also
+returns branded 404 and 500 pages for normal page requests, while API routes
+continue to receive JSON errors.
+
+The student portal shows a dashboard skeleton while `/api/portal` loads and
+uses polite toast notifications for sign-in, registration, profile save,
+logout, and recoverable API failures. The fetch helper tolerates non-JSON error
+responses so students see clear copy instead of silent console failures.
 ## Quality Checks
 
 Run these before deploying:

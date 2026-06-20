@@ -22,6 +22,8 @@ const homepageCss = fs.readFileSync(path.join(root, "school-react.css"), "utf8")
 const designSystemCss = fs.readFileSync(path.join(root, "design-system.css"), "utf8");
 const tailwindCss = fs.readFileSync(path.join(root, "school-tailwind.css"), "utf8");
 const tailwindInputCss = fs.readFileSync(path.join(root, "src", "site", "styles", "tailwind.css"), "utf8");
+const homepageEntrySource = fs.readFileSync(path.join(root, "src", "site", "index.jsx"), "utf8");
+const errorBoundarySource = fs.readFileSync(path.join(root, "src", "site", "components", "ErrorBoundary.jsx"), "utf8");
 const tailwindConfig = fs.readFileSync(path.join(root, "tailwind.config.js"), "utf8");
 const tailwindCardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "TailwindCard.jsx"), "utf8");
 const inspiredDashboardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "InspiredStudentDashboardCards.jsx"), "utf8");
@@ -214,6 +216,15 @@ test("backend enforces setup secret, JSON validation, and reset re-auth", async 
 
   try {
     await waitForServer(baseUrl, child);
+
+    const missingPage = await fetch(`${baseUrl}/missing-page`);
+    assert.equal(missingPage.status, 404);
+    assert.match(missingPage.headers.get("content-type"), /text\/html/);
+    assert.match(await missingPage.text(), /class="error-page"/);
+
+    const missingApi = await fetch(`${baseUrl}/api/missing`);
+    assert.equal(missingApi.status, 404);
+    assert.equal((await missingApi.json()).code, "not_found");
 
     const badJson = await fetch(`${baseUrl}/api/admin/setup`, {
       method: "POST",
@@ -516,6 +527,56 @@ test("motion is subtle, accessible, and uses animated dashboard widgets", () => 
   assert.match(portalPreviewSource, /AnimatedDashboardWidget/);
   assert.match(homepageJs, /AnimatedDashboardWidget/);
   assert.match(homepageJs, /dashboard-preview-widget/);
+});
+
+test("React homepage is protected by a branded global error boundary", () => {
+  assert.match(homepageEntrySource, /import \{ ErrorBoundary \} from "\.\/components\/ErrorBoundary\.jsx"/);
+  assert.match(homepageEntrySource, /<ErrorBoundary>[\s\S]*<App \/>[\s\S]*<\/ErrorBoundary>/);
+  assert.match(errorBoundarySource, /export class ErrorBoundary extends Component/);
+  assert.match(errorBoundarySource, /static getDerivedStateFromError/);
+  assert.match(errorBoundarySource, /componentDidCatch/);
+  assert.match(errorBoundarySource, /role="alert"/);
+  assert.match(errorBoundarySource, /We could not load this page\./);
+  assert.match(homepageCss, /\.app-error/);
+  assert.match(homepageCss, /\.app-error-card/);
+  assert.match(homepageJs, /Success Story School homepage failed to render/);
+});
+
+test("server renders branded 404 and 500 pages instead of raw errors", () => {
+  assert.match(server, /ERROR_PAGE_COPY = \{/);
+  assert.match(server, /"title": "Page not found"/);
+  assert.match(server, /"title": "Server error"/);
+  assert.match(server, /def send_error_page\(self, status, message=None\):/);
+  assert.match(server, /<body class="error-page">/);
+  assert.match(server, /class="error-card"/);
+  assert.match(server, /Cache-Control", "no-store" if status >= 500 else "public, max-age=300"/);
+  assert.match(server, /def send_error\(self, code, message=None, explain=None\):/);
+  assert.match(server, /request_path\.startswith\("\/api\/"\)/);
+  assert.match(server, /if request_path\.startswith\("\/api\/"\):[\s\S]*self\.send_json\(404, \{"code": "not_found", "error": "Not found\."\}\)/);
+  assert.match(server, /self\.send_error_page\(404\)/);
+  assert.match(homepageCss, /\.error-page/);
+  assert.match(homepageCss, /\.error-card/);
+  assert.match(homepageCss, /\.error-code/);
+});
+
+test("student portal shows loading skeletons and toast feedback around API work", () => {
+  assert.match(html, /data-toast-region/);
+  assert.match(html, /aria-live="polite"/);
+  assert.match(html, /data-dashboard-loading/);
+  assert.match(html, /portal-skeleton-line/);
+  assert.match(css, /\.toast-region/);
+  assert.match(css, /\.toast\[data-type="error"\]/);
+  assert.match(css, /\.dashboard-loading/);
+  assert.match(css, /\.loading-card-grid/);
+  assert.match(css, /\.dashboard\[data-loading="true"\] \.dashboard-header/);
+  assert.match(js, /function showToast\(message, type = "info"\)/);
+  assert.match(js, /function setDashboardLoading\(isLoading\)/);
+  assert.match(js, /dashboard\.setAttribute\("aria-busy"/);
+  assert.match(js, /body = await response\.json\(\)/);
+  assert.match(js, /catch \{[\s\S]*body = \{\}/);
+  assert.match(js, /showToast\(messageForError\(error\), "error"\)/);
+  assert.match(js, /showToast\(text\("detailsSaved"\), "success"\)/);
+  assert.match(js, /showToast\(text\("signedOut"\), "success"\)/);
 });
 
 test("homepage uses production school content instead of demo or coding language", () => {

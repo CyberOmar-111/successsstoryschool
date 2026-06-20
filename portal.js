@@ -9,6 +9,8 @@ const idResult = document.querySelector("[data-id-result]");
 const issuedId = document.querySelector("[data-issued-id]");
 const profileForm = document.querySelector("[data-profile-form]");
 const profileStatus = document.querySelector("[data-profile-status]");
+const dashboardLoading = document.querySelector("[data-dashboard-loading]");
+const toastRegion = document.querySelector("[data-toast-region]");
 
 const translations = {
   en: {
@@ -81,6 +83,8 @@ const translations = {
     classMembers: "Class members",
     classPrivacyNote: "Class rosters are managed privately by the school office.",
     portalDashboard: "Student dashboard",
+    loadingDashboard: "Loading your dashboard...",
+    loadingDashboardText: "Fetching your grades, attendance, posts, and transportation details.",
     welcome: "Welcome,",
     logout: "Log out",
     attendanceThisTerm: "Attendance this term",
@@ -147,6 +151,9 @@ const translations = {
     passwordError: "Password must be 8-128 characters and include a letter and a number.",
     invalidClass: "Choose one of the available homerooms.",
     detailsSaved: "Registration details saved.",
+    signedIn: "Signed in. Loading your dashboard.",
+    signedOut: "Signed out.",
+    connectionError: "We could not reach the school server. Please try again.",
     busValue: "Bus requested",
     noBusValue: "No bus required",
     teacherLogin: "Teacher login",
@@ -209,6 +216,8 @@ const translations = {
     yourClass: "صفك",
     classMembers: "طلاب الصف",
     portalDashboard: "لوحة الطالب",
+    loadingDashboard: "جاري تحميل لوحة الطالب...",
+    loadingDashboardText: "جاري جلب العلامات والحضور والمنشورات وتفاصيل المواصلات.",
     welcome: "مرحبا،",
     logout: "تسجيل الخروج",
     attendanceThisTerm: "الحضور لهذا الفصل",
@@ -275,6 +284,9 @@ const translations = {
     passwordError: "يجب أن تكون كلمة المرور من 8 إلى 128 حرفا وأن تحتوي على حرف ورقم.",
     invalidClass: "اختر إحدى الشعب المتاحة.",
     detailsSaved: "تم حفظ بيانات التسجيل.",
+    signedIn: "تم تسجيل الدخول. جاري تحميل لوحة الطالب.",
+    signedOut: "تم تسجيل الخروج.",
+    connectionError: "تعذر الاتصال بخادم المدرسة. يرجى المحاولة مرة أخرى.",
     busValue: "مطلوب باص",
     noBusValue: "لا يلزم باص",
     administratorLogin: "دخول الإدارة",
@@ -300,7 +312,12 @@ async function api(url, options = {}) {
     headers: { "Content-Type": "application/json" },
     ...options
   });
-  const body = await response.json();
+  let body = {};
+  try {
+    body = await response.json();
+  } catch {
+    body = {};
+  }
   if (!response.ok) {
     const error = new Error(body.error || "Request failed.");
     error.code = body.code;
@@ -319,7 +336,29 @@ function messageForError(error) {
     password_rule: "passwordError",
     invalid_class: "invalidClass"
   };
-  return text(keys[error.code] || "genericError");
+  return text(keys[error?.code] || (error instanceof TypeError ? "connectionError" : "genericError"));
+}
+
+function showToast(message, type = "info") {
+  if (!toastRegion || !message) {
+    return;
+  }
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.dataset.type = type;
+  toast.textContent = message;
+  toastRegion.appendChild(toast);
+  window.setTimeout(() => {
+    toast.remove();
+  }, 4200);
+}
+
+function setDashboardLoading(isLoading) {
+  dashboard.dataset.loading = isLoading ? "true" : "false";
+  dashboard.setAttribute("aria-busy", isLoading ? "true" : "false");
+  if (dashboardLoading) {
+    dashboardLoading.hidden = !isLoading;
+  }
 }
 
 function applyLanguage(nextLanguage) {
@@ -474,8 +513,9 @@ function addDismissButton(item, type, post) {
     button.disabled = true;
     try {
       await dismissPost(type, post);
-    } catch {
+    } catch (error) {
       button.disabled = false;
+      showToast(messageForError(error), "error");
     }
   });
   item.appendChild(button);
@@ -670,17 +710,29 @@ function openPanel(panelName) {
 }
 
 async function openDashboard() {
-  const portal = await api("/api/portal");
-  currentUser = portal.user;
-  currentRecords = portal.records;
-  currentClass = portal.class;
   authView.hidden = true;
   dashboard.hidden = false;
-  profileForm.elements.transport.value = currentUser.transport || "";
-  refreshUserDetails();
-  renderClass();
-  renderRecords(currentRecords);
+  setDashboardLoading(true);
   openPanel("overview");
+  try {
+    const portal = await api("/api/portal");
+    currentUser = portal.user;
+    currentRecords = portal.records;
+    currentClass = portal.class;
+    profileForm.elements.transport.value = currentUser.transport || "";
+    refreshUserDetails();
+    renderClass();
+    renderRecords(currentRecords);
+    setDashboardLoading(false);
+    return true;
+  } catch (error) {
+    setDashboardLoading(false);
+    dashboard.hidden = true;
+    authView.hidden = false;
+    loginStatus.textContent = messageForError(error);
+    showToast(messageForError(error), "error");
+    return false;
+  }
 }
 
 languageToggle.addEventListener("click", () => {
@@ -711,8 +763,10 @@ registerForm.addEventListener("submit", async (event) => {
     idResult.hidden = false;
     loginForm.elements.studentId.value = result.studentId;
     registerForm.reset();
+    showToast(text("accountCreated"), "success");
   } catch (error) {
     registerStatus.textContent = messageForError(error);
+    showToast(messageForError(error), "error");
   }
 });
 
@@ -733,10 +787,14 @@ loginForm.addEventListener("submit", async (event) => {
         password: values.get("password")
       })
     });
-    loginForm.reset();
-    await openDashboard();
+    const opened = await openDashboard();
+    if (opened) {
+      loginForm.reset();
+      showToast(text("signedIn"), "success");
+    }
   } catch (error) {
     loginStatus.textContent = messageForError(error);
+    showToast(messageForError(error), "error");
   }
 });
 
@@ -762,19 +820,26 @@ profileForm.addEventListener("submit", async (event) => {
     refreshUserDetails();
     renderRecords(currentRecords);
     profileStatus.textContent = text("detailsSaved");
-  } catch {
-    profileStatus.textContent = text("genericError");
+    showToast(text("detailsSaved"), "success");
+  } catch (error) {
+    profileStatus.textContent = messageForError(error);
+    showToast(messageForError(error), "error");
   }
 });
 
 document.querySelector("[data-logout]").addEventListener("click", async () => {
-  await api("/api/auth/logout", { method: "POST", body: "{}" });
+  try {
+    await api("/api/auth/logout", { method: "POST", body: "{}" });
+  } catch {
+    // Local sign-out should still clear the screen if the network blips.
+  }
   currentUser = null;
   currentClass = null;
   dashboard.hidden = true;
   authView.hidden = false;
   profileStatus.textContent = "";
   selectAuthTab("signin");
+  showToast(text("signedOut"), "success");
 });
 
 try {
@@ -787,10 +852,7 @@ applyLanguage(language);
 api("/api/auth/session")
   .then((session) => {
     if (session.authenticated) {
-      openDashboard().catch(() => {
-        dashboard.hidden = true;
-        authView.hidden = false;
-      });
+      openDashboard();
     }
   })
   .catch(() => {});

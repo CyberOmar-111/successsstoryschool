@@ -97,6 +97,18 @@ CONTENT_TYPES = {
     ".jpg": "image/jpeg",
     ".svg": "image/svg+xml; charset=utf-8",
 }
+ERROR_PAGE_COPY = {
+    404: {
+        "code": "404",
+        "title": "Page not found",
+        "message": "We could not find that school page. The homepage and secure account areas are still available.",
+    },
+    500: {
+        "code": "500",
+        "title": "Server error",
+        "message": "The school site hit a temporary problem. Please try again in a moment.",
+    },
+}
 DUMMY_SALT = b"\x00" * 16
 DUMMY_PASSWORD_HASH = None
 POSTGRES_POOL = None
@@ -795,6 +807,59 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             "base-uri 'none'; frame-ancestors 'none'",
         )
         super().end_headers()
+
+    def send_error_page(self, status, message=None):
+        copy = ERROR_PAGE_COPY.get(status, ERROR_PAGE_COPY[500])
+        title = copy["title"]
+        body_message = copy["message"] if status in ERROR_PAGE_COPY else message or copy["message"]
+        content = f"""<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#12324A">
+    <title>{status} | Success Story School</title>
+    <link rel="icon" href="/assets/success-story-mark.png?v=3" type="image/png">
+    <link rel="stylesheet" href="/school-react.css?v=20260620-error-pages">
+    <link rel="stylesheet" href="/design-system.css?v=20260620-ui-system">
+  </head>
+  <body class="error-page">
+    <main class="error-shell" role="main">
+      <a class="error-brand" href="/" aria-label="Success Story School home">
+        <img src="/assets/success-story-logo.jpg?v=4" alt="" width="70" height="70">
+        <span>
+          <strong>Success Story</strong>
+          <small>School</small>
+        </span>
+      </a>
+      <section class="error-card" aria-labelledby="error-title">
+        <p class="eyebrow">Success Story School</p>
+        <strong class="error-code">{status}</strong>
+        <h1 id="error-title">{title}</h1>
+        <p>{body_message}</p>
+        <div class="error-actions">
+          <a class="action-link primary" href="/">Return home</a>
+          <a class="action-link secondary" href="/student">Student account</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>""".encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.send_header("Cache-Control", "no-store" if status >= 500 else "public, max-age=300")
+        self.end_headers()
+        self.wfile.write(content)
+
+    def send_error(self, code, message=None, explain=None):
+        request_path = urlparse(self.path).path
+        if request_path.startswith("/api/"):
+            status = code if code in ERROR_PAGE_COPY else 500
+            payload_code = "not_found" if status == 404 else "server_error"
+            self.send_json(status, {"code": payload_code, "error": message or ERROR_PAGE_COPY[status]["title"]})
+            return
+        self.send_error_page(code if code in ERROR_PAGE_COPY else 500, message)
 
     def send_json(self, status, payload, extra_headers=None):
         content = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -2383,13 +2448,23 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         if request_path in LEGACY_ROUTE_REDIRECTS:
             self.redirect_clean_route(LEGACY_ROUTE_REDIRECTS[request_path])
             return
+        if request_path.startswith("/api/"):
+            self.send_json(404, {"code": "not_found", "error": "Not found."})
+            return
         pathname = CLEAN_ROUTES.get(request_path, "/index.html" if request_path == "/" else request_path)
         if pathname not in STATIC_FILES:
-            self.send_error(404, "Not found")
+            self.send_error_page(404)
             return
         query = parse_qs(urlparse(self.path).query)
         file_path = ROOT / "assets" / "success-story-mark.png" if pathname == "/favicon.ico" else ROOT / pathname.lstrip("/")
-        file_stat = file_path.stat()
+        try:
+            file_stat = file_path.stat()
+        except FileNotFoundError:
+            self.send_error_page(404)
+            return
+        except OSError:
+            self.send_error_page(500)
+            return
         etag = self.static_etag(file_stat)
         last_modified = formatdate(file_stat.st_mtime, usegmt=True)
         cache_control = self.static_cache_control(file_path, query)
@@ -2400,7 +2475,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", cache_control)
             self.end_headers()
             return
-        content = file_path.read_bytes()
+        try:
+            content = file_path.read_bytes()
+        except OSError:
+            self.send_error_page(500)
+            return
         self.send_response(200)
         self.send_header("Content-Type", CONTENT_TYPES.get(file_path.suffix, "application/octet-stream"))
         self.send_header("Content-Length", str(len(content)))

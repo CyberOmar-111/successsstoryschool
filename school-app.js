@@ -6,13 +6,6 @@
     throw Error('Dynamic require of "' + x + '" is not supported');
   });
 
-  // src/site/data/site-config.js
-  var schoolEmail = "abrar.rashdan84@gmail.com";
-  var phoneNumber = "07 9946 4848";
-  var phoneHref = "tel:+962799464848";
-  var whatsappHref = "https://wa.me/00962799464848";
-  var mapsHref = "https://www.google.com/maps/search/?api=1&query=32.532984%2C35.863854";
-
   // src/carousel/react-global.js
   var React = window.React;
   if (!React) {
@@ -53,6 +46,54 @@
     useTransition
   } = React;
   var react_global_default = React;
+
+  // src/carousel/react-jsx-runtime.js
+  var Fragment2 = react_global_default.Fragment;
+  function createJsxElement(type, props, key) {
+    const nextProps = props ? { ...props } : {};
+    if (key !== void 0) {
+      nextProps.key = key;
+    }
+    return react_global_default.createElement(type, nextProps);
+  }
+  var jsx = createJsxElement;
+  var jsxs = createJsxElement;
+
+  // src/site/components/ErrorBoundary.jsx
+  var ErrorBoundary = class extends Component {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false };
+    }
+    static getDerivedStateFromError() {
+      return { hasError: true };
+    }
+    componentDidCatch(error, info) {
+      console.error("Success Story School homepage failed to render.", error, info);
+    }
+    render() {
+      if (!this.state.hasError) {
+        return this.props.children;
+      }
+      return /* @__PURE__ */ jsx("main", { className: "app-error", role: "alert", "aria-labelledby": "app-error-title", children: /* @__PURE__ */ jsxs("section", { className: "app-error-card", children: [
+        /* @__PURE__ */ jsx("img", { src: "/assets/success-story-mark.png?v=3", alt: "", width: "72", height: "72" }),
+        /* @__PURE__ */ jsx("p", { className: "eyebrow", children: "Success Story School" }),
+        /* @__PURE__ */ jsx("h1", { id: "app-error-title", children: "We could not load this page." }),
+        /* @__PURE__ */ jsx("p", { children: "Please refresh the page or return to the school homepage. Student, teacher, and office accounts are still available from the links below." }),
+        /* @__PURE__ */ jsxs("div", { className: "app-error-actions", children: [
+          /* @__PURE__ */ jsx("a", { className: "action-link primary", href: "/", children: "Return home" }),
+          /* @__PURE__ */ jsx("a", { className: "action-link secondary", href: "/student", children: "Student account" })
+        ] })
+      ] }) });
+    }
+  };
+
+  // src/site/data/site-config.js
+  var schoolEmail = "abrar.rashdan84@gmail.com";
+  var phoneNumber = "07 9946 4848";
+  var phoneHref = "tel:+962799464848";
+  var whatsappHref = "https://wa.me/00962799464848";
+  var mapsHref = "https://www.google.com/maps/search/?api=1&query=32.532984%2C35.863854";
 
   // src/site/icons/index.jsx
   var h = react_global_default.createElement;
@@ -813,18 +854,6 @@
       toggleMenu
     };
   }
-
-  // src/carousel/react-jsx-runtime.js
-  var Fragment2 = react_global_default.Fragment;
-  function createJsxElement(type, props, key) {
-    const nextProps = props ? { ...props } : {};
-    if (key !== void 0) {
-      nextProps.key = key;
-    }
-    return react_global_default.createElement(type, nextProps);
-  }
-  var jsx = createJsxElement;
-  var jsxs = createJsxElement;
 
   // node_modules/framer-motion/dist/es/context/LayoutGroupContext.mjs
   var LayoutGroupContext = createContext({});
@@ -10506,7 +10535,9 @@
   // src/site/index.jsx
   var rootElement = document.getElementById("root");
   if (rootElement && window.ReactDOM?.createRoot) {
-    window.ReactDOM.createRoot(rootElement).render(/* @__PURE__ */ jsx(App, {}));
+    window.ReactDOM.createRoot(rootElement).render(
+      /* @__PURE__ */ jsx(ErrorBoundary, { children: /* @__PURE__ */ jsx(App, {}) })
+    );
   }
 })();
 /*! Bundled license information:

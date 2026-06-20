@@ -14,6 +14,7 @@
   </head>
   <body>
     <a class="skip-link" href="#portal-main" data-i18n="skip">Skip to account content</a>
+    <div class="toast-region" data-toast-region aria-live="polite" aria-atomic="true"></div>
 
     <header class="portal-header">
       <nav class="portal-container portal-nav" aria-label="Student account navigation">
@@ -166,6 +167,35 @@
           </aside>
 
           <div class="dashboard-content edu-dashboard-main">
+            <section class="dashboard-loading" data-dashboard-loading aria-live="polite" hidden>
+              <div class="loading-hero">
+                <span class="portal-skeleton-pill"></span>
+                <h2 data-i18n="loadingDashboard">Loading your dashboard...</h2>
+                <p data-i18n="loadingDashboardText">Fetching your grades, attendance, posts, and transportation details.</p>
+              </div>
+              <div class="loading-card-grid" aria-label="Loading dashboard widgets">
+                <article>
+                  <span class="portal-skeleton-line wide"></span>
+                  <span class="portal-skeleton-line"></span>
+                  <span class="portal-skeleton-line short"></span>
+                </article>
+                <article>
+                  <span class="portal-skeleton-line wide"></span>
+                  <span class="portal-skeleton-line"></span>
+                  <span class="portal-skeleton-line short"></span>
+                </article>
+                <article>
+                  <span class="portal-skeleton-line wide"></span>
+                  <span class="portal-skeleton-line"></span>
+                  <span class="portal-skeleton-line short"></span>
+                </article>
+                <article>
+                  <span class="portal-skeleton-line wide"></span>
+                  <span class="portal-skeleton-line"></span>
+                  <span class="portal-skeleton-line short"></span>
+                </article>
+              </div>
+            </section>
             <header class="dashboard-header">
               <div>
                 <p class="eyebrow" data-i18n="portalDashboard">Student dashboard</p>
