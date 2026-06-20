@@ -7431,6 +7431,162 @@
     reducedMotion: "never"
   });
 
+  // node_modules/framer-motion/dist/es/utils/use-composed-ref.mjs
+  function setRef(ref, value) {
+    if (typeof ref === "function") {
+      return ref(value);
+    } else if (ref !== null && ref !== void 0) {
+      ref.current = value;
+    }
+  }
+  function composeRefs(...refs) {
+    return (node) => {
+      let hasCleanup = false;
+      const cleanups = refs.map((ref) => {
+        const cleanup = setRef(ref, node);
+        if (!hasCleanup && typeof cleanup === "function") {
+          hasCleanup = true;
+        }
+        return cleanup;
+      });
+      if (hasCleanup) {
+        return () => {
+          for (let i = 0; i < cleanups.length; i++) {
+            const cleanup = cleanups[i];
+            if (typeof cleanup === "function") {
+              cleanup();
+            } else {
+              setRef(refs[i], null);
+            }
+          }
+        };
+      }
+    };
+  }
+  function useComposedRefs(...refs) {
+    return useCallback(composeRefs(...refs), refs);
+  }
+
+  // node_modules/framer-motion/dist/es/components/AnimatePresence/PopChild.mjs
+  var PopChildMeasure = class extends Component {
+    getSnapshotBeforeUpdate(prevProps) {
+      const element = this.props.childRef.current;
+      if (isHTMLElement(element) && prevProps.isPresent && !this.props.isPresent && this.props.pop !== false) {
+        const parent = element.offsetParent;
+        const parentWidth = isHTMLElement(parent) ? parent.offsetWidth || 0 : 0;
+        const parentHeight = isHTMLElement(parent) ? parent.offsetHeight || 0 : 0;
+        const computedStyle = getComputedStyle(element);
+        const size = this.props.sizeRef.current;
+        size.height = parseFloat(computedStyle.height);
+        size.width = parseFloat(computedStyle.width);
+        size.top = element.offsetTop;
+        size.left = element.offsetLeft;
+        size.right = parentWidth - size.width - size.left;
+        size.bottom = parentHeight - size.height - size.top;
+        size.direction = computedStyle.direction;
+      }
+      return null;
+    }
+    /**
+     * Required with getSnapshotBeforeUpdate to stop React complaining.
+     */
+    componentDidUpdate() {
+    }
+    render() {
+      return this.props.children;
+    }
+  };
+  function PopChild({ children, isPresent, anchorX, anchorY, root, pop }) {
+    const id3 = useId();
+    const ref = useRef(null);
+    const size = useRef({
+      width: 0,
+      height: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      direction: "ltr"
+    });
+    const { nonce } = useContext(MotionConfigContext);
+    const childRef = children.props?.ref ?? children?.ref;
+    const composedRef = useComposedRefs(ref, childRef);
+    useInsertionEffect(() => {
+      const { width, height, top, left, right, bottom, direction } = size.current;
+      if (isPresent || pop === false || !ref.current || !width || !height)
+        return;
+      const isRTL = direction === "rtl";
+      const x = anchorX === "left" ? isRTL ? `right: ${right}` : `left: ${left}` : isRTL ? `left: ${left}` : `right: ${right}`;
+      const y = anchorY === "bottom" ? `bottom: ${bottom}` : `top: ${top}`;
+      ref.current.dataset.motionPopId = id3;
+      const style = document.createElement("style");
+      if (nonce)
+        style.nonce = nonce;
+      const parent = root ?? document.head;
+      parent.appendChild(style);
+      if (style.sheet) {
+        style.sheet.insertRule(`
+          [data-motion-pop-id="${id3}"] {
+            position: absolute !important;
+            width: ${width}px !important;
+            height: ${height}px !important;
+            ${x}px !important;
+            ${y}px !important;
+          }
+        `);
+      }
+      return () => {
+        ref.current?.removeAttribute("data-motion-pop-id");
+        if (parent.contains(style)) {
+          parent.removeChild(style);
+        }
+      };
+    }, [isPresent]);
+    return jsx(PopChildMeasure, { isPresent, childRef: ref, sizeRef: size, pop, children: pop === false ? children : cloneElement(children, { ref: composedRef }) });
+  }
+
+  // node_modules/framer-motion/dist/es/components/AnimatePresence/PresenceChild.mjs
+  var PresenceChild = ({ children, initial, isPresent, onExitComplete, custom, presenceAffectsLayout, mode, anchorX, anchorY, root }) => {
+    const presenceChildren = useConstant(newChildrenMap);
+    const id3 = useId();
+    let isReusedContext = true;
+    let context = useMemo(() => {
+      isReusedContext = false;
+      return {
+        id: id3,
+        initial,
+        isPresent,
+        custom,
+        onExitComplete: (childId) => {
+          presenceChildren.set(childId, true);
+          for (const isComplete of presenceChildren.values()) {
+            if (!isComplete)
+              return;
+          }
+          onExitComplete && onExitComplete();
+        },
+        register: (childId) => {
+          presenceChildren.set(childId, false);
+          return () => presenceChildren.delete(childId);
+        }
+      };
+    }, [isPresent, presenceChildren, onExitComplete]);
+    if (presenceAffectsLayout && isReusedContext) {
+      context = { ...context };
+    }
+    useMemo(() => {
+      presenceChildren.forEach((_, key) => presenceChildren.set(key, false));
+    }, [isPresent]);
+    useEffect(() => {
+      !isPresent && !presenceChildren.size && onExitComplete && onExitComplete();
+    }, [isPresent]);
+    children = jsx(PopChild, { pop: mode === "popLayout", isPresent, anchorX, anchorY, root, children });
+    return jsx(PresenceContext.Provider, { value: context, children });
+  };
+  function newChildrenMap() {
+    return /* @__PURE__ */ new Map();
+  }
+
   // node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence.mjs
   function usePresence(subscribe = true) {
     const context = useContext(PresenceContext);
@@ -7446,6 +7602,94 @@
     const safeToRemove = useCallback(() => subscribe && onExitComplete && onExitComplete(id3), [id3, onExitComplete, subscribe]);
     return !isPresent && onExitComplete ? [false, safeToRemove] : [true];
   }
+
+  // node_modules/framer-motion/dist/es/components/AnimatePresence/utils.mjs
+  var getChildKey = (child) => child.key || "";
+  function onlyElements(children) {
+    const filtered = [];
+    Children.forEach(children, (child) => {
+      if (isValidElement(child))
+        filtered.push(child);
+    });
+    return filtered;
+  }
+
+  // node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs
+  var AnimatePresence = ({ children, custom, initial = true, onExitComplete, presenceAffectsLayout = true, mode = "sync", propagate = false, anchorX = "left", anchorY = "top", root }) => {
+    const [isParentPresent, safeToRemove] = usePresence(propagate);
+    const presentChildren = useMemo(() => onlyElements(children), [children]);
+    const presentKeys = propagate && !isParentPresent ? [] : presentChildren.map(getChildKey);
+    const isInitialRender = useRef(true);
+    const pendingPresentChildren = useRef(presentChildren);
+    const exitComplete = useConstant(() => /* @__PURE__ */ new Map());
+    const exitingComponents = useRef(/* @__PURE__ */ new Set());
+    const [diffedChildren, setDiffedChildren] = useState(presentChildren);
+    const [renderedChildren, setRenderedChildren] = useState(presentChildren);
+    useIsomorphicLayoutEffect(() => {
+      isInitialRender.current = false;
+      pendingPresentChildren.current = presentChildren;
+      for (let i = 0; i < renderedChildren.length; i++) {
+        const key = getChildKey(renderedChildren[i]);
+        if (!presentKeys.includes(key)) {
+          if (exitComplete.get(key) !== true) {
+            exitComplete.set(key, false);
+          }
+        } else {
+          exitComplete.delete(key);
+          exitingComponents.current.delete(key);
+        }
+      }
+    }, [renderedChildren, presentKeys.length, presentKeys.join("-")]);
+    const exitingChildren = [];
+    if (presentChildren !== diffedChildren) {
+      let nextChildren = [...presentChildren];
+      for (let i = 0; i < renderedChildren.length; i++) {
+        const child = renderedChildren[i];
+        const key = getChildKey(child);
+        if (!presentKeys.includes(key)) {
+          nextChildren.splice(i, 0, child);
+          exitingChildren.push(child);
+        }
+      }
+      if (mode === "wait" && exitingChildren.length) {
+        nextChildren = exitingChildren;
+      }
+      setRenderedChildren(onlyElements(nextChildren));
+      setDiffedChildren(presentChildren);
+      return null;
+    }
+    if (mode === "wait" && renderedChildren.length > 1) {
+      console.warn(`You're attempting to animate multiple children within AnimatePresence, but its mode is set to "wait". This will lead to odd visual behaviour.`);
+    }
+    const { forceRender } = useContext(LayoutGroupContext);
+    return jsx(Fragment2, { children: renderedChildren.map((child) => {
+      const key = getChildKey(child);
+      const isPresent = propagate && !isParentPresent ? false : presentChildren === renderedChildren || presentKeys.includes(key);
+      const onExit = () => {
+        if (exitingComponents.current.has(key)) {
+          return;
+        }
+        if (exitComplete.has(key)) {
+          exitingComponents.current.add(key);
+          exitComplete.set(key, true);
+        } else {
+          return;
+        }
+        let isEveryExitComplete = true;
+        exitComplete.forEach((isExitComplete) => {
+          if (!isExitComplete)
+            isEveryExitComplete = false;
+        });
+        if (isEveryExitComplete) {
+          forceRender?.();
+          setRenderedChildren(pendingPresentChildren.current);
+          propagate && safeToRemove?.();
+          onExitComplete && onExitComplete();
+        }
+      };
+      return jsx(PresenceChild, { isPresent, initial: !isInitialRender.current || initial ? void 0 : false, custom, presenceAffectsLayout, mode, root, onExitComplete: isPresent ? void 0 : onExit, anchorX, anchorY, children: child }, key);
+    }) });
+  };
 
   // node_modules/framer-motion/dist/es/context/LazyContext.mjs
   var LazyContext = createContext({ strict: false });
@@ -9289,16 +9533,16 @@
       ] })
     ] });
   }
-  function IconLabel({ icon: Icon, children }) {
+  function IconLabel({ icon: Icon2, children }) {
     return /* @__PURE__ */ jsxs("span", { className: "icon-label", children: [
-      /* @__PURE__ */ jsx(Icon, { size: 18, strokeWidth: 2.2, "aria-hidden": "true" }),
+      /* @__PURE__ */ jsx(Icon2, { size: 18, strokeWidth: 2.2, "aria-hidden": "true" }),
       /* @__PURE__ */ jsx("span", { children })
     ] });
   }
-  function ActionLink({ href, children, icon: Icon = ArrowRight, variant = "primary", ...props }) {
+  function ActionLink({ href, children, icon: Icon2 = ArrowRight, variant = "primary", ...props }) {
     return /* @__PURE__ */ jsxs("a", { className: cx("action-link", variant), href, ...props, children: [
       /* @__PURE__ */ jsx("span", { children }),
-      /* @__PURE__ */ jsx(Icon, { size: 18, strokeWidth: 2.4, "aria-hidden": "true" })
+      /* @__PURE__ */ jsx(Icon2, { size: 18, strokeWidth: 2.4, "aria-hidden": "true" })
     ] });
   }
   function SplitHeading({ eyebrow, title, text, className = "", action = null }) {
@@ -9529,28 +9773,401 @@
     ] }) });
   }
 
-  // src/site/components/sections/GallerySection.jsx
-  function GallerySection({ galleryCopy, isArabic }) {
-    const [SchoolPhotoCarousel, setSchoolPhotoCarousel] = useState(
-      () => window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null
+  // node_modules/lucide-react/dist/esm/shared/src/utils/mergeClasses.mjs
+  var mergeClasses = (...classes) => classes.filter((className, index, array) => {
+    return Boolean(className) && className.trim() !== "" && array.indexOf(className) === index;
+  }).join(" ").trim();
+
+  // node_modules/lucide-react/dist/esm/shared/src/utils/toKebabCase.mjs
+  var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+
+  // node_modules/lucide-react/dist/esm/shared/src/utils/toCamelCase.mjs
+  var toCamelCase = (string) => string.replace(
+    /^([A-Z])|[\s-_]+(\w)/g,
+    (match, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase()
+  );
+
+  // node_modules/lucide-react/dist/esm/shared/src/utils/toPascalCase.mjs
+  var toPascalCase = (string) => {
+    const camelCase = toCamelCase(string);
+    return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+  };
+
+  // node_modules/lucide-react/dist/esm/defaultAttributes.mjs
+  var defaultAttributes = {
+    xmlns: "http://www.w3.org/2000/svg",
+    width: 24,
+    height: 24,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  };
+
+  // node_modules/lucide-react/dist/esm/shared/src/utils/hasA11yProp.mjs
+  var hasA11yProp = (props) => {
+    for (const prop in props) {
+      if (prop.startsWith("aria-") || prop === "role" || prop === "title") {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // node_modules/lucide-react/dist/esm/context.mjs
+  var LucideContext = createContext({});
+  var useLucideContext = () => useContext(LucideContext);
+
+  // node_modules/lucide-react/dist/esm/Icon.mjs
+  var Icon = forwardRef(
+    ({ color: color2, size, strokeWidth, absoluteStrokeWidth, className = "", children, iconNode, ...rest }, ref) => {
+      const {
+        size: contextSize = 24,
+        strokeWidth: contextStrokeWidth = 2,
+        absoluteStrokeWidth: contextAbsoluteStrokeWidth = false,
+        color: contextColor = "currentColor",
+        className: contextClass = ""
+      } = useLucideContext() ?? {};
+      const calculatedStrokeWidth = absoluteStrokeWidth ?? contextAbsoluteStrokeWidth ? Number(strokeWidth ?? contextStrokeWidth) * 24 / Number(size ?? contextSize) : strokeWidth ?? contextStrokeWidth;
+      return createElement(
+        "svg",
+        {
+          ref,
+          ...defaultAttributes,
+          width: size ?? contextSize ?? defaultAttributes.width,
+          height: size ?? contextSize ?? defaultAttributes.height,
+          stroke: color2 ?? contextColor,
+          strokeWidth: calculatedStrokeWidth,
+          className: mergeClasses("lucide", contextClass, className),
+          ...!children && !hasA11yProp(rest) && { "aria-hidden": "true" },
+          ...rest
+        },
+        [
+          ...iconNode.map(([tag, attrs]) => createElement(tag, attrs)),
+          ...Array.isArray(children) ? children : [children]
+        ]
+      );
+    }
+  );
+
+  // node_modules/lucide-react/dist/esm/createLucideIcon.mjs
+  var createLucideIcon = (iconName, iconNode) => {
+    const Component2 = forwardRef(
+      ({ className, ...props }, ref) => createElement(Icon, {
+        ref,
+        iconNode,
+        className: mergeClasses(
+          `lucide-${toKebabCase(toPascalCase(iconName))}`,
+          `lucide-${iconName}`,
+          className
+        ),
+        ...props
+      })
     );
+    Component2.displayName = toPascalCase(iconName);
+    return Component2;
+  };
+
+  // node_modules/lucide-react/dist/esm/icons/chevron-left.mjs
+  var __iconNode = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+  var ChevronLeft = createLucideIcon("chevron-left", __iconNode);
+
+  // node_modules/lucide-react/dist/esm/icons/chevron-right.mjs
+  var __iconNode2 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+  var ChevronRight = createLucideIcon("chevron-right", __iconNode2);
+
+  // src/carousel/CarouselNavigator.jsx
+  var DEFAULT_AUTO_DELAY = 5200;
+  var DEFAULT_THEMES = [
+    { bg: "#11151a", button: "#f8fafc", dot: "#4b5563", progress: "#dbe4ee" },
+    { bg: "#10181d", button: "#96f0e5", dot: "#395158", progress: "#d2faf5" },
+    { bg: "#16171b", button: "#f8fafc", dot: "#4f5965", progress: "#dde7f1" }
+  ];
+  function CarouselNavigator({
+    totalSlides = DEFAULT_THEMES.length,
+    autoDelay = DEFAULT_AUTO_DELAY,
+    themes = DEFAULT_THEMES,
+    currentIndex,
+    onIndexChange
+  }) {
+    const theme = themes[currentIndex] ?? themes[0];
+    const canCycle = totalSlides > 1;
+    const goPrev = () => {
+      if (!canCycle) return;
+      onIndexChange((currentIndex - 1 + totalSlides) % totalSlides);
+    };
+    const goNext = () => {
+      if (!canCycle) return;
+      onIndexChange((currentIndex + 1) % totalSlides);
+    };
+    return /* @__PURE__ */ jsxs(
+      motion.div,
+      {
+        animate: { backgroundColor: theme.bg },
+        transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+        className: "wm-carousel-nav",
+        children: [
+          /* @__PURE__ */ jsx(
+            ArrowButton,
+            {
+              ariaLabel: "Previous slide",
+              onClick: goPrev,
+              themeColor: theme.button,
+              disabled: !canCycle,
+              children: /* @__PURE__ */ jsx(ChevronLeft, { size: 22, strokeWidth: 2.8 })
+            }
+          ),
+          /* @__PURE__ */ jsx("div", { className: "wm-carousel-indicators", role: "tablist", "aria-label": "School photo slides", children: Array.from({ length: totalSlides }).map((_, index) => /* @__PURE__ */ jsx(
+            Indicator,
+            {
+              isActive: index === currentIndex,
+              theme,
+              autoDelay,
+              onClick: () => onIndexChange(index)
+            },
+            index
+          )) }),
+          /* @__PURE__ */ jsx(
+            ArrowButton,
+            {
+              ariaLabel: "Next slide",
+              onClick: goNext,
+              themeColor: theme.button,
+              disabled: !canCycle,
+              children: /* @__PURE__ */ jsx(ChevronRight, { size: 22, strokeWidth: 2.8 })
+            }
+          )
+        ]
+      }
+    );
+  }
+  function ArrowButton({ children, ariaLabel, onClick, themeColor, disabled }) {
+    return /* @__PURE__ */ jsx(
+      motion.button,
+      {
+        type: "button",
+        "aria-label": ariaLabel,
+        onClick,
+        whileTap: disabled ? void 0 : { scale: 0.92 },
+        className: "wm-carousel-arrow",
+        style: {
+          backgroundColor: disabled ? "rgba(255, 255, 255, 0.16)" : themeColor,
+          color: disabled ? "rgba(255, 255, 255, 0.55)" : "#05070a",
+          cursor: disabled ? "default" : "pointer",
+          opacity: disabled ? 0.5 : 1
+        },
+        disabled,
+        children
+      }
+    );
+  }
+  function Indicator({ isActive, theme, autoDelay, onClick }) {
+    return /* @__PURE__ */ jsx(
+      motion.button,
+      {
+        type: "button",
+        onClick,
+        layout: true,
+        transition: { type: "spring", stiffness: 300, damping: 30 },
+        className: "wm-carousel-dot",
+        style: {
+          width: isActive ? 52 : 12,
+          backgroundColor: isActive ? theme.progress : theme.dot
+        },
+        "aria-label": "Show selected school photo",
+        children: isActive ? /* @__PURE__ */ jsx(
+          motion.span,
+          {
+            className: "wm-carousel-dot-fill",
+            initial: { width: "0%" },
+            animate: { width: "100%" },
+            transition: { duration: autoDelay / 1e3, ease: "linear" }
+          }
+        ) : null
+      }
+    );
+  }
+
+  // src/carousel/school-gallery-slides.js
+  var gallerySlides = [
+    {
+      id: "campus",
+      image: "assets/gallery-campus-4k.jpg",
+      position: "center center",
+      alt: {
+        en: "Success Story School campus exterior in Irbid",
+        ar: "\u0645\u0628\u0646\u0649 \u0645\u062F\u0631\u0633\u0629 \u0642\u0635\u0629 \u0646\u062C\u0627\u062D \u0641\u064A \u0625\u0631\u0628\u062F"
+      },
+      kicker: {
+        en: "Campus exterior",
+        ar: "\u0627\u0644\u062D\u0631\u0645 \u0627\u0644\u0645\u062F\u0631\u0633\u064A"
+      },
+      title: {
+        en: "The arrival frontage and main school building.",
+        ar: "\u0627\u0644\u0648\u0627\u062C\u0647\u0629 \u0648\u0627\u0644\u0645\u0628\u0646\u0649 \u0627\u0644\u0631\u0626\u064A\u0633\u064A \u0644\u0644\u0645\u062F\u0631\u0633\u0629."
+      },
+      description: {
+        en: "A clean exterior view that gives families an immediate sense of the Irbid campus and the school entrance experience.",
+        ar: "\u0645\u0634\u0647\u062F \u062E\u0627\u0631\u062C\u064A \u0648\u0627\u0636\u062D \u064A\u0639\u0637\u064A \u0627\u0644\u0639\u0627\u0626\u0644\u0627\u062A \u0635\u0648\u0631\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0639\u0646 \u062D\u0631\u0645 \u0627\u0644\u0645\u062F\u0631\u0633\u0629 \u0648\u0648\u0635\u0648\u0644 \u0627\u0644\u0637\u0644\u0627\u0628."
+      },
+      theme: { bg: "#0b1014", button: "#f8fafc", dot: "#44505a", progress: "#dde7f1" }
+    },
+    {
+      id: "activity",
+      image: "assets/gallery-activity-4k.jpg",
+      position: "center center",
+      alt: {
+        en: "Success Story School outdoor activity area",
+        ar: "\u0635\u0648\u0631\u0629 \u0645\u0646 \u0627\u0644\u0645\u0633\u0627\u062D\u0627\u062A \u0627\u0644\u062E\u0627\u0631\u062C\u064A\u0629 \u0641\u064A \u0627\u0644\u0645\u062F\u0631\u0633\u0629"
+      },
+      kicker: {
+        en: "Outdoor spaces",
+        ar: "\u0627\u0644\u0645\u0633\u0627\u062D\u0627\u062A \u0627\u0644\u062E\u0627\u0631\u062C\u064A\u0629"
+      },
+      title: {
+        en: "Field and activity areas that support student life.",
+        ar: "\u0645\u0633\u0627\u062D\u0627\u062A \u0627\u0644\u0633\u0627\u062D\u0629 \u0648\u0627\u0644\u0623\u0646\u0634\u0637\u0629 \u0627\u0644\u062A\u064A \u062A\u062F\u0639\u0645 \u0627\u0644\u062D\u064A\u0627\u0629 \u0627\u0644\u0645\u062F\u0631\u0633\u064A\u0629."
+      },
+      description: {
+        en: "A closer look at the open-air side of the school day, including movement, gathering, and supervised activity space.",
+        ar: "\u0646\u0638\u0631\u0629 \u0623\u0642\u0631\u0628 \u0639\u0644\u0649 \u0627\u0644\u062C\u0627\u0646\u0628 \u0627\u0644\u062E\u0627\u0631\u062C\u064A \u0645\u0646 \u0627\u0644\u064A\u0648\u0645 \u0627\u0644\u0645\u062F\u0631\u0633\u064A \u0628\u0645\u0627 \u064A\u0634\u0645\u0644 \u0627\u0644\u062D\u0631\u0643\u0629 \u0648\u0627\u0644\u062A\u062C\u0645\u0639 \u0648\u0627\u0644\u0623\u0646\u0634\u0637\u0629 \u0627\u0644\u0645\u0634\u0631\u0641 \u0639\u0644\u064A\u0647\u0627."
+      },
+      theme: { bg: "#0c1116", button: "#9de9df", dot: "#37535c", progress: "#d6faf5" }
+    },
+    {
+      id: "classroom",
+      image: "assets/gallery-classroom-4k.jpg",
+      position: "center center",
+      alt: {
+        en: "Success Story School classroom and learning space",
+        ar: "\u0635\u0648\u0631\u0629 \u0645\u0646 \u0628\u064A\u0626\u0629 \u0627\u0644\u0635\u0641 \u0648\u0627\u0644\u062A\u0639\u0644\u0645"
+      },
+      kicker: {
+        en: "Learning spaces",
+        ar: "\u0628\u064A\u0626\u0627\u062A \u0627\u0644\u062A\u0639\u0644\u0645"
+      },
+      title: {
+        en: "Classroom views that complete the school picture.",
+        ar: "\u0645\u0634\u0627\u0647\u062F \u0645\u0646 \u0627\u0644\u0635\u0641\u0648\u0641 \u062A\u0643\u0645\u0644 \u0635\u0648\u0631\u0629 \u0627\u0644\u062D\u064A\u0627\u0629 \u0627\u0644\u0645\u062F\u0631\u0633\u064A\u0629."
+      },
+      description: {
+        en: "This frame keeps the gallery grounded in teaching spaces and everyday classroom reality, not just exterior branding.",
+        ar: "\u0647\u0630\u0627 \u0627\u0644\u0645\u0634\u0647\u062F \u064A\u0628\u0642\u064A \u0627\u0644\u0645\u0639\u0631\u0636 \u0645\u0631\u062A\u0628\u0637\u0627\u064B \u0628\u0628\u064A\u0626\u0629 \u0627\u0644\u062A\u0639\u0644\u064A\u0645 \u0648\u0627\u0644\u062D\u064A\u0627\u0629 \u0627\u0644\u062F\u0631\u0627\u0633\u064A\u0629 \u0627\u0644\u064A\u0648\u0645\u064A\u0629."
+      },
+      theme: { bg: "#101318", button: "#f8fafc", dot: "#4e5b66", progress: "#e0e8f1" }
+    }
+  ];
+
+  // src/carousel/SchoolPhotoCarousel.jsx
+  var AUTO_DELAY = 5200;
+  function SchoolPhotoCarousel({ locale = "en" }) {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const slides = useMemo(() => gallerySlides, []);
+    const currentSlide = slides[currentIndex] ?? slides[0];
+    const copy2 = locale === "ar" ? {
+      region: "\u0645\u0639\u0631\u0636 \u0635\u0648\u0631 \u0627\u0644\u0645\u062F\u0631\u0633\u0629",
+      counter: "\u0631\u0642\u0645 \u0627\u0644\u0635\u0648\u0631\u0629",
+      navigator: "\u0627\u0644\u062A\u0646\u0642\u0644 \u0628\u064A\u0646 \u0635\u0648\u0631 \u0627\u0644\u0645\u062F\u0631\u0633\u0629"
+    } : {
+      region: "School photo gallery",
+      counter: "Slide",
+      navigator: "Navigate school photos"
+    };
     useEffect(() => {
-      if (SchoolPhotoCarousel) {
+      if (slides.length <= 1) {
         return void 0;
       }
-      const handleCarouselReady = () => {
-        const carouselComponent = window.SuccessStoryCarousel?.SchoolPhotoCarousel ?? null;
-        if (carouselComponent) {
-          setSchoolPhotoCarousel(() => carouselComponent);
-        }
-      };
-      window.addEventListener("success-story-carousel-ready", handleCarouselReady);
-      handleCarouselReady();
-      return () => window.removeEventListener("success-story-carousel-ready", handleCarouselReady);
-    }, [SchoolPhotoCarousel]);
-    if (!SchoolPhotoCarousel) {
-      return null;
-    }
+      const timeoutId = window.setTimeout(() => {
+        setCurrentIndex((index) => (index + 1) % slides.length);
+      }, AUTO_DELAY);
+      return () => window.clearTimeout(timeoutId);
+    }, [currentIndex, slides.length]);
+    return /* @__PURE__ */ jsx("div", { className: "school-photo-carousel", "aria-label": copy2.region, children: /* @__PURE__ */ jsxs("div", { className: "school-photo-stage", children: [
+      /* @__PURE__ */ jsx(AnimatePresence, { mode: "wait", children: /* @__PURE__ */ jsxs(
+        motion.figure,
+        {
+          className: "school-photo-figure",
+          initial: { opacity: 0.22 },
+          animate: { opacity: 1 },
+          exit: { opacity: 0.22 },
+          transition: { duration: 0.34, ease: [0.22, 1, 0.36, 1] },
+          children: [
+            /* @__PURE__ */ jsx(
+              motion.div,
+              {
+                className: "school-photo-backdrop",
+                style: {
+                  backgroundImage: `url(${currentSlide.image})`,
+                  backgroundPosition: currentSlide.position ?? "center center"
+                },
+                initial: { opacity: 0 },
+                animate: { opacity: 1 },
+                exit: { opacity: 0 },
+                transition: { duration: 0.34, ease: [0.22, 1, 0.36, 1] }
+              }
+            ),
+            /* @__PURE__ */ jsx(
+              motion.img,
+              {
+                className: "school-photo-image",
+                src: currentSlide.image,
+                alt: currentSlide.alt[locale] ?? currentSlide.alt.en,
+                style: { objectPosition: currentSlide.position ?? "center center" },
+                initial: { opacity: 0.56 },
+                animate: { opacity: 1 },
+                exit: { opacity: 0.48 },
+                transition: { duration: 0.36, ease: [0.22, 1, 0.36, 1] },
+                loading: currentIndex === 0 ? "eager" : "lazy",
+                fetchPriority: currentIndex === 0 ? "high" : "auto",
+                decoding: "async"
+              }
+            ),
+            /* @__PURE__ */ jsxs(
+              motion.figcaption,
+              {
+                className: "school-photo-caption",
+                initial: { opacity: 0 },
+                animate: { opacity: 1 },
+                exit: { opacity: 0 },
+                transition: { duration: 0.24, delay: 0.04 },
+                children: [
+                  /* @__PURE__ */ jsx("span", { className: "school-photo-kicker", children: currentSlide.kicker[locale] ?? currentSlide.kicker.en }),
+                  /* @__PURE__ */ jsx("h3", { children: currentSlide.title[locale] ?? currentSlide.title.en }),
+                  /* @__PURE__ */ jsx("p", { children: currentSlide.description[locale] ?? currentSlide.description.en })
+                ]
+              }
+            )
+          ]
+        },
+        currentSlide.id
+      ) }),
+      /* @__PURE__ */ jsxs("div", { className: "school-photo-carousel-footer", children: [
+        /* @__PURE__ */ jsxs("div", { className: "school-photo-carousel-meta", children: [
+          /* @__PURE__ */ jsx("span", { children: copy2.counter }),
+          /* @__PURE__ */ jsxs("strong", { children: [
+            String(currentIndex + 1).padStart(2, "0"),
+            " / ",
+            String(slides.length).padStart(2, "0")
+          ] })
+        ] }),
+        /* @__PURE__ */ jsx("div", { "aria-label": copy2.navigator, children: /* @__PURE__ */ jsx(
+          CarouselNavigator,
+          {
+            totalSlides: slides.length,
+            autoDelay: AUTO_DELAY,
+            themes: slides.map((slide) => slide.theme),
+            currentIndex,
+            onIndexChange: setCurrentIndex
+          }
+        ) })
+      ] })
+    ] }) });
+  }
+
+  // src/site/components/sections/GallerySection.jsx
+  function GallerySection({ galleryCopy, isArabic }) {
     return /* @__PURE__ */ jsxs("section", { className: "section gallery-section", id: "gallery", children: [
       /* @__PURE__ */ jsxs("div", { className: "shell split-heading gallery-heading", children: [
         /* @__PURE__ */ jsxs("div", { children: [
@@ -9747,9 +10364,9 @@
     return /* @__PURE__ */ jsxs("section", { className: "section portal-hub", id: "portals", children: [
       /* @__PURE__ */ jsx(SplitHeading, { eyebrow: t.navPortals, title: t.quickPortalTitle, text: t.quickPortalText }),
       /* @__PURE__ */ jsx("div", { className: "shell card-grid three", children: portals.map((portal) => {
-        const Icon = portal.icon;
+        const Icon2 = portal.icon;
         return /* @__PURE__ */ jsxs("article", { className: "info-card portal-card", "data-reveal-card": true, children: [
-          /* @__PURE__ */ jsx(Icon, { size: 30, strokeWidth: 2.1, "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx(Icon2, { size: 30, strokeWidth: 2.1, "aria-hidden": "true" }),
           /* @__PURE__ */ jsx("h3", { children: t[portal.title] }),
           /* @__PURE__ */ jsx("p", { children: t[portal.text] }),
           /* @__PURE__ */ jsx(ActionLink, { href: portal.href, variant: "subtle", children: t.open })
@@ -9796,9 +10413,9 @@
         /* @__PURE__ */ jsx("p", { children: t.proofText })
       ] }),
       /* @__PURE__ */ jsx("div", { className: "proof-grid", children: proofPoints.map((point) => {
-        const Icon = point.icon;
+        const Icon2 = point.icon;
         return /* @__PURE__ */ jsxs("article", { className: "proof-card", "data-reveal-card": true, children: [
-          /* @__PURE__ */ jsx(Icon, { size: 27, strokeWidth: 2.1, "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx(Icon2, { size: 27, strokeWidth: 2.1, "aria-hidden": "true" }),
           /* @__PURE__ */ jsx("h3", { children: t[point.title] }),
           /* @__PURE__ */ jsx("p", { children: t[point.text] })
         ] }, point.title);
@@ -9892,3 +10509,24 @@
     window.ReactDOM.createRoot(rootElement).render(/* @__PURE__ */ jsx(App, {}));
   }
 })();
+/*! Bundled license information:
+
+lucide-react/dist/esm/shared/src/utils/mergeClasses.mjs:
+lucide-react/dist/esm/shared/src/utils/toKebabCase.mjs:
+lucide-react/dist/esm/shared/src/utils/toCamelCase.mjs:
+lucide-react/dist/esm/shared/src/utils/toPascalCase.mjs:
+lucide-react/dist/esm/defaultAttributes.mjs:
+lucide-react/dist/esm/shared/src/utils/hasA11yProp.mjs:
+lucide-react/dist/esm/context.mjs:
+lucide-react/dist/esm/Icon.mjs:
+lucide-react/dist/esm/createLucideIcon.mjs:
+lucide-react/dist/esm/icons/chevron-left.mjs:
+lucide-react/dist/esm/icons/chevron-right.mjs:
+lucide-react/dist/esm/lucide-react.mjs:
+  (**
+   * @license lucide-react v1.18.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   *)
+*/

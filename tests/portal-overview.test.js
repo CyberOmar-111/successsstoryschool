@@ -542,36 +542,33 @@ test("homepage uses production school content instead of demo or coding language
   assert.match(readme, /admissions inquiry, campus directions, grade information/);
 });
 
-test("homepage gallery uses separate Watermelon-inspired carousel files", () => {
+test("homepage gallery bundles the Watermelon-inspired carousel directly", () => {
   const carouselBundle = fs.readFileSync(path.join(root, "school-carousel.js"), "utf8");
-  const carouselEntrySource = fs.readFileSync(path.join(root, "src", "carousel", "index.jsx"), "utf8");
   const navigatorSource = fs.readFileSync(path.join(root, "src", "carousel", "CarouselNavigator.jsx"), "utf8");
   const carouselSource = fs.readFileSync(path.join(root, "src", "carousel", "SchoolPhotoCarousel.jsx"), "utf8");
   const gallerySource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "GallerySection.jsx"), "utf8");
   const slideSource = fs.readFileSync(path.join(root, "src", "carousel", "school-gallery-slides.js"), "utf8");
   const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
 
-  assert.match(indexHtml, /<script defer src="school-carousel\.js\?v=20260620-react-src"><\/script>/);
   assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-react-src"><\/script>/);
+  assert.doesNotMatch(indexHtml, /school-carousel\.js/);
   assert.match(packageJson, /"build:carousel": "node scripts[\\\\/]build-carousel\.mjs"/);
   assert.match(packageJson, /"motion":/);
   assert.match(packageJson, /"lucide-react":/);
   assert.match(homepageJs, /SchoolPhotoCarousel/);
   assert.match(homepageJs, /gallery-section/);
+  assert.match(homepageJs, /school-gallery-slides\.js/);
   assert.match(homepageCss, /\.school-photo-carousel/);
   assert.match(homepageCss, /\.wm-carousel-nav/);
   assert.match(navigatorSource, /motion\/react/);
   assert.match(navigatorSource, /lucide-react/);
   assert.match(carouselSource, /AnimatePresence/);
-  assert.match(carouselEntrySource, /success-story-carousel-ready/);
-  assert.match(gallerySource, /useState/);
-  assert.match(gallerySource, /success-story-carousel-ready/);
-  assert.match(gallerySource, /setSchoolPhotoCarousel/);
+  assert.match(gallerySource, /import \{ SchoolPhotoCarousel \} from "\.\.\/\.\.\/\.\.\/carousel\/SchoolPhotoCarousel\.jsx"/);
+  assert.doesNotMatch(gallerySource, /window\.SuccessStoryCarousel|success-story-carousel-ready/);
   assert.match(slideSource, /gallery-campus-4k\.jpg/);
   assert.match(slideSource, /gallery-activity-4k\.jpg/);
   assert.match(slideSource, /gallery-classroom-4k\.jpg/);
   assert.match(carouselBundle, /SchoolPhotoCarousel/);
-  assert.match(carouselBundle, /success-story-carousel-ready/);
 });
 
 

@@ -239,9 +239,10 @@ build scripts run. Components in `src/site/components/examples` are reference
 examples and do not render unless they are imported into the homepage or portal
 entry point.
 
-The photo carousel is split into `src/carousel` and exposed through
-`school-carousel.js`; the homepage listens for the carousel-ready event so the
-gallery still renders if the bundles load in a slightly different order.
+The photo carousel source lives in `src/carousel` and is imported directly by
+the homepage gallery section, so rebuilding `school-app.js` is enough for the
+carousel to appear on the website. `school-carousel.js` can still be generated
+for standalone carousel work, but `index.html` does not depend on it.
 ## Quality Checks
 
 Run these before deploying:
