@@ -248,8 +248,8 @@ test("Twilio Verify MFA is wired as a post-password session gate", () => {
   assert.match(server, /getattr\(verification_check, "status", ""\) == "approved"/);
   assert.match(server, /elif request_path == "\/api\/auth\/mfa":/);
   assert.match(server, /self\.handle_mfa_verify\(body, "student"\)/);
-  assert.match(server, /elif request_path == "\/api\/admin\/mfa":/);
-  assert.match(server, /self\.handle_mfa_verify\(body, "admin"\)/);
+  assert.doesNotMatch(server, /elif request_path == "\/api\/admin\/mfa":/);
+  assert.doesNotMatch(server, /self\.handle_mfa_verify\(body, "admin"\)/);
   assert.match(server, /elif request_path == "\/api\/teacher\/mfa":/);
   assert.match(server, /self\.handle_mfa_verify\(body, "teacher"\)/);
   assert.match(server, /MFA_ENABLED and request_path in \{/);
@@ -260,7 +260,8 @@ test("Twilio Verify MFA is wired as a post-password session gate", () => {
   assert.match(server, /def handle_mfa_verify\(self, body, expected_account_type\):/);
   assert.match(server, /not re\.fullmatch\(r"\\d\{6\}", code\)/);
   assert.match(server, /if self\.begin_mfa_challenge\("student", student_id, attempt_key\):[\s\S]*?return[\s\S]*?self\.create_login_session\(connection, "student", student\)/);
-  assert.match(server, /if self\.begin_mfa_challenge\("admin", admin_id, attempt_key\):[\s\S]*?return[\s\S]*?self\.create_login_session\(connection, "admin", admin\)/);
+  assert.doesNotMatch(server, /self\.begin_mfa_challenge\("admin", admin_id, attempt_key\)/);
+  assert.match(server, /payload, cookie = self\.create_login_session\(connection, "admin", admin\)/);
   assert.match(server, /if self\.begin_mfa_challenge\("teacher", teacher_id, attempt_key\):[\s\S]*?return[\s\S]*?self\.create_login_session\(connection, "teacher", teacher\)/);
   assert.match(server, /should_send_mfa_code = MFA_ENABLED and not bool\(student\["is_approved"\]\)/);
   assert.match(server, /lookup_valid = twilio_lookup_valid_jordanian\(student\["phone_number"\]\)/);
@@ -279,8 +280,8 @@ test("Twilio Verify MFA is wired as a post-password session gate", () => {
   assert.doesNotMatch(js, /window\.prompt/);
   assert.match(teacherJs, /completeMfaChallenge\(result\)/);
   assert.match(teacherJs, /api\("\/api\/teacher\/mfa"/);
-  assert.match(adminJs, /completeMfaChallenge\(result\)/);
-  assert.match(adminJs, /api\("\/api\/admin\/mfa"/);
+  assert.doesNotMatch(adminJs, /completeMfaChallenge\(result\)/);
+  assert.doesNotMatch(adminJs, /api\("\/api\/admin\/mfa"/);
   assert.match(adminJs, /mfa_phone_invalid: "phoneLookupUnavailable"/);
   assert.match(adminJs, /studentVerifiedCodeSent/);
   assert.match(adminJs, /result\.mfaNotificationSent \? "studentVerifiedCodeSent" : "studentVerified"/);

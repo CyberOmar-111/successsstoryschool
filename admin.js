@@ -385,23 +385,6 @@ function errorText(error) {
   return text(errors[error.code] || "genericError");
 }
 
-async function completeMfaChallenge(result) {
-  if (!result.mfaRequired) {
-    return result;
-  }
-  loginStatus.textContent = text("mfaRequired");
-  const code = window.prompt(text("mfaPrompt").replace("{phone}", result.phoneHint || "your phone"));
-  if (!code) {
-    const error = new Error(text("mfaRequired"));
-    error.code = "mfa_code_required";
-    throw error;
-  }
-  return api("/api/admin/mfa", {
-    method: "POST",
-    body: JSON.stringify({ challengeId: result.challengeId, code })
-  });
-}
-
 function className(value) {
   if (!value) {
     return text("noClass");
@@ -804,8 +787,7 @@ loginForm.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify({ adminId: values.get("adminId"), password: values.get("password") })
     });
-    const signedIn = await completeMfaChallenge(result);
-    admin = signedIn.admin;
+    admin = result.admin;
     loginForm.reset();
     await openDashboard();
   } catch (error) {

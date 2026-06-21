@@ -1535,12 +1535,10 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.send_json(400, {"code": "bad_request", "error": "Invalid request."})
             return
 
-        if request_path in {"/api/auth/register", "/api/admin/setup"} or (
+        if request_path in {"/api/auth/register", "/api/admin/setup", "/api/admin/login"} or (
             MFA_ENABLED and request_path in {
                 "/api/auth/login",
                 "/api/auth/mfa",
-                "/api/admin/login",
-                "/api/admin/mfa",
                 "/api/teacher/login",
                 "/api/teacher/mfa",
             }
@@ -1563,8 +1561,6 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_admin_setup(body)
         elif request_path == "/api/admin/login":
             self.handle_admin_login(body)
-        elif request_path == "/api/admin/mfa":
-            self.handle_mfa_verify(body, "admin")
         elif request_path == "/api/admin/logout":
             self.handle_admin_logout()
         elif request_path == "/api/admin/accounts":
@@ -2018,8 +2014,6 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             code = "login_locked" if blocked_until else "invalid_login"
             status = 429 if blocked_until else 401
             self.send_json(status, {"code": code, "error": "Invalid administrator ID or password."})
-            return
-        if self.begin_mfa_challenge("admin", admin_id, attempt_key):
             return
         with db_connection() as connection:
             connection.execute("DELETE FROM login_attempts WHERE attempt_key = ?", (attempt_key,))

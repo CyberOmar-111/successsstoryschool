@@ -237,7 +237,7 @@ SSS_MFA_ENABLED=1
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=your-twilio-auth-token
 TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SSS_MFA_PHONE_NUMBERS={"ADM-0001":"+962700000000","TCH-001":"+962700000001"}
+SSS_MFA_PHONE_NUMBERS={"TCH-001":"+962700000001"}
 ```
 
 Student signup accepts Jordanian mobile numbers such as `0791234567`,
@@ -249,28 +249,31 @@ so older saved numbers are checked too. Twilio's basic validation confirms the
 number format/country validity; deeper reachability or line-status checks
 require Twilio's paid Lookup packages.
 
-Administrator and teacher phone numbers still come from `SSS_MFA_PHONE_NUMBERS`
-until staff account phone fields are added. If MFA is enabled and an account
-does not have a valid phone number, the server refuses the login instead of
-falling back to password-only access.
+Teacher phone numbers still come from `SSS_MFA_PHONE_NUMBERS` until staff
+account phone fields are added. Administrators do not use SMS MFA; administrator
+login remains ID/password only so school staff can manage accounts even when SMS
+setup is being adjusted. If MFA is enabled and a teacher or student does not
+have a valid phone number, the server refuses that login instead of falling back
+to password-only access.
 
-Important: once this is deployed in production with MFA enabled, student,
-teacher, and administrator logins will not finish unless the Twilio credentials
-are valid and each account has a valid saved or configured phone number.
+Important: once this is deployed in production with MFA enabled, student and
+teacher logins will not finish unless the Twilio credentials are valid and each
+account has a valid saved or configured phone number. Administrator login does
+not require Twilio.
 
 The MFA flow is:
 
-1. The user submits their ID and password to the existing login endpoint.
+1. The student or teacher submits their ID and password to the existing login endpoint.
 2. After the password matches, the server calls Twilio Verify to send an SMS
-   code to the saved student number or configured staff number, then stores a
+   code to the saved student number or configured teacher number, then stores a
    temporary `mfa_challenges` row.
 3. The server returns `mfaRequired`, `challengeId`, `expiresInSeconds`, and a
    masked `phoneHint`; no session cookie is issued yet.
 4. The student portal shows an in-page verification form for the 6-digit code,
-   then posts it to `/api/auth/mfa`. Teacher and admin logins post to
-   `/api/teacher/mfa` and `/api/admin/mfa`.
+   then posts it to `/api/auth/mfa`. Teacher login posts to `/api/teacher/mfa`.
 5. Only after Twilio returns `approved` does the server create the real
-   student, teacher, or administrator session cookie.
+   student or teacher session cookie. Administrators receive their session after
+   a valid password check.
 
 Challenges expire after 5 minutes and lock after 5 invalid verification
 attempts.
