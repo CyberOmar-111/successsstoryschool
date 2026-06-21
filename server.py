@@ -18,11 +18,31 @@ def env_flag(name):
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def load_mfa_phone_numbers():
+    raw = os.environ.get("SSS_MFA_PHONE_NUMBERS", "").strip()
+    if not raw:
+        return {}
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    return {str(key).upper(): str(value).strip() for key, value in payload.items()}
+
+
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("SSS_DATA_DIR", str(ROOT / ".data")))
 DB_PATH = DATA_DIR / "portal.db"
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 ADMIN_SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "").strip()
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
+TWILIO_VERIFY_SERVICE_SID = os.environ.get("TWILIO_VERIFY_SERVICE_SID", "").strip()
+MFA_ENABLED = env_flag("SSS_MFA_ENABLED")
+MFA_PHONE_NUMBERS = load_mfa_phone_numbers()
+MFA_TTL_SECONDS = 5 * 60
+MFA_MAX_FAILURES = 5
 IS_POSTGRES = bool(DATABASE_URL)
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "4173"))
@@ -216,6 +236,7 @@ def initialize_sqlite_database():
                 full_name TEXT NOT NULL,
                 password_salt BLOB NOT NULL,
                 password_hash BLOB NOT NULL,
+                phone_number TEXT NOT NULL,
                 grade INTEGER CHECK (grade BETWEEN 1 AND 10),
                 transport TEXT CHECK (transport IN ('bus', 'none') OR transport IS NULL),
                 class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
@@ -236,6 +257,17 @@ def initialize_sqlite_database():
                 failure_count INTEGER NOT NULL,
                 window_started INTEGER NOT NULL,
                 blocked_until INTEGER NOT NULL DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS mfa_challenges (
+                challenge_id TEXT PRIMARY KEY,
+                account_type TEXT NOT NULL CHECK (account_type IN ('student', 'admin', 'teacher')),
+                account_id TEXT NOT NULL,
+                phone_number TEXT NOT NULL,
+                attempt_key TEXT NOT NULL,
+                expires_at INTEGER NOT NULL,
+                failure_count INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS registration_attempts (
@@ -355,6 +387,8 @@ def initialize_sqlite_database():
             connection.execute(
                 "ALTER TABLE students ADD COLUMN class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL"
             )
+        if "phone_number" not in student_columns:
+            connection.execute("ALTER TABLE students ADD COLUMN phone_number TEXT")
         if "requested_class_id" not in student_columns:
             connection.execute(
                 "ALTER TABLE students ADD COLUMN requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL"
@@ -415,6 +449,7 @@ def initialize_sqlite_database():
         connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM admin_sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM teacher_sessions WHERE expires_at <= ?", (int(time.time()),))
+        connection.execute("DELETE FROM mfa_challenges WHERE expires_at <= ?", (int(time.time()),))
 
 
 def initialize_postgres_database():
@@ -439,6 +474,7 @@ def initialize_postgres_database():
             full_name TEXT NOT NULL,
             password_salt BYTEA NOT NULL,
             password_hash BYTEA NOT NULL,
+            phone_number TEXT,
             grade INTEGER CHECK (grade BETWEEN 1 AND 10),
             transport TEXT CHECK (transport IN ('bus', 'none') OR transport IS NULL),
             class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
@@ -461,6 +497,18 @@ def initialize_postgres_database():
             failure_count INTEGER NOT NULL,
             window_started INTEGER NOT NULL,
             blocked_until INTEGER NOT NULL DEFAULT 0
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS mfa_challenges (
+            challenge_id TEXT PRIMARY KEY,
+            account_type TEXT NOT NULL CHECK (account_type IN ('student', 'admin', 'teacher')),
+            account_id TEXT NOT NULL,
+            phone_number TEXT NOT NULL,
+            attempt_key TEXT NOT NULL,
+            expires_at INTEGER NOT NULL,
+            failure_count INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT)
         )
         """,
         """
@@ -599,6 +647,7 @@ def initialize_postgres_database():
             [(grade, section) for grade, section, _group in AVAILABLE_HOMEROOMS],
         )
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL")
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS phone_number TEXT")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS is_approved BOOLEAN NOT NULL DEFAULT TRUE")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS approved_at TEXT")
         connection.execute(
@@ -607,6 +656,7 @@ def initialize_postgres_database():
         connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM admin_sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM teacher_sessions WHERE expires_at <= ?", (int(time.time()),))
+        connection.execute("DELETE FROM mfa_challenges WHERE expires_at <= ?", (int(time.time()),))
 
 
 def ensure_post_dismissals_table(connection):
@@ -719,6 +769,54 @@ def parse_homeroom_code(value):
     return (grade, section) if homeroom_group(grade, section) else None
 
 
+def valid_mfa_phone(phone_number):
+    return bool(re.fullmatch(r"\+[1-9]\d{7,14}", phone_number or ""))
+
+
+def normalize_jordanian_phone(value):
+    digits = re.sub(r"\D", "", str(value or ""))
+    if digits.startswith("00962"):
+        digits = digits[2:]
+    if digits.startswith("962"):
+        normalized = f"+{digits}"
+    elif digits.startswith("07"):
+        normalized = f"+962{digits[1:]}"
+    elif digits.startswith("7"):
+        normalized = f"+962{digits}"
+    else:
+        return None
+    return normalized if re.fullmatch(r"\+9627[789]\d{7}", normalized) else None
+
+
+def mask_phone_number(phone_number):
+    if len(phone_number) <= 5:
+        return "configured phone"
+    return f"{phone_number[:3]}***{phone_number[-2:]}"
+
+
+def twilio_verify_ready():
+    return bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_VERIFY_SERVICE_SID)
+
+
+def twilio_verify_client():
+    from twilio.rest import Client
+
+    return Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+
+def send_twilio_sms_verification(phone_number):
+    return twilio_verify_client().verify.v2.services(
+        TWILIO_VERIFY_SERVICE_SID
+    ).verifications.create(to=phone_number, channel="sms")
+
+
+def check_twilio_sms_verification(phone_number, code):
+    verification_check = twilio_verify_client().verify.v2.services(
+        TWILIO_VERIFY_SERVICE_SID
+    ).verification_checks.create(to=phone_number, code=code)
+    return getattr(verification_check, "status", "") == "approved"
+
+
 def public_student(row):
     class_name = None
     class_id = row["class_id"] if "class_id" in row.keys() else None
@@ -736,6 +834,7 @@ def public_student(row):
         "name": row["full_name"],
         "grade": row["grade"],
         "transport": row["transport"],
+        "phoneHint": mask_phone_number(row["phone_number"]) if "phone_number" in row.keys() and row["phone_number"] else None,
         "classId": class_id,
         "className": class_name,
         "requestedClassId": requested_class_id,
@@ -1416,13 +1515,24 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.send_json(400, {"code": "bad_request", "error": "Invalid request."})
             return
 
-        if request_path in {"/api/auth/register", "/api/admin/setup"}:
+        if request_path in {"/api/auth/register", "/api/admin/setup"} or (
+            MFA_ENABLED and request_path in {
+                "/api/auth/login",
+                "/api/auth/mfa",
+                "/api/admin/login",
+                "/api/admin/mfa",
+                "/api/teacher/login",
+                "/api/teacher/mfa",
+            }
+        ):
             initialize_database()
 
         if request_path == "/api/auth/register":
             self.handle_register(body)
         elif request_path == "/api/auth/login":
             self.handle_login(body)
+        elif request_path == "/api/auth/mfa":
+            self.handle_mfa_verify(body, "student")
         elif request_path == "/api/auth/logout":
             self.handle_logout()
         elif request_path == "/api/portal/profile":
@@ -1433,6 +1543,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_admin_setup(body)
         elif request_path == "/api/admin/login":
             self.handle_admin_login(body)
+        elif request_path == "/api/admin/mfa":
+            self.handle_mfa_verify(body, "admin")
         elif request_path == "/api/admin/logout":
             self.handle_admin_logout()
         elif request_path == "/api/admin/accounts":
@@ -1459,6 +1571,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_class_record_delete(body)
         elif request_path == "/api/teacher/login":
             self.handle_teacher_login(body)
+        elif request_path == "/api/teacher/mfa":
+            self.handle_mfa_verify(body, "teacher")
         elif request_path == "/api/teacher/logout":
             self.handle_teacher_logout()
         elif request_path == "/api/teacher/homework":
@@ -1504,8 +1618,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         name = clean_text(body.get("name"))
         password = str(body.get("password", ""))
         homeroom = parse_homeroom_code(body.get("classCode"))
+        phone_number = normalize_jordanian_phone(body.get("phoneNumber"))
         if len(name) < 2:
             self.send_json(400, {"code": "name_required", "error": "Enter the student's full name."})
+            return
+        if not phone_number:
+            self.send_json(400, {"code": "phone_rule", "error": "Enter a valid Jordanian mobile number."})
             return
         if not valid_password(password):
             self.send_json(
@@ -1546,11 +1664,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 """
                 INSERT INTO students (
                     student_id, full_name, password_salt, password_hash,
-                    grade, class_id, requested_class_id, is_approved
+                    phone_number, grade, class_id, requested_class_id, is_approved
                 )
-                VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)
                 """,
-                (student_id, name, salt, hashed, grade, class_row["id"], False),
+                (student_id, name, salt, hashed, phone_number, grade, class_row["id"], False),
             )
             connection.commit()
         self.send_json(201, {"studentId": student_id})
@@ -1595,6 +1713,157 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             )
         return blocked_until
 
+    def create_login_session(self, connection, account_type, account):
+        token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(token.encode("ascii")).hexdigest()
+        expires_at = int(time.time()) + SESSION_TTL_SECONDS
+        if account_type == "student":
+            connection.execute(
+                "INSERT INTO sessions (token_hash, student_id, expires_at) VALUES (?, ?, ?)",
+                (token_hash, account["student_id"], expires_at),
+            )
+            return {"user": public_student(account)}, self.session_cookie("sss_session", token, SESSION_TTL_SECONDS)
+        if account_type == "admin":
+            connection.execute(
+                "INSERT INTO admin_sessions (token_hash, admin_id, expires_at) VALUES (?, ?, ?)",
+                (token_hash, account["admin_id"], expires_at),
+            )
+            return (
+                {"admin": {"adminId": account["admin_id"], "name": account["full_name"]}},
+                self.session_cookie("sss_admin_session", token, SESSION_TTL_SECONDS),
+            )
+        connection.execute(
+            "INSERT INTO teacher_sessions (token_hash, teacher_id, expires_at) VALUES (?, ?, ?)",
+            (token_hash, account["teacher_id"], expires_at),
+        )
+        return {"teacher": public_teacher(account)}, self.session_cookie("sss_teacher_session", token, SESSION_TTL_SECONDS)
+
+    def account_phone_number(self, account_type, account_id):
+        if account_type == "student":
+            with db_connection() as connection:
+                row = connection.execute(
+                    "SELECT phone_number FROM students WHERE student_id = ?",
+                    (account_id,),
+                ).fetchone()
+            phone_number = row["phone_number"] if row else ""
+            return phone_number if valid_mfa_phone(phone_number) else ""
+        phone_number = MFA_PHONE_NUMBERS.get(account_id.upper(), "")
+        return phone_number if valid_mfa_phone(phone_number) else ""
+
+    def begin_mfa_challenge(self, account_type, account_id, attempt_key):
+        if not MFA_ENABLED:
+            return False
+        if not twilio_verify_ready():
+            self.send_json(503, {"code": "mfa_not_configured", "error": "MFA is enabled but Twilio Verify is not configured."})
+            return True
+        phone_number = self.account_phone_number(account_type, account_id)
+        if not phone_number:
+            self.send_json(403, {"code": "mfa_phone_missing", "error": "No verified phone number is configured for this account."})
+            return True
+        challenge_id = secrets.token_urlsafe(24)
+        expires_at = int(time.time()) + MFA_TTL_SECONDS
+        try:
+            send_twilio_sms_verification(phone_number)
+        except Exception:
+            self.send_json(502, {"code": "mfa_send_failed", "error": "Could not send the MFA verification code."})
+            return True
+        with db_connection() as connection:
+            connection.execute("DELETE FROM mfa_challenges WHERE expires_at <= ?", (int(time.time()),))
+            connection.execute(
+                "DELETE FROM mfa_challenges WHERE account_type = ? AND account_id = ?",
+                (account_type, account_id),
+            )
+            connection.execute(
+                """
+                INSERT INTO mfa_challenges (
+                    challenge_id, account_type, account_id, phone_number,
+                    attempt_key, expires_at, failure_count
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 0)
+                """,
+                (challenge_id, account_type, account_id, phone_number, attempt_key, expires_at),
+            )
+        self.send_json(
+            200,
+            {
+                "mfaRequired": True,
+                "challengeId": challenge_id,
+                "expiresInSeconds": MFA_TTL_SECONDS,
+                "phoneHint": mask_phone_number(phone_number),
+            },
+        )
+        return True
+
+    def handle_mfa_verify(self, body, expected_account_type):
+        if not MFA_ENABLED:
+            self.send_json(404, {"code": "not_found", "error": "Not found."})
+            return
+        challenge_id = clean_text(body.get("challengeId"), 120)
+        code = clean_text(body.get("code"), 12)
+        if not challenge_id or not re.fullmatch(r"\d{6}", code):
+            self.send_json(400, {"code": "mfa_code_required", "error": "Enter the 6-digit verification code."})
+            return
+        now = int(time.time())
+        with db_connection() as connection:
+            connection.execute("DELETE FROM mfa_challenges WHERE expires_at <= ?", (now,))
+            challenge = connection.execute(
+                """
+                SELECT * FROM mfa_challenges
+                WHERE challenge_id = ? AND account_type = ? AND expires_at > ?
+                """,
+                (challenge_id, expected_account_type, now),
+            ).fetchone()
+        if not challenge:
+            self.send_json(401, {"code": "invalid_mfa", "error": "The verification code is invalid or expired."})
+            return
+        if challenge["failure_count"] >= MFA_MAX_FAILURES:
+            self.send_json(429, {"code": "mfa_locked", "error": "Too many invalid verification attempts."})
+            return
+        try:
+            approved = check_twilio_sms_verification(challenge["phone_number"], code)
+        except Exception:
+            self.send_json(502, {"code": "mfa_check_failed", "error": "Could not verify the MFA code."})
+            return
+        if not approved:
+            next_failures = challenge["failure_count"] + 1
+            with db_connection() as connection:
+                if next_failures >= MFA_MAX_FAILURES:
+                    connection.execute("DELETE FROM mfa_challenges WHERE challenge_id = ?", (challenge_id,))
+                else:
+                    connection.execute(
+                        "UPDATE mfa_challenges SET failure_count = ? WHERE challenge_id = ?",
+                        (next_failures, challenge_id),
+                    )
+            status = 429 if next_failures >= MFA_MAX_FAILURES else 401
+            code_name = "mfa_locked" if next_failures >= MFA_MAX_FAILURES else "invalid_mfa"
+            self.send_json(status, {"code": code_name, "error": "The verification code is invalid or expired."})
+            return
+
+        with db_connection() as connection:
+            if expected_account_type == "student":
+                account = connection.execute(
+                    STUDENT_WITH_CLASS_SQL + " WHERE students.student_id = ?",
+                    (challenge["account_id"],),
+                ).fetchone()
+            elif expected_account_type == "admin":
+                account = connection.execute(
+                    "SELECT * FROM administrators WHERE admin_id = ?",
+                    (challenge["account_id"],),
+                ).fetchone()
+            else:
+                account = connection.execute(
+                    "SELECT * FROM teachers WHERE teacher_id = ?",
+                    (challenge["account_id"],),
+                ).fetchone()
+            if not account:
+                connection.execute("DELETE FROM mfa_challenges WHERE challenge_id = ?", (challenge_id,))
+                self.send_json(401, {"code": "invalid_mfa", "error": "The verification code is invalid or expired."})
+                return
+            connection.execute("DELETE FROM mfa_challenges WHERE challenge_id = ?", (challenge_id,))
+            connection.execute("DELETE FROM login_attempts WHERE attempt_key = ?", (challenge["attempt_key"],))
+            payload, cookie = self.create_login_session(connection, expected_account_type, account)
+        self.send_json(200, payload, {"Set-Cookie": cookie})
+
     def handle_login(self, body):
         student_id = clean_text(body.get("studentId"), 20).upper()
         password = str(body.get("password", ""))
@@ -1624,18 +1893,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         if not bool(student["is_approved"]):
             self.send_json(403, {"code": "pending_approval", "error": "Waiting for admin permission."})
             return
-
-        token = secrets.token_urlsafe(32)
-        token_hash = hashlib.sha256(token.encode("ascii")).hexdigest()
-        expires_at = int(time.time()) + SESSION_TTL_SECONDS
+        if self.begin_mfa_challenge("student", student_id, attempt_key):
+            return
         with db_connection() as connection:
             connection.execute("DELETE FROM login_attempts WHERE attempt_key = ?", (attempt_key,))
-            connection.execute(
-                "INSERT INTO sessions (token_hash, student_id, expires_at) VALUES (?, ?, ?)",
-                (token_hash, student_id, expires_at),
-            )
-        cookie = self.session_cookie("sss_session", token, SESSION_TTL_SECONDS)
-        self.send_json(200, {"user": public_student(student)}, {"Set-Cookie": cookie})
+            payload, cookie = self.create_login_session(connection, "student", student)
+        self.send_json(200, payload, {"Set-Cookie": cookie})
 
     def handle_logout(self):
         token = self.session_token()
@@ -1724,21 +1987,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             status = 429 if blocked_until else 401
             self.send_json(status, {"code": code, "error": "Invalid administrator ID or password."})
             return
-        token = secrets.token_urlsafe(32)
-        token_hash = hashlib.sha256(token.encode("ascii")).hexdigest()
-        expires_at = int(time.time()) + SESSION_TTL_SECONDS
+        if self.begin_mfa_challenge("admin", admin_id, attempt_key):
+            return
         with db_connection() as connection:
             connection.execute("DELETE FROM login_attempts WHERE attempt_key = ?", (attempt_key,))
-            connection.execute(
-                "INSERT INTO admin_sessions (token_hash, admin_id, expires_at) VALUES (?, ?, ?)",
-                (token_hash, admin_id, expires_at),
-            )
-        cookie = self.session_cookie("sss_admin_session", token, SESSION_TTL_SECONDS)
-        self.send_json(
-            200,
-            {"admin": {"adminId": admin["admin_id"], "name": admin["full_name"]}},
-            {"Set-Cookie": cookie},
-        )
+            payload, cookie = self.create_login_session(connection, "admin", admin)
+        self.send_json(200, payload, {"Set-Cookie": cookie})
 
     def handle_admin_logout(self):
         token = self.cookie_token("sss_admin_session")
@@ -1934,17 +2188,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             status = 429 if blocked_until else 401
             self.send_json(status, {"code": code, "error": "Invalid teacher ID or password."})
             return
-        token = secrets.token_urlsafe(32)
-        token_hash = hashlib.sha256(token.encode("ascii")).hexdigest()
-        expires_at = int(time.time()) + SESSION_TTL_SECONDS
+        if self.begin_mfa_challenge("teacher", teacher_id, attempt_key):
+            return
         with db_connection() as connection:
             connection.execute("DELETE FROM login_attempts WHERE attempt_key = ?", (attempt_key,))
-            connection.execute(
-                "INSERT INTO teacher_sessions (token_hash, teacher_id, expires_at) VALUES (?, ?, ?)",
-                (token_hash, teacher_id, expires_at),
-            )
-        cookie = self.session_cookie("sss_teacher_session", token, SESSION_TTL_SECONDS)
-        self.send_json(200, {"teacher": public_teacher(teacher)}, {"Set-Cookie": cookie})
+            payload, cookie = self.create_login_session(connection, "teacher", teacher)
+        self.send_json(200, payload, {"Set-Cookie": cookie})
 
     def handle_teacher_logout(self):
         token = self.cookie_token("sss_teacher_session")
@@ -2246,9 +2495,26 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             return
         grade, section = homeroom
         with db_connection() as connection:
-            if not self.admin_student_exists(connection, student_id):
+            student = connection.execute(
+                "SELECT phone_number, is_approved FROM students WHERE student_id = ?",
+                (student_id,),
+            ).fetchone()
+            if not student:
                 self.send_json(404, {"code": "student_not_found", "error": "Student not found."})
                 return
+            should_send_mfa_code = MFA_ENABLED and not bool(student["is_approved"])
+            if should_send_mfa_code and not twilio_verify_ready():
+                self.send_json(503, {"code": "mfa_not_configured", "error": "MFA is enabled but Twilio Verify is not configured."})
+                return
+            if should_send_mfa_code and not valid_mfa_phone(student["phone_number"]):
+                self.send_json(403, {"code": "mfa_phone_missing", "error": "No verified phone number is configured for this account."})
+                return
+            if should_send_mfa_code:
+                try:
+                    send_twilio_sms_verification(student["phone_number"])
+                except Exception:
+                    self.send_json(502, {"code": "mfa_send_failed", "error": "Could not send the MFA verification code."})
+                    return
             connection.execute(
                 "INSERT INTO classes (grade, section) VALUES (?, ?) ON CONFLICT (grade, section) DO NOTHING",
                 (grade, section),
@@ -2266,7 +2532,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 """,
                 (class_row["id"], class_row["id"], grade, student_id),
             )
-        self.send_json(200, {"class": public_class(class_row)})
+        self.send_json(200, {"class": public_class(class_row), "mfaNotificationSent": should_send_mfa_code})
 
     def handle_student_decline(self, body):
         if not self.require_admin():

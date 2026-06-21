@@ -13,7 +13,17 @@ services:
         value: 24.14.1
       - key: SSS_REQUIRE_ADMIN_SETUP_SECRET
         value: "1"
+      - key: SSS_MFA_ENABLED
+        value: "1"
       - key: ADMIN_SETUP_SECRET
         sync: false
       - key: DATABASE_URL
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_VERIFY_SERVICE_SID
+        sync: false
+      - key: SSS_MFA_PHONE_NUMBERS
         sync: false

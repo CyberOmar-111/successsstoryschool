@@ -46,6 +46,8 @@ const translations = {
     createTitle: "Create a student account",
     createText: "Enter the student's name, request the correct homeroom, and create a private password. School staff approve class access after review.",
     studentName: "Student full name",
+    phoneNumber: "Jordanian mobile number",
+    phoneRule: "Use a Jordan mobile number such as 07XXXXXXXX or +9627XXXXXXXX.",
     classSection: "Class / section",
     chooseClass: "Choose your class",
     class10ABoys: "Grade 10 A - Boys",
@@ -145,9 +147,15 @@ const translations = {
     invalidLogin: "The student ID or password is incorrect.",
     waitingPermission: "Waiting for admin permission.",
     loginLocked: "Too many failed attempts. Sign-in is locked for 15 minutes.",
+    mfaPrompt: "Enter the 6-digit SMS code sent to {phone}.",
+    mfaRequired: "Enter the SMS verification code to finish signing in.",
+    invalidMfa: "The verification code is invalid or expired.",
+    mfaLocked: "Too many invalid verification attempts. Please sign in again.",
+    mfaUnavailable: "SMS verification is not available right now. Please contact the school office.",
     genericError: "Something went wrong. Please try again.",
     registerLimited: "Too many account requests. Please try again later.",
     nameRequired: "Enter the student's full name.",
+    phoneError: "Enter a valid Jordanian mobile number.",
     passwordError: "Password must be 8-128 characters and include a letter and a number.",
     invalidClass: "Choose one of the available homerooms.",
     detailsSaved: "Registration details saved.",
@@ -184,6 +192,8 @@ const translations = {
     createTitle: "إنشاء حساب طالب",
     createText: "أدخل اسم الطالب واختر الشعبة الصحيحة وأنشئ كلمة مرور خاصة. سيصدر نظام المدرسة رقم الطالب.",
     studentName: "اسم الطالب الكامل",
+    phoneNumber: "رقم موبايل أردني",
+    phoneRule: "استخدم رقم موبايل أردني مثل 07XXXXXXXX أو +9627XXXXXXXX.",
     classSection: "الصف / الشعبة",
     chooseClass: "اختر صفك",
     class10ABoys: "الصف العاشر أ - بنين",
@@ -278,9 +288,15 @@ const translations = {
     invalidLogin: "رقم الطالب أو كلمة المرور غير صحيحة.",
     waitingPermission: "Waiting for admin permission.",
     loginLocked: "محاولات كثيرة غير صحيحة. تم إيقاف تسجيل الدخول لمدة 15 دقيقة.",
+    mfaPrompt: "أدخل رمز الرسالة النصية المكون من 6 أرقام والمرسل إلى {phone}.",
+    mfaRequired: "أدخل رمز التحقق النصي لإكمال تسجيل الدخول.",
+    invalidMfa: "رمز التحقق غير صحيح أو انتهت صلاحيته.",
+    mfaLocked: "محاولات تحقق كثيرة غير صحيحة. يرجى تسجيل الدخول مرة أخرى.",
+    mfaUnavailable: "التحقق عبر الرسائل غير متاح الآن. يرجى التواصل مع مكتب المدرسة.",
     genericError: "حدث خطأ. يرجى المحاولة مرة أخرى.",
     registerLimited: "طلبات حسابات كثيرة جدا. يرجى المحاولة لاحقا.",
     nameRequired: "أدخل اسم الطالب الكامل.",
+    phoneError: "أدخل رقم موبايل أردني صحيح.",
     passwordError: "يجب أن تكون كلمة المرور من 8 إلى 128 حرفا وأن تحتوي على حرف ورقم.",
     invalidClass: "اختر إحدى الشعب المتاحة.",
     detailsSaved: "تم حفظ بيانات التسجيل.",
@@ -331,12 +347,37 @@ function messageForError(error) {
     invalid_login: "invalidLogin",
     pending_approval: "waitingPermission",
     login_locked: "loginLocked",
+    mfa_code_required: "mfaRequired",
+    invalid_mfa: "invalidMfa",
+    mfa_locked: "mfaLocked",
+    mfa_not_configured: "mfaUnavailable",
+    mfa_phone_missing: "mfaUnavailable",
+    mfa_send_failed: "mfaUnavailable",
+    mfa_check_failed: "mfaUnavailable",
     register_limited: "registerLimited",
     name_required: "nameRequired",
+    phone_rule: "phoneError",
     password_rule: "passwordError",
     invalid_class: "invalidClass"
   };
   return text(keys[error?.code] || (error instanceof TypeError ? "connectionError" : "genericError"));
+}
+
+async function completeMfaChallenge(result, endpoint) {
+  if (!result.mfaRequired) {
+    return result;
+  }
+  loginStatus.textContent = text("mfaRequired");
+  const code = window.prompt(text("mfaPrompt").replace("{phone}", result.phoneHint || "your phone"));
+  if (!code) {
+    const error = new Error(text("mfaRequired"));
+    error.code = "mfa_code_required";
+    throw error;
+  }
+  return api(endpoint, {
+    method: "POST",
+    body: JSON.stringify({ challengeId: result.challengeId, code })
+  });
 }
 
 function showToast(message, type = "info") {
@@ -756,7 +797,12 @@ registerForm.addEventListener("submit", async (event) => {
   try {
     const result = await api("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ name: values.get("name"), classCode: values.get("classCode"), password })
+      body: JSON.stringify({
+        name: values.get("name"),
+        phoneNumber: values.get("phoneNumber"),
+        classCode: values.get("classCode"),
+        password
+      })
     });
     registerStatus.textContent = text("accountCreated");
     issuedId.textContent = result.studentId;
@@ -780,13 +826,14 @@ loginForm.addEventListener("submit", async (event) => {
   loginStatus.textContent = "";
   const values = new FormData(loginForm);
   try {
-    await api("/api/auth/login", {
+    const result = await api("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({
         studentId: values.get("studentId"),
         password: values.get("password")
       })
     });
+    await completeMfaChallenge(result, "/api/auth/mfa");
     const opened = await openDashboard();
     if (opened) {
       loginForm.reset();

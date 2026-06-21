@@ -31,6 +31,7 @@ const inspiredDashboardSource = fs.readFileSync(path.join(root, "src", "site", "
 const portalIcons = fs.readFileSync(path.join(root, "assets", "portal-icons.svg"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const server = fs.readFileSync(path.join(root, "server.py"), "utf8");
+const requirements = fs.readFileSync(path.join(root, "requirements.txt"), "utf8");
 const packageJson = fs.readFileSync(path.join(root, "package.json"), "utf8");
 const viteConfig = fs.readFileSync(path.join(root, "vite.config.mjs"), "utf8");
 const buildSiteSource = fs.readFileSync(path.join(root, "scripts", "build-site.mjs"), "utf8");
@@ -121,8 +122,13 @@ test("student posts can be dismissed through the real portal API", () => {
 test("student registration is pending until school approval", () => {
   assert.match(server, /requested_class_id/);
   assert.match(server, /is_approved/);
-  assert.match(server, /VALUES \(\?, \?, \?, \?, \?, NULL, \?, \?\)/);
-  assert.match(server, /\(student_id, name, salt, hashed, grade, class_row\["id"\], False\)/);
+  assert.match(server, /phone_number TEXT/);
+  assert.match(server, /def normalize_jordanian_phone\(value\):/);
+  assert.match(server, /re\.fullmatch\(r"\\\+9627\[789\]\\d\{7\}", normalized\)/);
+  assert.match(server, /phone_number = normalize_jordanian_phone\(body\.get\("phoneNumber"\)\)/);
+  assert.match(server, /"code": "phone_rule"/);
+  assert.match(server, /VALUES \(\?, \?, \?, \?, \?, \?, NULL, \?, \?\)/);
+  assert.match(server, /\(student_id, name, salt, hashed, phone_number, grade, class_row\["id"\], False\)/);
   assert.match(server, /if is_approved and student\["class_id"\]:/);
   const portalRecordsBlock = server.slice(
     server.indexOf("def portal_records"),
@@ -132,6 +138,11 @@ test("student registration is pending until school approval", () => {
   assert.match(server, /"code": "pending_approval"/);
   assert.match(server, /Waiting for admin permission\./);
   assert.match(js, /pending_approval: "waitingPermission"/);
+  assert.match(html, /name="phoneNumber"/);
+  assert.match(html, /pattern="\(\\\+9627\[789\]\[0-9\]\{7\}\|009627\[789\]\[0-9\]\{7\}\|07\[789\]\[0-9\]\{7\}\)"/);
+  assert.match(js, /phoneNumber: "Jordanian mobile number"/);
+  assert.match(js, /phone_rule: "phoneError"/);
+  assert.match(js, /phoneNumber: values\.get\("phoneNumber"\)/);
   assert.match(js, /Waiting for admin permission\./);
   assert.match(html, /Class placement/);
   assert.match(js, /Pending school approval/);
@@ -207,6 +218,64 @@ test("server sends HSTS and a strict self-hosted CSP", () => {
   assert.doesNotMatch(server, /img-src 'self' data:/);
   assert.match(endHeadersBlock, /self\.send_header\("Strict-Transport-Security", STRICT_TRANSPORT_SECURITY\)/);
   assert.match(endHeadersBlock, /self\.send_header\("Content-Security-Policy", CONTENT_SECURITY_POLICY\)/);
+});
+
+test("Twilio Verify MFA is wired as a post-password session gate", () => {
+  assert.match(requirements, /twilio>=9\.8,<10/);
+  assert.match(server, /TWILIO_ACCOUNT_SID = os\.environ\.get\("TWILIO_ACCOUNT_SID"/);
+  assert.match(server, /TWILIO_AUTH_TOKEN = os\.environ\.get\("TWILIO_AUTH_TOKEN"/);
+  assert.match(server, /TWILIO_VERIFY_SERVICE_SID = os\.environ\.get\("TWILIO_VERIFY_SERVICE_SID"/);
+  assert.match(server, /MFA_ENABLED = env_flag\("SSS_MFA_ENABLED"\)/);
+  assert.match(server, /MFA_PHONE_NUMBERS = load_mfa_phone_numbers\(\)/);
+  assert.match(server, /CREATE TABLE IF NOT EXISTS mfa_challenges/);
+  assert.match(server, /account_type TEXT NOT NULL CHECK \(account_type IN \('student', 'admin', 'teacher'\)\)/);
+  assert.match(server, /DELETE FROM mfa_challenges WHERE expires_at <= \?/);
+  assert.match(server, /def account_phone_number\(self, account_type, account_id\):/);
+  assert.match(server, /if account_type == "student":/);
+  assert.match(server, /SELECT phone_number FROM students WHERE student_id = \?/);
+  assert.match(server, /phone_number = MFA_PHONE_NUMBERS\.get\(account_id\.upper\(\), ""\)/);
+  assert.match(server, /from twilio\.rest import Client/);
+  assert.match(server, /return Client\(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN\)/);
+  assert.match(server, /verifications\.create\(to=phone_number, channel="sms"\)/);
+  assert.match(server, /verification_checks\.create\(to=phone_number, code=code\)/);
+  assert.match(server, /getattr\(verification_check, "status", ""\) == "approved"/);
+  assert.match(server, /elif request_path == "\/api\/auth\/mfa":/);
+  assert.match(server, /self\.handle_mfa_verify\(body, "student"\)/);
+  assert.match(server, /elif request_path == "\/api\/admin\/mfa":/);
+  assert.match(server, /self\.handle_mfa_verify\(body, "admin"\)/);
+  assert.match(server, /elif request_path == "\/api\/teacher\/mfa":/);
+  assert.match(server, /self\.handle_mfa_verify\(body, "teacher"\)/);
+  assert.match(server, /MFA_ENABLED and request_path in \{/);
+  assert.match(server, /def begin_mfa_challenge\(self, account_type, account_id, attempt_key\):/);
+  assert.match(server, /"mfaRequired": True/);
+  assert.match(server, /"challengeId": challenge_id/);
+  assert.match(server, /"phoneHint": mask_phone_number\(phone_number\)/);
+  assert.match(server, /def handle_mfa_verify\(self, body, expected_account_type\):/);
+  assert.match(server, /not re\.fullmatch\(r"\\d\{6\}", code\)/);
+  assert.match(server, /if self\.begin_mfa_challenge\("student", student_id, attempt_key\):[\s\S]*?return[\s\S]*?self\.create_login_session\(connection, "student", student\)/);
+  assert.match(server, /if self\.begin_mfa_challenge\("admin", admin_id, attempt_key\):[\s\S]*?return[\s\S]*?self\.create_login_session\(connection, "admin", admin\)/);
+  assert.match(server, /if self\.begin_mfa_challenge\("teacher", teacher_id, attempt_key\):[\s\S]*?return[\s\S]*?self\.create_login_session\(connection, "teacher", teacher\)/);
+  assert.match(server, /should_send_mfa_code = MFA_ENABLED and not bool\(student\["is_approved"\]\)/);
+  assert.match(server, /send_twilio_sms_verification\(student\["phone_number"\]\)/);
+  assert.match(server, /"mfaNotificationSent": should_send_mfa_code/);
+  assert.match(server, /payload, cookie = self\.create_login_session\(connection, expected_account_type, account\)/);
+  assert.match(server, /self\.send_json\(200, payload, \{"Set-Cookie": cookie\}\)/);
+  assert.match(js, /completeMfaChallenge\(result, "\/api\/auth\/mfa"\)/);
+  assert.match(teacherJs, /completeMfaChallenge\(result\)/);
+  assert.match(teacherJs, /api\("\/api\/teacher\/mfa"/);
+  assert.match(adminJs, /completeMfaChallenge\(result\)/);
+  assert.match(adminJs, /api\("\/api\/admin\/mfa"/);
+  assert.match(adminJs, /studentVerifiedCodeSent/);
+  assert.match(adminJs, /result\.mfaNotificationSent \? "studentVerifiedCodeSent" : "studentVerified"/);
+  assert.match(readme, /SSS_MFA_ENABLED=1/);
+  assert.match(readme, /TWILIO_VERIFY_SERVICE_SID/);
+  assert.match(readme, /SSS_MFA_PHONE_NUMBERS/);
+  assert.match(readme, /students\.phone_number/);
+  assert.match(readme, /Neon through `DATABASE_URL`/);
+  assert.match(readme, /render\.yaml` enables it/);
+  assert.match(renderConfig, /- key: SSS_MFA_ENABLED\n        value: "1"/);
+  assert.match(renderConfig, /- key: TWILIO_VERIFY_SERVICE_SID\n        sync: false/);
+  assert.match(renderConfig, /- key: SSS_MFA_PHONE_NUMBERS\n        sync: false/);
 });
 
 test("backend enforces setup secret, JSON validation, and reset re-auth", async (t) => {
@@ -614,8 +683,13 @@ test("build pipeline uses local React, Vite, Vercel, and Render CI/CD", () => {
   assert.match(renderConfig, /- key: HOST\n        value: 0\.0\.0\.0/);
   assert.match(renderConfig, /- key: NODE_VERSION\n        value: 24\.14\.1/);
   assert.match(renderConfig, /- key: SSS_REQUIRE_ADMIN_SETUP_SECRET\n        value: "1"/);
+  assert.match(renderConfig, /- key: SSS_MFA_ENABLED\n        value: "1"/);
   assert.match(renderConfig, /- key: ADMIN_SETUP_SECRET\n        sync: false/);
   assert.match(renderConfig, /- key: DATABASE_URL\n        sync: false/);
+  assert.match(renderConfig, /- key: TWILIO_ACCOUNT_SID\n        sync: false/);
+  assert.match(renderConfig, /- key: TWILIO_AUTH_TOKEN\n        sync: false/);
+  assert.match(renderConfig, /- key: TWILIO_VERIFY_SERVICE_SID\n        sync: false/);
+  assert.match(renderConfig, /- key: SSS_MFA_PHONE_NUMBERS\n        sync: false/);
   assert.equal(nodeVersionFile.trim(), "24.14.1");
   assert.equal(pythonVersionFile.trim(), "3.13");
   assert.match(gitignore, /\.vercel\//);

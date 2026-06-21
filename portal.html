@@ -86,6 +86,10 @@
                 <input name="name" type="text" autocomplete="name" required maxlength="80">
               </label>
               <label>
+                <span data-i18n="phoneNumber">Jordanian mobile number</span>
+                <input name="phoneNumber" type="tel" autocomplete="tel" inputmode="tel" placeholder="07XXXXXXXX" pattern="(\+9627[789][0-9]{7}|009627[789][0-9]{7}|07[789][0-9]{7})" required>
+              </label>
+              <label>
                 <span data-i18n="classSection">Class / section</span>
                 <select name="classCode" required>
                   <option value="" data-i18n="chooseClass">Choose your class</option>
@@ -108,6 +112,7 @@
                 <span data-i18n="confirmPassword">Confirm password</span>
                 <input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
               </label>
+              <p class="password-note" data-i18n="phoneRule">Use a Jordan mobile number such as 07XXXXXXXX or +9627XXXXXXXX.</p>
               <p class="password-note" data-i18n="passwordRule">Password must be at least 8 characters and contain a letter and a number.</p>
               <button class="portal-button primary" type="submit" data-i18n="getStudentId">Create account and get ID</button>
               <p class="form-status" data-register-status aria-live="polite"></p>

@@ -183,6 +183,9 @@ waiting states for student records.
 - All responses include HSTS with a 1-year max age, subdomains, and preload,
   plus a strict Content Security Policy that keeps scripts and images on
   `self`.
+- Optional SMS MFA is available through Twilio Verify. When enabled, a correct
+  password creates a short-lived MFA challenge instead of a session; the session
+  cookie is issued only after Twilio approves the 6-digit SMS code.
 - User-facing navigation uses clean routes: `/student`, `/teacher`, and `/office-access`.
 
 Local development uses SQLite by default. For public deployment on Render, connect
@@ -217,6 +220,53 @@ Rate limits use the direct client address by default and ignore
 `X-Forwarded-For`, because that header can be spoofed when a proxy does not
 overwrite it. Set `SSS_TRUST_PROXY_HEADERS=1` only when the public deployment is
 behind a trusted proxy that replaces client-supplied forwarded headers.
+
+## Twilio Verify MFA
+
+MFA is disabled by default for local development, but `render.yaml` enables it
+for the Render service with `SSS_MFA_ENABLED=1`. Student phone numbers are
+collected on signup, normalized to Jordanian E.164 format, and stored in the
+`students.phone_number` column in the configured Postgres database, including
+Neon through `DATABASE_URL`. Before deploying that config, configure Twilio
+Verify and add these secret environment variables in Render:
+
+```text
+SSS_MFA_ENABLED=1
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SSS_MFA_PHONE_NUMBERS={"ADM-0001":"+962700000000","TCH-001":"+962700000001"}
+```
+
+Student signup accepts Jordanian mobile numbers such as `0791234567`,
+`+962791234567`, or `00962791234567` and stores them as `+962...`.
+Administrator and teacher phone numbers still come from
+`SSS_MFA_PHONE_NUMBERS` until staff account phone fields are added. If MFA is
+enabled and an account does not have a valid phone number, the server refuses
+the login instead of falling back to password-only access.
+
+Important: once this is deployed with `SSS_MFA_ENABLED=1`, student, teacher, and
+administrator logins will not finish unless the Twilio credentials are valid and
+each account has a valid saved or configured phone number.
+
+The MFA flow is:
+
+1. The user submits their ID and password to the existing login endpoint.
+2. After the password matches, the server calls Twilio Verify to send an SMS
+   code to the saved student number or configured staff number, then stores a
+   temporary `mfa_challenges` row.
+3. The server returns `mfaRequired`, `challengeId`, `expiresInSeconds`, and a
+   masked `phoneHint`; no session cookie is issued yet.
+4. The user enters the 6-digit code, and the browser posts it to
+   `/api/auth/mfa`, `/api/teacher/mfa`, or `/api/admin/mfa`.
+5. Only after Twilio returns `approved` does the server create the real
+   student, teacher, or administrator session cookie.
+
+Challenges expire after 5 minutes and lock after 5 invalid verification
+attempts.
+
+When an administrator verifies a pending student into a class, the server also
+sends a Twilio Verify SMS code to that student's saved phone number.
 
 ## Build Tools and Deployment
 

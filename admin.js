@@ -125,6 +125,7 @@ const translations = {
     noPosts: "No classroom posts yet.",
     noMembers: "No students are currently in this class.",
     studentVerified: "Student verified.",
+    studentVerifiedCodeSent: "Student verified. SMS code sent to the saved phone number.",
     studentDeclined: "Student account request declined.",
     setupDone: "Administrator account created. Sign in below.",
     setupAlreadyComplete: "Administrator setup is complete. Sign in below.",
@@ -136,6 +137,11 @@ const translations = {
     passwordsDoNotMatch: "Passwords do not match.",
     invalidLogin: "Administrator ID or password is incorrect.",
     loginLocked: "Too many attempts. Sign-in is locked for 15 minutes.",
+    mfaPrompt: "Enter the 6-digit SMS code sent to {phone}.",
+    mfaRequired: "Enter the SMS verification code to finish signing in.",
+    invalidMfa: "The verification code is invalid or expired.",
+    mfaLocked: "Too many invalid verification attempts. Please sign in again.",
+    mfaUnavailable: "SMS verification is not available right now. Please contact the school office.",
     adminPasswordError: "Use at least 8 characters with a letter, number, and symbol.",
     nameRequired: "Enter the administrator's name.",
     teacherPasswordError: "Use at least 8 characters with a letter, number, and symbol.",
@@ -265,6 +271,7 @@ const translations = {
     noPosts: "لا توجد منشورات صفية بعد.",
     noMembers: "لا يوجد طلاب في هذا الصف حاليا.",
     studentVerified: "Student verified.",
+    studentVerifiedCodeSent: "تم اعتماد الطالب. تم إرسال رمز برسالة نصية إلى الرقم المحفوظ.",
     studentDeclined: "Student account request declined.",
     setupDone: "تم إنشاء حساب الإدارة. سجل الدخول أدناه.",
     setupAlreadyComplete: "تم إعداد حساب الإدارة. سجل الدخول أدناه.",
@@ -274,6 +281,11 @@ const translations = {
     passwordsDoNotMatch: "كلمتا المرور غير متطابقتين.",
     invalidLogin: "رقم الإدارة أو كلمة المرور غير صحيحة.",
     loginLocked: "محاولات كثيرة. توقف الدخول لمدة 15 دقيقة.",
+    mfaPrompt: "أدخل رمز الرسالة النصية المكون من 6 أرقام والمرسل إلى {phone}.",
+    mfaRequired: "أدخل رمز التحقق النصي لإكمال تسجيل الدخول.",
+    invalidMfa: "رمز التحقق غير صحيح أو انتهت صلاحيته.",
+    mfaLocked: "محاولات تحقق كثيرة غير صحيحة. يرجى تسجيل الدخول مرة أخرى.",
+    mfaUnavailable: "التحقق عبر الرسائل غير متاح الآن. يرجى التواصل مع مكتب المدرسة.",
     adminPasswordError: "استخدم 8 خانات على الأقل مع حرف ورقم ورمز.",
     nameRequired: "أدخل اسم الإداري.",
     invalidCurrentPassword: "كلمة المرور الحالية غير صحيحة.",
@@ -313,6 +325,7 @@ Object.assign(translations.ar, {
   declineStudent: "Decline",
   dashboardBanner: "Administration area. Changes here appear in student accounts.",
   studentVerified: "Student verified.",
+  studentVerifiedCodeSent: "Student verified. SMS code sent to the saved phone number.",
   studentDeclined: "Student account request declined.",
   setupDone: "Administrator account created. Sign in below.",
   setupAlreadyComplete: "Administrator setup is complete. Sign in below.",
@@ -348,6 +361,13 @@ function errorText(error) {
   const errors = {
     invalid_login: "invalidLogin",
     login_locked: "loginLocked",
+    mfa_code_required: "mfaRequired",
+    invalid_mfa: "invalidMfa",
+    mfa_locked: "mfaLocked",
+    mfa_not_configured: "mfaUnavailable",
+    mfa_phone_missing: "mfaUnavailable",
+    mfa_send_failed: "mfaUnavailable",
+    mfa_check_failed: "mfaUnavailable",
     admin_id_rule: "adminIdRule",
     admin_password_rule: "adminPasswordError",
     teacher_password_rule: "teacherPasswordError",
@@ -359,6 +379,23 @@ function errorText(error) {
     setup_secret_required: "setupSecretRequired"
   };
   return text(errors[error.code] || "genericError");
+}
+
+async function completeMfaChallenge(result) {
+  if (!result.mfaRequired) {
+    return result;
+  }
+  loginStatus.textContent = text("mfaRequired");
+  const code = window.prompt(text("mfaPrompt").replace("{phone}", result.phoneHint || "your phone"));
+  if (!code) {
+    const error = new Error(text("mfaRequired"));
+    error.code = "mfa_code_required";
+    throw error;
+  }
+  return api("/api/admin/mfa", {
+    method: "POST",
+    body: JSON.stringify({ challengeId: result.challengeId, code })
+  });
 }
 
 function className(value) {
@@ -763,7 +800,8 @@ loginForm.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify({ adminId: values.get("adminId"), password: values.get("password") })
     });
-    admin = result.admin;
+    const signedIn = await completeMfaChallenge(result);
+    admin = signedIn.admin;
     loginForm.reset();
     await openDashboard();
   } catch (error) {
@@ -877,8 +915,8 @@ document.querySelector("[data-class-assignment-form]").addEventListener("submit"
   const status = form.querySelector("[data-class-assignment-status]");
   try {
     const values = Object.fromEntries(new FormData(form));
-    await api("/api/admin/class-assignment", { method: "POST", body: JSON.stringify(values) });
-    status.textContent = text("studentVerified");
+    const result = await api("/api/admin/class-assignment", { method: "POST", body: JSON.stringify(values) });
+    status.textContent = text(result.mfaNotificationSent ? "studentVerifiedCodeSent" : "studentVerified");
     await loadLists();
     await loadStudent(values.studentId);
   } catch (error) {
@@ -914,14 +952,14 @@ document.querySelector("[data-class-member-form]").addEventListener("submit", as
   const status = form.querySelector(".form-status");
   const group = classDetails.class;
   try {
-    await api("/api/admin/class-assignment", {
+    const result = await api("/api/admin/class-assignment", {
       method: "POST",
       body: JSON.stringify({
         studentId: form.elements.studentId.value,
         classCode: `${group.grade}-${group.section}`
       })
     });
-    status.textContent = text("saved");
+    status.textContent = text(result.mfaNotificationSent ? "studentVerifiedCodeSent" : "saved");
     await loadLists();
     await loadClass(group.id);
   } catch (error) {

@@ -64,6 +64,11 @@ const translations = {
     saved: "Saved.",
     invalidLogin: "Teacher ID or password is incorrect.",
     loginLocked: "Too many attempts. Sign-in is locked for 15 minutes.",
+    mfaPrompt: "Enter the 6-digit SMS code sent to {phone}.",
+    mfaRequired: "Enter the SMS verification code to finish signing in.",
+    invalidMfa: "The verification code is invalid or expired.",
+    mfaLocked: "Too many invalid verification attempts. Please sign in again.",
+    mfaUnavailable: "SMS verification is not available right now. Please contact the school office.",
     invalidRecord: "Check the information entered and try again.",
     assignmentRequired: "This class and subject is not assigned to your account.",
     genericError: "Something went wrong. Please try again.",
@@ -132,6 +137,11 @@ const translations = {
     saved: "تم الحفظ.",
     invalidLogin: "رقم المعلم أو كلمة المرور غير صحيحة.",
     loginLocked: "محاولات كثيرة. توقف الدخول لمدة 15 دقيقة.",
+    mfaPrompt: "أدخل رمز الرسالة النصية المكون من 6 أرقام والمرسل إلى {phone}.",
+    mfaRequired: "أدخل رمز التحقق النصي لإكمال تسجيل الدخول.",
+    invalidMfa: "رمز التحقق غير صحيح أو انتهت صلاحيته.",
+    mfaLocked: "محاولات تحقق كثيرة غير صحيحة. يرجى تسجيل الدخول مرة أخرى.",
+    mfaUnavailable: "التحقق عبر الرسائل غير متاح الآن. يرجى التواصل مع مكتب المدرسة.",
     invalidRecord: "تحقق من المعلومات المدخلة وحاول مرة أخرى.",
     assignmentRequired: "هذه الشعبة والمادة غير معيّنة لحسابك.",
     genericError: "حدث خطأ. يرجى المحاولة مرة أخرى.",
@@ -175,11 +185,35 @@ function errorText(error) {
   const messages = {
     invalid_login: "invalidLogin",
     login_locked: "loginLocked",
+    mfa_code_required: "mfaRequired",
+    invalid_mfa: "invalidMfa",
+    mfa_locked: "mfaLocked",
+    mfa_not_configured: "mfaUnavailable",
+    mfa_phone_missing: "mfaUnavailable",
+    mfa_send_failed: "mfaUnavailable",
+    mfa_check_failed: "mfaUnavailable",
     invalid_record: "invalidRecord",
     invalid_date: "invalidRecord",
     assignment_required: "assignmentRequired"
   };
   return text(messages[error.code] || "genericError");
+}
+
+async function completeMfaChallenge(result) {
+  if (!result.mfaRequired) {
+    return result;
+  }
+  loginStatus.textContent = text("mfaRequired");
+  const code = window.prompt(text("mfaPrompt").replace("{phone}", result.phoneHint || "your phone"));
+  if (!code) {
+    const error = new Error(text("mfaRequired"));
+    error.code = "mfa_code_required";
+    throw error;
+  }
+  return api("/api/teacher/mfa", {
+    method: "POST",
+    body: JSON.stringify({ challengeId: result.challengeId, code })
+  });
 }
 
 function className(value) {
@@ -384,7 +418,8 @@ loginForm.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify({ teacherId: values.get("teacherId"), password: values.get("password") })
     });
-    teacher = result.teacher;
+    const signedIn = await completeMfaChallenge(result);
+    teacher = signedIn.teacher;
     loginForm.reset();
     await openDashboard();
   } catch (error) {
