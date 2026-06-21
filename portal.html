@@ -139,6 +139,17 @@
               <button class="portal-button primary" type="submit" data-i18n="signIn">Sign in</button>
               <p class="form-status" data-login-status aria-live="polite"></p>
             </form>
+            <form class="login-form" data-mfa-form hidden>
+              <h2 data-i18n="mfaTitle">Enter verification code</h2>
+              <p data-mfa-copy data-i18n="mfaText">A 6-digit SMS code was sent to the saved phone number.</p>
+              <label>
+                <span data-i18n="verificationCode">Verification code</span>
+                <input name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+              </label>
+              <button class="portal-button primary" type="submit" data-i18n="verifyCode">Verify code</button>
+              <button class="portal-button secondary" type="button" data-mfa-cancel data-i18n="backToSignIn">Back to sign in</button>
+              <p class="form-status" data-mfa-status aria-live="polite"></p>
+            </form>
             <a class="staff-link" href="/teacher" data-i18n="teacherLogin">Teacher login</a>
           </div>
         </div>

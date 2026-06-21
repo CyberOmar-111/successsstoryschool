@@ -240,10 +240,17 @@ SSS_MFA_PHONE_NUMBERS={"ADM-0001":"+962700000000","TCH-001":"+962700000001"}
 
 Student signup accepts Jordanian mobile numbers such as `0791234567`,
 `+962791234567`, or `00962791234567` and stores them as `+962...`.
-Administrator and teacher phone numbers still come from
-`SSS_MFA_PHONE_NUMBERS` until staff account phone fields are added. If MFA is
-enabled and an account does not have a valid phone number, the server refuses
-the login instead of falling back to password-only access.
+When MFA is enabled, signup also checks the normalized number with Twilio Lookup
+and rejects numbers Twilio does not mark as valid Jordanian mobile numbers. The
+admin verification path repeats that lookup before it sends the approval SMS,
+so older saved numbers are checked too. Twilio's basic validation confirms the
+number format/country validity; deeper reachability or line-status checks
+require Twilio's paid Lookup packages.
+
+Administrator and teacher phone numbers still come from `SSS_MFA_PHONE_NUMBERS`
+until staff account phone fields are added. If MFA is enabled and an account
+does not have a valid phone number, the server refuses the login instead of
+falling back to password-only access.
 
 Important: once this is deployed with `SSS_MFA_ENABLED=1`, student, teacher, and
 administrator logins will not finish unless the Twilio credentials are valid and
@@ -257,8 +264,9 @@ The MFA flow is:
    temporary `mfa_challenges` row.
 3. The server returns `mfaRequired`, `challengeId`, `expiresInSeconds`, and a
    masked `phoneHint`; no session cookie is issued yet.
-4. The user enters the 6-digit code, and the browser posts it to
-   `/api/auth/mfa`, `/api/teacher/mfa`, or `/api/admin/mfa`.
+4. The student portal shows an in-page verification form for the 6-digit code,
+   then posts it to `/api/auth/mfa`. Teacher and admin logins post to
+   `/api/teacher/mfa` and `/api/admin/mfa`.
 5. Only after Twilio returns `approved` does the server create the real
    student, teacher, or administrator session cookie.
 

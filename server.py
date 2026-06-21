@@ -798,10 +798,27 @@ def twilio_verify_ready():
     return bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_VERIFY_SERVICE_SID)
 
 
+def twilio_account_ready():
+    return bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN)
+
+
 def twilio_verify_client():
     from twilio.rest import Client
 
     return Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+
+def lookup_twilio_phone_number(phone_number):
+    return twilio_verify_client().lookups.v2.phone_numbers(phone_number).fetch()
+
+
+def twilio_lookup_valid_jordanian(phone_number):
+    lookup = lookup_twilio_phone_number(phone_number)
+    return (
+        bool(getattr(lookup, "valid", False))
+        and getattr(lookup, "country_code", "") == "JO"
+        and bool(re.fullmatch(r"\+9627[789]\d{7}", getattr(lookup, "phone_number", "") or phone_number))
+    )
 
 
 def send_twilio_sms_verification(phone_number):
@@ -1625,6 +1642,18 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         if not phone_number:
             self.send_json(400, {"code": "phone_rule", "error": "Enter a valid Jordanian mobile number."})
             return
+        if MFA_ENABLED:
+            if not twilio_account_ready():
+                self.send_json(503, {"code": "phone_lookup_not_configured", "error": "Phone validation is not configured."})
+                return
+            try:
+                lookup_valid = twilio_lookup_valid_jordanian(phone_number)
+            except Exception:
+                self.send_json(502, {"code": "phone_lookup_failed", "error": "Could not validate the phone number."})
+                return
+            if not lookup_valid:
+                self.send_json(400, {"code": "phone_rule", "error": "Enter a real Jordanian mobile number."})
+                return
         if not valid_password(password):
             self.send_json(
                 400,
@@ -2509,6 +2538,15 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             if should_send_mfa_code and not valid_mfa_phone(student["phone_number"]):
                 self.send_json(403, {"code": "mfa_phone_missing", "error": "No verified phone number is configured for this account."})
                 return
+            if should_send_mfa_code:
+                try:
+                    lookup_valid = twilio_lookup_valid_jordanian(student["phone_number"])
+                except Exception:
+                    self.send_json(502, {"code": "phone_lookup_failed", "error": "Could not validate the phone number."})
+                    return
+                if not lookup_valid:
+                    self.send_json(403, {"code": "mfa_phone_invalid", "error": "The saved phone number is not a real Jordanian mobile number."})
+                    return
             if should_send_mfa_code:
                 try:
                     send_twilio_sms_verification(student["phone_number"])

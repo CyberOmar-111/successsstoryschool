@@ -3,8 +3,11 @@ const authView = document.querySelector("[data-auth-view]");
 const dashboard = document.querySelector("[data-dashboard]");
 const registerForm = document.querySelector("[data-register-form]");
 const loginForm = document.querySelector("[data-login-form]");
+const mfaForm = document.querySelector("[data-mfa-form]");
 const registerStatus = document.querySelector("[data-register-status]");
 const loginStatus = document.querySelector("[data-login-status]");
+const mfaStatus = document.querySelector("[data-mfa-status]");
+const mfaCopy = document.querySelector("[data-mfa-copy]");
 const idResult = document.querySelector("[data-id-result]");
 const issuedId = document.querySelector("[data-issued-id]");
 const profileForm = document.querySelector("[data-profile-form]");
@@ -70,6 +73,12 @@ const translations = {
     signInText: "Enter the student ID issued by the school system and your password.",
     studentId: "Student ID",
     password: "Password",
+    mfaTitle: "Enter verification code",
+    mfaText: "A 6-digit SMS code was sent to the saved phone number.",
+    mfaTextWithPhone: "A 6-digit SMS code was sent to {phone}.",
+    verificationCode: "Verification code",
+    verifyCode: "Verify code",
+    backToSignIn: "Back to sign in",
     rateLimitNote: "After 5 incorrect attempts, sign-in is locked for 15 minutes.",
     secureBanner: "Secure student account. Grades, attendance, and other records will appear when entered by the school.",
     gradeLabel: "Grade:",
@@ -152,6 +161,7 @@ const translations = {
     invalidMfa: "The verification code is invalid or expired.",
     mfaLocked: "Too many invalid verification attempts. Please sign in again.",
     mfaUnavailable: "SMS verification is not available right now. Please contact the school office.",
+    phoneLookupUnavailable: "Phone number validation is not available right now. Please contact the school office.",
     genericError: "Something went wrong. Please try again.",
     registerLimited: "Too many account requests. Please try again later.",
     nameRequired: "Enter the student's full name.",
@@ -216,6 +226,12 @@ const translations = {
     signInText: "أدخل رقم الطالب الصادر عن نظام المدرسة وكلمة المرور.",
     studentId: "رقم الطالب",
     password: "كلمة المرور",
+    mfaTitle: "أدخل رمز التحقق",
+    mfaText: "تم إرسال رمز من 6 أرقام برسالة نصية إلى الرقم المحفوظ.",
+    mfaTextWithPhone: "تم إرسال رمز من 6 أرقام برسالة نصية إلى {phone}.",
+    verificationCode: "رمز التحقق",
+    verifyCode: "تحقق من الرمز",
+    backToSignIn: "العودة إلى تسجيل الدخول",
     rateLimitNote: "بعد 5 محاولات غير صحيحة، يتم إيقاف تسجيل الدخول لمدة 15 دقيقة.",
     secureBanner: "حساب طالب آمن. ستظهر العلامات والحضور والسجلات الأخرى عند إدخالها من المدرسة.",
     gradeLabel: "الصف:",
@@ -293,6 +309,7 @@ const translations = {
     invalidMfa: "رمز التحقق غير صحيح أو انتهت صلاحيته.",
     mfaLocked: "محاولات تحقق كثيرة غير صحيحة. يرجى تسجيل الدخول مرة أخرى.",
     mfaUnavailable: "التحقق عبر الرسائل غير متاح الآن. يرجى التواصل مع مكتب المدرسة.",
+    phoneLookupUnavailable: "التحقق من رقم الهاتف غير متاح الآن. يرجى التواصل مع مكتب المدرسة.",
     genericError: "حدث خطأ. يرجى المحاولة مرة أخرى.",
     registerLimited: "طلبات حسابات كثيرة جدا. يرجى المحاولة لاحقا.",
     nameRequired: "أدخل اسم الطالب الكامل.",
@@ -320,6 +337,7 @@ let currentRecords = {
   announcements: [],
   fees: []
 };
+let pendingMfaChallenge = null;
 
 const text = (key) => translations[language][key] ?? translations.en[key] ?? "";
 
@@ -352,8 +370,11 @@ function messageForError(error) {
     mfa_locked: "mfaLocked",
     mfa_not_configured: "mfaUnavailable",
     mfa_phone_missing: "mfaUnavailable",
+    mfa_phone_invalid: "phoneError",
     mfa_send_failed: "mfaUnavailable",
     mfa_check_failed: "mfaUnavailable",
+    phone_lookup_not_configured: "phoneLookupUnavailable",
+    phone_lookup_failed: "phoneLookupUnavailable",
     register_limited: "registerLimited",
     name_required: "nameRequired",
     phone_rule: "phoneError",
@@ -363,21 +384,31 @@ function messageForError(error) {
   return text(keys[error?.code] || (error instanceof TypeError ? "connectionError" : "genericError"));
 }
 
-async function completeMfaChallenge(result, endpoint) {
-  if (!result.mfaRequired) {
-    return result;
-  }
-  loginStatus.textContent = text("mfaRequired");
-  const code = window.prompt(text("mfaPrompt").replace("{phone}", result.phoneHint || "your phone"));
-  if (!code) {
-    const error = new Error(text("mfaRequired"));
-    error.code = "mfa_code_required";
-    throw error;
-  }
-  return api(endpoint, {
-    method: "POST",
-    body: JSON.stringify({ challengeId: result.challengeId, code })
-  });
+function resetMfaForm() {
+  pendingMfaChallenge = null;
+  mfaForm.hidden = true;
+  mfaStatus.textContent = "";
+  mfaCopy.textContent = text("mfaText");
+  mfaForm.reset();
+}
+
+function showMfaForm(result, endpoint) {
+  pendingMfaChallenge = {
+    endpoint,
+    challengeId: result.challengeId,
+    phoneHint: result.phoneHint || ""
+  };
+  loginForm.hidden = true;
+  registerForm.hidden = true;
+  mfaForm.hidden = false;
+  loginStatus.textContent = "";
+  registerStatus.textContent = "";
+  mfaStatus.textContent = text("mfaRequired");
+  mfaCopy.textContent = pendingMfaChallenge.phoneHint
+    ? text("mfaTextWithPhone").replace("{phone}", pendingMfaChallenge.phoneHint)
+    : text("mfaText");
+  mfaForm.elements.code.value = "";
+  mfaForm.elements.code.focus();
 }
 
 function showToast(message, type = "info") {
@@ -410,6 +441,12 @@ function applyLanguage(nextLanguage) {
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = text(element.dataset.i18n);
   });
+  if (pendingMfaChallenge) {
+    mfaCopy.textContent = pendingMfaChallenge.phoneHint
+      ? text("mfaTextWithPhone").replace("{phone}", pendingMfaChallenge.phoneHint)
+      : text("mfaText");
+    mfaStatus.textContent = text("mfaRequired");
+  }
   languageToggle.textContent = language === "ar" ? "English" : "العربية";
   languageToggle.setAttribute(
     "aria-label",
@@ -732,6 +769,7 @@ function renderRecords(records) {
 }
 
 function selectAuthTab(tabName) {
+  resetMfaForm();
   document.querySelectorAll("[data-auth-tab]").forEach((button) => {
     button.classList.toggle("active", button.dataset.authTab === tabName);
   });
@@ -821,9 +859,16 @@ document.querySelector("[data-go-signin]").addEventListener("click", () => {
   loginForm.elements.password.focus();
 });
 
+document.querySelector("[data-mfa-cancel]").addEventListener("click", () => {
+  selectAuthTab("signin");
+  loginForm.elements.password.focus();
+});
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   loginStatus.textContent = "";
+  resetMfaForm();
+  loginForm.hidden = false;
   const values = new FormData(loginForm);
   try {
     const result = await api("/api/auth/login", {
@@ -833,7 +878,11 @@ loginForm.addEventListener("submit", async (event) => {
         password: values.get("password")
       })
     });
-    await completeMfaChallenge(result, "/api/auth/mfa");
+    if (result.mfaRequired) {
+      showMfaForm(result, "/api/auth/mfa");
+      showToast(text("mfaRequired"), "info");
+      return;
+    }
     const opened = await openDashboard();
     if (opened) {
       loginForm.reset();
@@ -841,6 +890,34 @@ loginForm.addEventListener("submit", async (event) => {
     }
   } catch (error) {
     loginStatus.textContent = messageForError(error);
+    showToast(messageForError(error), "error");
+  }
+});
+
+mfaForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  mfaStatus.textContent = "";
+  if (!pendingMfaChallenge) {
+    selectAuthTab("signin");
+    return;
+  }
+  const values = new FormData(mfaForm);
+  try {
+    await api(pendingMfaChallenge.endpoint, {
+      method: "POST",
+      body: JSON.stringify({
+        challengeId: pendingMfaChallenge.challengeId,
+        code: values.get("code")
+      })
+    });
+    const opened = await openDashboard();
+    if (opened) {
+      loginForm.reset();
+      resetMfaForm();
+      showToast(text("signedIn"), "success");
+    }
+  } catch (error) {
+    mfaStatus.textContent = messageForError(error);
     showToast(messageForError(error), "error");
   }
 });
