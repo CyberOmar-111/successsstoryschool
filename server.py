@@ -2528,28 +2528,6 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             if not student:
                 self.send_json(404, {"code": "student_not_found", "error": "Student not found."})
                 return
-            should_send_mfa_code = MFA_ENABLED and not bool(student["is_approved"])
-            if should_send_mfa_code and not twilio_verify_ready():
-                self.send_json(503, {"code": "mfa_not_configured", "error": "MFA is enabled but Twilio Verify is not configured."})
-                return
-            if should_send_mfa_code and not valid_mfa_phone(student["phone_number"]):
-                self.send_json(403, {"code": "mfa_phone_missing", "error": "No verified phone number is configured for this account."})
-                return
-            if should_send_mfa_code:
-                try:
-                    lookup_valid = twilio_lookup_valid_jordanian(student["phone_number"])
-                except Exception:
-                    self.send_json(502, {"code": "phone_lookup_failed", "error": "Could not validate the phone number."})
-                    return
-                if not lookup_valid:
-                    self.send_json(403, {"code": "mfa_phone_invalid", "error": "The saved phone number is not a real Jordanian mobile number."})
-                    return
-            if should_send_mfa_code:
-                try:
-                    send_twilio_sms_verification(student["phone_number"])
-                except Exception:
-                    self.send_json(502, {"code": "mfa_send_failed", "error": "Could not send the MFA verification code."})
-                    return
             connection.execute(
                 "INSERT INTO classes (grade, section) VALUES (?, ?) ON CONFLICT (grade, section) DO NOTHING",
                 (grade, section),
@@ -2567,7 +2545,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 """,
                 (class_row["id"], class_row["id"], grade, student_id),
             )
-        self.send_json(200, {"class": public_class(class_row), "mfaNotificationSent": should_send_mfa_code})
+        self.send_json(200, {"class": public_class(class_row), "mfaNotificationSent": False})
 
     def handle_student_decline(self, body):
         if not self.require_admin():

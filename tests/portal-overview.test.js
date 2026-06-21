@@ -263,11 +263,9 @@ test("Twilio Verify MFA is wired as a post-password session gate", () => {
   assert.doesNotMatch(server, /self\.begin_mfa_challenge\("admin", admin_id, attempt_key\)/);
   assert.match(server, /payload, cookie = self\.create_login_session\(connection, "admin", admin\)/);
   assert.match(server, /if self\.begin_mfa_challenge\("teacher", teacher_id, attempt_key\):[\s\S]*?return[\s\S]*?self\.create_login_session\(connection, "teacher", teacher\)/);
-  assert.match(server, /should_send_mfa_code = MFA_ENABLED and not bool\(student\["is_approved"\]\)/);
-  assert.match(server, /lookup_valid = twilio_lookup_valid_jordanian\(student\["phone_number"\]\)/);
-  assert.match(server, /"mfa_phone_invalid"/);
-  assert.match(server, /send_twilio_sms_verification\(student\["phone_number"\]\)/);
-  assert.match(server, /"mfaNotificationSent": should_send_mfa_code/);
+  assert.doesNotMatch(server, /send_twilio_sms_verification\(student\["phone_number"\]\)/);
+  assert.doesNotMatch(server, /"mfaNotificationSent": should_send_mfa_code/);
+  assert.match(server, /"mfaNotificationSent": False/);
   assert.match(server, /payload, cookie = self\.create_login_session\(connection, expected_account_type, account\)/);
   assert.match(server, /self\.send_json\(200, payload, \{"Set-Cookie": cookie\}\)/);
   assert.match(html, /data-mfa-form/);
@@ -282,7 +280,6 @@ test("Twilio Verify MFA is wired as a post-password session gate", () => {
   assert.match(teacherJs, /api\("\/api\/teacher\/mfa"/);
   assert.doesNotMatch(adminJs, /completeMfaChallenge\(result\)/);
   assert.doesNotMatch(adminJs, /api\("\/api\/admin\/mfa"/);
-  assert.match(adminJs, /mfa_phone_invalid: "phoneLookupUnavailable"/);
   assert.match(adminJs, /studentVerifiedCodeSent/);
   assert.match(adminJs, /result\.mfaNotificationSent \? "studentVerifiedCodeSent" : "studentVerified"/);
   assert.match(readme, /SSS_MFA_ENABLED=1/);
