@@ -225,7 +225,9 @@ test("Twilio Verify MFA is wired as a post-password session gate", () => {
   assert.match(server, /TWILIO_ACCOUNT_SID = os\.environ\.get\("TWILIO_ACCOUNT_SID"/);
   assert.match(server, /TWILIO_AUTH_TOKEN = os\.environ\.get\("TWILIO_AUTH_TOKEN"/);
   assert.match(server, /TWILIO_VERIFY_SERVICE_SID = os\.environ\.get\("TWILIO_VERIFY_SERVICE_SID"/);
-  assert.match(server, /MFA_ENABLED = env_flag\("SSS_MFA_ENABLED"\)/);
+  assert.match(server, /PRODUCTION_DEPLOYMENT = bool\(os\.environ\.get\("RENDER"\)\) or bool\(os\.environ\.get\("VERCEL"\)\) or IS_POSTGRES or HOST not in LOCAL_HOSTS/);
+  assert.match(server, /MFA_EXPLICITLY_DISABLED = MFA_SETTING in \{"0", "false", "no", "off"\}/);
+  assert.match(server, /MFA_ENABLED = not MFA_EXPLICITLY_DISABLED and \(env_flag\("SSS_MFA_ENABLED"\) or PRODUCTION_DEPLOYMENT\)/);
   assert.match(server, /MFA_PHONE_NUMBERS = load_mfa_phone_numbers\(\)/);
   assert.match(server, /CREATE TABLE IF NOT EXISTS mfa_challenges/);
   assert.match(server, /account_type TEXT NOT NULL CHECK \(account_type IN \('student', 'admin', 'teacher'\)\)/);
@@ -289,7 +291,7 @@ test("Twilio Verify MFA is wired as a post-password session gate", () => {
   assert.match(readme, /Twilio Lookup/);
   assert.match(readme, /in-page verification form/);
   assert.match(readme, /Neon through `DATABASE_URL`/);
-  assert.match(readme, /render\.yaml` enables it/);
+  assert.match(readme, /server enables MFA unless/);
   assert.match(renderConfig, /- key: SSS_MFA_ENABLED\n        value: "1"/);
   assert.match(renderConfig, /- key: TWILIO_VERIFY_SERVICE_SID\n        sync: false/);
   assert.match(renderConfig, /- key: SSS_MFA_PHONE_NUMBERS\n        sync: false/);
@@ -687,16 +689,15 @@ test("build pipeline uses local React, Vite, Vercel, and Render CI/CD", () => {
   assert.match(vercelWorkflow, /VERCEL_PROJECT_ID/);
   assert.match(vercelWorkflow, /vercel@latest build --prod/);
   assert.match(vercelWorkflow, /vercel@latest deploy --prebuilt --prod/);
-  assert.match(vercelWorkflow, /name: Deploy to Render/);
-  assert.match(vercelWorkflow, /RENDER_DEPLOY_HOOK_URL/);
-  assert.match(vercelWorkflow, /curl --fail --request POST "\$RENDER_DEPLOY_HOOK_URL"/);
+  assert.doesNotMatch(vercelWorkflow, /RENDER_DEPLOY_HOOK_URL/);
+  assert.doesNotMatch(vercelWorkflow, /name: Deploy to Render/);
   assert.match(renderConfig, /type: web/);
   assert.match(renderConfig, /name: success-story-school/);
   assert.match(renderConfig, /runtime: python/);
   assert.match(renderConfig, /buildCommand: npm ci && npm run build && python -m pip install -r requirements\.txt/);
   assert.match(renderConfig, /startCommand: python server\.py/);
   assert.match(renderConfig, /healthCheckPath: \/api\/admin\/setup-status/);
-  assert.match(renderConfig, /autoDeployTrigger: off/);
+  assert.match(renderConfig, /autoDeployTrigger: commit/);
   assert.match(renderConfig, /- key: HOST\n        value: 0\.0\.0\.0/);
   assert.match(renderConfig, /- key: NODE_VERSION\n        value: 24\.14\.1/);
   assert.match(renderConfig, /- key: SSS_REQUIRE_ADMIN_SETUP_SECRET\n        value: "1"/);
@@ -714,7 +715,7 @@ test("build pipeline uses local React, Vite, Vercel, and Render CI/CD", () => {
   assert.match(readme, /## Build Tools and Deployment/);
   assert.match(readme, /GitHub Actions/);
   assert.match(readme, /VERCEL_TOKEN/);
-  assert.match(readme, /RENDER_DEPLOY_HOOK_URL/);
+  assert.match(readme, /enables Render auto-deploys on\s+commits/);
   assert.match(readme, /npm ci && npm run build && python -m pip install -r requirements\.txt/);
 });
 

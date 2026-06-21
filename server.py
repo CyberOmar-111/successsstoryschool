@@ -39,15 +39,18 @@ ADMIN_SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "").strip()
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
 TWILIO_VERIFY_SERVICE_SID = os.environ.get("TWILIO_VERIFY_SERVICE_SID", "").strip()
-MFA_ENABLED = env_flag("SSS_MFA_ENABLED")
-MFA_PHONE_NUMBERS = load_mfa_phone_numbers()
-MFA_TTL_SECONDS = 5 * 60
-MFA_MAX_FAILURES = 5
 IS_POSTGRES = bool(DATABASE_URL)
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "4173"))
 TRUST_PROXY_HEADERS = env_flag("SSS_TRUST_PROXY_HEADERS")
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+PRODUCTION_DEPLOYMENT = bool(os.environ.get("RENDER")) or bool(os.environ.get("VERCEL")) or IS_POSTGRES or HOST not in LOCAL_HOSTS
+MFA_SETTING = os.environ.get("SSS_MFA_ENABLED", "").strip().lower()
+MFA_EXPLICITLY_DISABLED = MFA_SETTING in {"0", "false", "no", "off"}
+MFA_ENABLED = not MFA_EXPLICITLY_DISABLED and (env_flag("SSS_MFA_ENABLED") or PRODUCTION_DEPLOYMENT)
+MFA_PHONE_NUMBERS = load_mfa_phone_numbers()
+MFA_TTL_SECONDS = 5 * 60
+MFA_MAX_FAILURES = 5
 ADMIN_SETUP_SECRET_REQUIRED = (
     env_flag("SSS_REQUIRE_ADMIN_SETUP_SECRET")
     or bool(os.environ.get("VERCEL"))

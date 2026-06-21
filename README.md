@@ -223,12 +223,14 @@ behind a trusted proxy that replaces client-supplied forwarded headers.
 
 ## Twilio Verify MFA
 
-MFA is disabled by default for local development, but `render.yaml` enables it
-for the Render service with `SSS_MFA_ENABLED=1`. Student phone numbers are
-collected on signup, normalized to Jordanian E.164 format, and stored in the
-`students.phone_number` column in the configured Postgres database, including
-Neon through `DATABASE_URL`. Before deploying that config, configure Twilio
-Verify and add these secret environment variables in Render:
+MFA is disabled by default only for local development. On production-style
+deployments, including Render, Vercel, public hosts, or any deployment using
+Postgres/Neon through `DATABASE_URL`, the server enables MFA unless
+`SSS_MFA_ENABLED=0` explicitly disables it. This prevents a missing environment
+variable from silently falling back to password-only login. Student phone
+numbers are collected on signup, normalized to Jordanian E.164 format, and
+stored in the `students.phone_number` column. Before deploying that config,
+configure Twilio Verify and add these secret environment variables in Render:
 
 ```text
 SSS_MFA_ENABLED=1
@@ -252,9 +254,9 @@ until staff account phone fields are added. If MFA is enabled and an account
 does not have a valid phone number, the server refuses the login instead of
 falling back to password-only access.
 
-Important: once this is deployed with `SSS_MFA_ENABLED=1`, student, teacher, and
-administrator logins will not finish unless the Twilio credentials are valid and
-each account has a valid saved or configured phone number.
+Important: once this is deployed in production with MFA enabled, student,
+teacher, and administrator logins will not finish unless the Twilio credentials
+are valid and each account has a valid saved or configured phone number.
 
 The MFA flow is:
 
@@ -295,22 +297,17 @@ npm test
 
 `vercel.json` runs `npm run build` during Vercel deployment. `render.yaml`
 defines the matching Render web service, pins the Node and Python versions with
-`.node-version` and `.python-version`, and disables Render auto-deploys so
-GitHub Actions can deploy only after checks pass.
+`.node-version` and `.python-version`, and enables Render auto-deploys on
+commits.
 
 The GitHub Actions workflow in `.github/workflows/vercel.yml` builds, checks,
 and tests every pull request and push to `main`. Pushes to `main` also deploy
-to Vercel and trigger Render through a deploy hook. Add these repository
-secrets:
+to Vercel. The Render service deploys from GitHub commits through
+`render.yaml`. Add these repository secrets:
 
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
-- `RENDER_DEPLOY_HOOK_URL`
-
-Create the Render deploy hook from the Render service Settings page, then save
-that URL as `RENDER_DEPLOY_HOOK_URL` in GitHub. The hook URL is a secret; do
-not commit it.
 
 ## Frontend Architecture
 
