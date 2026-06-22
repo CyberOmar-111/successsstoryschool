@@ -5,8 +5,10 @@ import json
 import os
 import re
 import secrets
+import smtplib
 import sqlite3
 import time
+from email.message import EmailMessage
 from email.utils import formatdate, parsedate_to_datetime
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -18,27 +20,18 @@ def env_flag(name):
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
-def load_mfa_phone_numbers():
-    raw = os.environ.get("SSS_MFA_PHONE_NUMBERS", "").strip()
-    if not raw:
-        return {}
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
-        return {}
-    if not isinstance(payload, dict):
-        return {}
-    return {str(key).upper(): str(value).strip() for key, value in payload.items()}
-
-
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("SSS_DATA_DIR", str(ROOT / ".data")))
 DB_PATH = DATA_DIR / "portal.db"
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 ADMIN_SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "").strip()
-TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
-TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
-TWILIO_VERIFY_SERVICE_SID = os.environ.get("TWILIO_VERIFY_SERVICE_SID", "").strip()
+SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "").strip() or "587")
+SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "").strip()
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
+SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USERNAME).strip()
+SMTP_USE_SSL = env_flag("SMTP_USE_SSL")
+SMTP_USE_TLS = not SMTP_USE_SSL and not env_flag("SMTP_DISABLE_TLS")
 IS_POSTGRES = bool(DATABASE_URL)
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "4173"))
@@ -48,7 +41,6 @@ PRODUCTION_DEPLOYMENT = bool(os.environ.get("RENDER")) or bool(os.environ.get("V
 MFA_SETTING = os.environ.get("SSS_MFA_ENABLED", "").strip().lower()
 MFA_EXPLICITLY_DISABLED = MFA_SETTING in {"0", "false", "no", "off"}
 MFA_ENABLED = not MFA_EXPLICITLY_DISABLED and (env_flag("SSS_MFA_ENABLED") or PRODUCTION_DEPLOYMENT)
-MFA_PHONE_NUMBERS = load_mfa_phone_numbers()
 MFA_TTL_SECONDS = 5 * 60
 MFA_MAX_FAILURES = 5
 ADMIN_SETUP_SECRET_REQUIRED = (
@@ -237,6 +229,7 @@ def initialize_sqlite_database():
             CREATE TABLE IF NOT EXISTS students (
                 student_id TEXT PRIMARY KEY,
                 full_name TEXT NOT NULL,
+                email TEXT NOT NULL,
                 password_salt BLOB NOT NULL,
                 password_hash BLOB NOT NULL,
                 phone_number TEXT NOT NULL,
@@ -267,6 +260,7 @@ def initialize_sqlite_database():
                 account_type TEXT NOT NULL CHECK (account_type IN ('student', 'admin', 'teacher')),
                 account_id TEXT NOT NULL,
                 phone_number TEXT NOT NULL,
+                code_hash TEXT,
                 attempt_key TEXT NOT NULL,
                 expires_at INTEGER NOT NULL,
                 failure_count INTEGER NOT NULL DEFAULT 0,
@@ -392,6 +386,8 @@ def initialize_sqlite_database():
             )
         if "phone_number" not in student_columns:
             connection.execute("ALTER TABLE students ADD COLUMN phone_number TEXT")
+        if "email" not in student_columns:
+            connection.execute("ALTER TABLE students ADD COLUMN email TEXT")
         if "requested_class_id" not in student_columns:
             connection.execute(
                 "ALTER TABLE students ADD COLUMN requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL"
@@ -414,6 +410,11 @@ def initialize_sqlite_database():
             connection.execute(
                 "ALTER TABLE class_announcements ADD COLUMN posted_by_teacher_id TEXT REFERENCES teachers(teacher_id) ON DELETE SET NULL"
             )
+        mfa_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(mfa_challenges)").fetchall()
+        }
+        if "code_hash" not in mfa_columns:
+            connection.execute("ALTER TABLE mfa_challenges ADD COLUMN code_hash TEXT")
         connection.executemany(
             "INSERT OR IGNORE INTO classes (grade, section) VALUES (?, ?)",
             [(grade, section) for grade, section, _group in AVAILABLE_HOMEROOMS],
@@ -475,6 +476,7 @@ def initialize_postgres_database():
         CREATE TABLE IF NOT EXISTS students (
             student_id TEXT PRIMARY KEY,
             full_name TEXT NOT NULL,
+            email TEXT,
             password_salt BYTEA NOT NULL,
             password_hash BYTEA NOT NULL,
             phone_number TEXT,
@@ -508,6 +510,7 @@ def initialize_postgres_database():
             account_type TEXT NOT NULL CHECK (account_type IN ('student', 'admin', 'teacher')),
             account_id TEXT NOT NULL,
             phone_number TEXT NOT NULL,
+            code_hash TEXT,
             attempt_key TEXT NOT NULL,
             expires_at INTEGER NOT NULL,
             failure_count INTEGER NOT NULL DEFAULT 0,
@@ -651,8 +654,10 @@ def initialize_postgres_database():
         )
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS phone_number TEXT")
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS email TEXT")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS is_approved BOOLEAN NOT NULL DEFAULT TRUE")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS approved_at TEXT")
+        connection.execute("ALTER TABLE mfa_challenges ADD COLUMN IF NOT EXISTS code_hash TEXT")
         connection.execute(
             "UPDATE students SET requested_class_id = class_id WHERE requested_class_id IS NULL AND class_id IS NOT NULL"
         )
@@ -772,69 +777,47 @@ def parse_homeroom_code(value):
     return (grade, section) if homeroom_group(grade, section) else None
 
 
-def valid_mfa_phone(phone_number):
-    return bool(re.fullmatch(r"\+[1-9]\d{7,14}", phone_number or ""))
-
-
-def normalize_jordanian_phone(value):
-    digits = re.sub(r"\D", "", str(value or ""))
-    if digits.startswith("00962"):
-        digits = digits[2:]
-    if digits.startswith("962"):
-        normalized = f"+{digits}"
-    elif digits.startswith("07"):
-        normalized = f"+962{digits[1:]}"
-    elif digits.startswith("7"):
-        normalized = f"+962{digits}"
-    else:
+def normalize_email(value):
+    email = clean_text(value, 254).lower()
+    if not email or len(email) > 254:
         return None
-    return normalized if re.fullmatch(r"\+9627[789]\d{7}", normalized) else None
+    if not re.fullmatch(r"[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+", email):
+        return None
+    return email
 
 
-def mask_phone_number(phone_number):
-    if len(phone_number) <= 5:
-        return "configured phone"
-    return f"{phone_number[:3]}***{phone_number[-2:]}"
+def mask_email(email):
+    local, _, domain = (email or "").partition("@")
+    if not local or not domain:
+        return "your email"
+    visible = local[:2] if len(local) > 2 else local[:1]
+    return f"{visible}***@{domain}"
 
 
-def twilio_verify_ready():
-    return bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_VERIFY_SERVICE_SID)
+def mfa_code_hash(challenge_id, code):
+    return hmac.new(challenge_id.encode("utf-8"), code.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
-def twilio_account_ready():
-    return bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN)
+def email_mfa_ready():
+    return bool(SMTP_HOST and SMTP_PORT and SMTP_FROM)
 
 
-def twilio_verify_client():
-    from twilio.rest import Client
-
-    return Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-
-def lookup_twilio_phone_number(phone_number):
-    return twilio_verify_client().lookups.v2.phone_numbers(phone_number).fetch()
-
-
-def twilio_lookup_valid_jordanian(phone_number):
-    lookup = lookup_twilio_phone_number(phone_number)
-    return (
-        bool(getattr(lookup, "valid", False))
-        and getattr(lookup, "country_code", "") == "JO"
-        and bool(re.fullmatch(r"\+9627[789]\d{7}", getattr(lookup, "phone_number", "") or phone_number))
+def send_email_mfa_code(email, code):
+    message = EmailMessage()
+    message["From"] = SMTP_FROM
+    message["To"] = email
+    message["Subject"] = "Your Success Story School verification code"
+    message.set_content(
+        "Your Success Story School verification code is "
+        f"{code}.\n\nThis code expires in 5 minutes."
     )
-
-
-def send_twilio_sms_verification(phone_number):
-    return twilio_verify_client().verify.v2.services(
-        TWILIO_VERIFY_SERVICE_SID
-    ).verifications.create(to=phone_number, channel="sms")
-
-
-def check_twilio_sms_verification(phone_number, code):
-    verification_check = twilio_verify_client().verify.v2.services(
-        TWILIO_VERIFY_SERVICE_SID
-    ).verification_checks.create(to=phone_number, code=code)
-    return getattr(verification_check, "status", "") == "approved"
+    smtp_class = smtplib.SMTP_SSL if SMTP_USE_SSL else smtplib.SMTP
+    with smtp_class(SMTP_HOST, SMTP_PORT, timeout=12) as client:
+        if SMTP_USE_TLS:
+            client.starttls()
+        if SMTP_USERNAME:
+            client.login(SMTP_USERNAME, SMTP_PASSWORD)
+        client.send_message(message)
 
 
 def public_student(row):
@@ -854,7 +837,7 @@ def public_student(row):
         "name": row["full_name"],
         "grade": row["grade"],
         "transport": row["transport"],
-        "phoneHint": mask_phone_number(row["phone_number"]) if "phone_number" in row.keys() and row["phone_number"] else None,
+        "emailHint": mask_email(row["email"]) if "email" in row.keys() and row["email"] else None,
         "classId": class_id,
         "className": class_name,
         "requestedClassId": requested_class_id,
@@ -1535,12 +1518,15 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.send_json(400, {"code": "bad_request", "error": "Invalid request."})
             return
 
-        if request_path in {"/api/auth/register", "/api/admin/setup", "/api/admin/login"} or (
+        if request_path in {
+            "/api/auth/register",
+            "/api/auth/login",
+            "/api/admin/setup",
+            "/api/admin/login",
+            "/api/teacher/login",
+        } or (
             MFA_ENABLED and request_path in {
-                "/api/auth/login",
                 "/api/auth/mfa",
-                "/api/teacher/login",
-                "/api/teacher/mfa",
             }
         ):
             initialize_database()
@@ -1587,8 +1573,6 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_class_record_delete(body)
         elif request_path == "/api/teacher/login":
             self.handle_teacher_login(body)
-        elif request_path == "/api/teacher/mfa":
-            self.handle_mfa_verify(body, "teacher")
         elif request_path == "/api/teacher/logout":
             self.handle_teacher_logout()
         elif request_path == "/api/teacher/homework":
@@ -1634,25 +1618,13 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         name = clean_text(body.get("name"))
         password = str(body.get("password", ""))
         homeroom = parse_homeroom_code(body.get("classCode"))
-        phone_number = normalize_jordanian_phone(body.get("phoneNumber"))
+        email = normalize_email(body.get("email"))
         if len(name) < 2:
             self.send_json(400, {"code": "name_required", "error": "Enter the student's full name."})
             return
-        if not phone_number:
-            self.send_json(400, {"code": "phone_rule", "error": "Enter a valid Jordanian mobile number."})
+        if not email:
+            self.send_json(400, {"code": "email_rule", "error": "Enter a valid email address."})
             return
-        if MFA_ENABLED:
-            if not twilio_account_ready():
-                self.send_json(503, {"code": "phone_lookup_not_configured", "error": "Phone validation is not configured."})
-                return
-            try:
-                lookup_valid = twilio_lookup_valid_jordanian(phone_number)
-            except Exception:
-                self.send_json(502, {"code": "phone_lookup_failed", "error": "Could not validate the phone number."})
-                return
-            if not lookup_valid:
-                self.send_json(400, {"code": "phone_rule", "error": "Enter a real Jordanian mobile number."})
-                return
         if not valid_password(password):
             self.send_json(
                 400,
@@ -1691,12 +1663,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             connection.execute(
                 """
                 INSERT INTO students (
-                    student_id, full_name, password_salt, password_hash,
+                    student_id, full_name, email, password_salt, password_hash,
                     phone_number, grade, class_id, requested_class_id, is_approved
                 )
-                VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
                 """,
-                (student_id, name, salt, hashed, phone_number, grade, class_row["id"], False),
+                (student_id, name, email, salt, hashed, "", grade, class_row["id"], False),
             )
             connection.commit()
         self.send_json(201, {"studentId": student_id})
@@ -1766,61 +1738,60 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         )
         return {"teacher": public_teacher(account)}, self.session_cookie("sss_teacher_session", token, SESSION_TTL_SECONDS)
 
-    def account_phone_number(self, account_type, account_id):
-        if account_type == "student":
-            with db_connection() as connection:
-                row = connection.execute(
-                    "SELECT phone_number FROM students WHERE student_id = ?",
-                    (account_id,),
-                ).fetchone()
-            phone_number = row["phone_number"] if row else ""
-            return phone_number if valid_mfa_phone(phone_number) else ""
-        phone_number = MFA_PHONE_NUMBERS.get(account_id.upper(), "")
-        return phone_number if valid_mfa_phone(phone_number) else ""
+    def account_email(self, account_id):
+        with db_connection() as connection:
+            row = connection.execute(
+                "SELECT email FROM students WHERE student_id = ?",
+                (account_id,),
+            ).fetchone()
+        return normalize_email(row["email"]) if row and "email" in row.keys() else None
 
     def begin_mfa_challenge(self, account_type, account_id, attempt_key):
         if not MFA_ENABLED:
             return False
-        if not twilio_verify_ready():
-            self.send_json(503, {"code": "mfa_not_configured", "error": "MFA is enabled but Twilio Verify is not configured."})
-            return True
-        phone_number = self.account_phone_number(account_type, account_id)
-        if not phone_number:
-            self.send_json(403, {"code": "mfa_phone_missing", "error": "No verified phone number is configured for this account."})
-            return True
-        challenge_id = secrets.token_urlsafe(24)
-        expires_at = int(time.time()) + MFA_TTL_SECONDS
-        try:
-            send_twilio_sms_verification(phone_number)
-        except Exception:
-            self.send_json(502, {"code": "mfa_send_failed", "error": "Could not send the MFA verification code."})
-            return True
-        with db_connection() as connection:
-            connection.execute("DELETE FROM mfa_challenges WHERE expires_at <= ?", (int(time.time()),))
-            connection.execute(
-                "DELETE FROM mfa_challenges WHERE account_type = ? AND account_id = ?",
-                (account_type, account_id),
-            )
-            connection.execute(
-                """
-                INSERT INTO mfa_challenges (
-                    challenge_id, account_type, account_id, phone_number,
-                    attempt_key, expires_at, failure_count
+        if account_type == "student":
+            if not email_mfa_ready():
+                self.send_json(503, {"code": "mfa_not_configured", "error": "Email verification is not configured."})
+                return True
+            email = self.account_email(account_id)
+            if not email:
+                self.send_json(403, {"code": "mfa_email_missing", "error": "No email address is configured for this account."})
+                return True
+            challenge_id = secrets.token_urlsafe(24)
+            code = f"{secrets.randbelow(1000000):06d}"
+            expires_at = int(time.time()) + MFA_TTL_SECONDS
+            try:
+                send_email_mfa_code(email, code)
+            except Exception:
+                self.send_json(502, {"code": "mfa_send_failed", "error": "Could not send the MFA verification code."})
+                return True
+            with db_connection() as connection:
+                connection.execute("DELETE FROM mfa_challenges WHERE expires_at <= ?", (int(time.time()),))
+                connection.execute(
+                    "DELETE FROM mfa_challenges WHERE account_type = ? AND account_id = ?",
+                    (account_type, account_id),
                 )
-                VALUES (?, ?, ?, ?, ?, ?, 0)
-                """,
-                (challenge_id, account_type, account_id, phone_number, attempt_key, expires_at),
+                connection.execute(
+                    """
+                    INSERT INTO mfa_challenges (
+                        challenge_id, account_type, account_id, phone_number,
+                        code_hash, attempt_key, expires_at, failure_count
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+                    """,
+                    (challenge_id, account_type, account_id, email, mfa_code_hash(challenge_id, code), attempt_key, expires_at),
+                )
+            self.send_json(
+                200,
+                {
+                    "mfaRequired": True,
+                    "challengeId": challenge_id,
+                    "expiresInSeconds": MFA_TTL_SECONDS,
+                    "emailHint": mask_email(email),
+                },
             )
-        self.send_json(
-            200,
-            {
-                "mfaRequired": True,
-                "challengeId": challenge_id,
-                "expiresInSeconds": MFA_TTL_SECONDS,
-                "phoneHint": mask_phone_number(phone_number),
-            },
-        )
-        return True
+            return True
+        return False
 
     def handle_mfa_verify(self, body, expected_account_type):
         if not MFA_ENABLED:
@@ -1847,11 +1818,10 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         if challenge["failure_count"] >= MFA_MAX_FAILURES:
             self.send_json(429, {"code": "mfa_locked", "error": "Too many invalid verification attempts."})
             return
-        try:
-            approved = check_twilio_sms_verification(challenge["phone_number"], code)
-        except Exception:
-            self.send_json(502, {"code": "mfa_check_failed", "error": "Could not verify the MFA code."})
-            return
+        approved = bool(challenge["code_hash"]) and hmac.compare_digest(
+            mfa_code_hash(challenge_id, code),
+            challenge["code_hash"],
+        )
         if not approved:
             next_failures = challenge["failure_count"] + 1
             with db_connection() as connection:
@@ -2214,8 +2184,6 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             status = 429 if blocked_until else 401
             self.send_json(status, {"code": code, "error": "Invalid teacher ID or password."})
             return
-        if self.begin_mfa_challenge("teacher", teacher_id, attempt_key):
-            return
         with db_connection() as connection:
             connection.execute("DELETE FROM login_attempts WHERE attempt_key = ?", (attempt_key,))
             payload, cookie = self.create_login_session(connection, "teacher", teacher)
@@ -2522,7 +2490,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         grade, section = homeroom
         with db_connection() as connection:
             student = connection.execute(
-                "SELECT phone_number, is_approved FROM students WHERE student_id = ?",
+                "SELECT is_approved FROM students WHERE student_id = ?",
                 (student_id,),
             ).fetchone()
             if not student:

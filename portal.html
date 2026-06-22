@@ -86,8 +86,8 @@
                 <input name="name" type="text" autocomplete="name" required maxlength="80">
               </label>
               <label>
-                <span data-i18n="phoneNumber">Jordanian mobile number</span>
-                <input name="phoneNumber" type="tel" autocomplete="tel" inputmode="tel" placeholder="07XXXXXXXX" pattern="(\+9627[789][0-9]{7}|009627[789][0-9]{7}|07[789][0-9]{7})" required>
+                <span data-i18n="emailAddress">Email address</span>
+                <input name="email" type="email" autocomplete="email" placeholder="student@example.com" required maxlength="254">
               </label>
               <label>
                 <span data-i18n="classSection">Class / section</span>
@@ -112,7 +112,7 @@
                 <span data-i18n="confirmPassword">Confirm password</span>
                 <input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
               </label>
-              <p class="password-note" data-i18n="phoneRule">Use a Jordan mobile number such as 07XXXXXXXX or +9627XXXXXXXX.</p>
+              <p class="password-note" data-i18n="emailRule">Use an email address the student or family can open for login codes.</p>
               <p class="password-note" data-i18n="passwordRule">Password must be at least 8 characters and contain a letter and a number.</p>
               <button class="portal-button primary" type="submit" data-i18n="getStudentId">Create account and get ID</button>
               <p class="form-status" data-register-status aria-live="polite"></p>
@@ -141,7 +141,7 @@
             </form>
             <form class="login-form" data-mfa-form hidden>
               <h2 data-i18n="mfaTitle">Enter verification code</h2>
-              <p data-mfa-copy data-i18n="mfaText">A 6-digit SMS code was sent to the saved phone number.</p>
+              <p data-mfa-copy data-i18n="mfaText">A 6-digit code was sent to the saved email address.</p>
               <label>
                 <span data-i18n="verificationCode">Verification code</span>
                 <input name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>

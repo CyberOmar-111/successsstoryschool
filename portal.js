@@ -49,8 +49,8 @@ const translations = {
     createTitle: "Create a student account",
     createText: "Enter the student's name, request the correct homeroom, and create a private password. School staff approve class access after review.",
     studentName: "Student full name",
-    phoneNumber: "Jordanian mobile number",
-    phoneRule: "Use a Jordan mobile number such as 07XXXXXXXX or +9627XXXXXXXX.",
+    emailAddress: "Email address",
+    emailRule: "Use an email address the student or family can open for login codes.",
     classSection: "Class / section",
     chooseClass: "Choose your class",
     class10ABoys: "Grade 10 A - Boys",
@@ -74,8 +74,8 @@ const translations = {
     studentId: "Student ID",
     password: "Password",
     mfaTitle: "Enter verification code",
-    mfaText: "A 6-digit SMS code was sent to the saved phone number.",
-    mfaTextWithPhone: "A 6-digit SMS code was sent to {phone}.",
+    mfaText: "A 6-digit code was sent to the saved email address.",
+    mfaTextWithEmail: "A 6-digit code was sent to {email}.",
     verificationCode: "Verification code",
     verifyCode: "Verify code",
     backToSignIn: "Back to sign in",
@@ -156,16 +156,15 @@ const translations = {
     invalidLogin: "The student ID or password is incorrect.",
     waitingPermission: "Waiting for admin permission.",
     loginLocked: "Too many failed attempts. Sign-in is locked for 15 minutes.",
-    mfaPrompt: "Enter the 6-digit SMS code sent to {phone}.",
-    mfaRequired: "Enter the SMS verification code to finish signing in.",
+    mfaPrompt: "Enter the 6-digit email code sent to {email}.",
+    mfaRequired: "Enter the email verification code to finish signing in.",
     invalidMfa: "The verification code is invalid or expired.",
     mfaLocked: "Too many invalid verification attempts. Please sign in again.",
-    mfaUnavailable: "SMS verification is not available right now. Please contact the school office.",
-    phoneLookupUnavailable: "Phone number validation is not available right now. Please contact the school office.",
+    mfaUnavailable: "Email verification is not available right now. Please contact the school office.",
     genericError: "Something went wrong. Please try again.",
     registerLimited: "Too many account requests. Please try again later.",
     nameRequired: "Enter the student's full name.",
-    phoneError: "Enter a valid Jordanian mobile number.",
+    emailError: "Enter a valid email address.",
     passwordError: "Password must be 8-128 characters and include a letter and a number.",
     invalidClass: "Choose one of the available homerooms.",
     detailsSaved: "Registration details saved.",
@@ -202,8 +201,8 @@ const translations = {
     createTitle: "إنشاء حساب طالب",
     createText: "أدخل اسم الطالب واختر الشعبة الصحيحة وأنشئ كلمة مرور خاصة. سيصدر نظام المدرسة رقم الطالب.",
     studentName: "اسم الطالب الكامل",
-    phoneNumber: "رقم موبايل أردني",
-    phoneRule: "استخدم رقم موبايل أردني مثل 07XXXXXXXX أو +9627XXXXXXXX.",
+    emailAddress: "البريد الإلكتروني",
+    emailRule: "استخدم بريدا إلكترونيا يستطيع الطالب أو العائلة فتحه للحصول على رموز الدخول.",
     classSection: "الصف / الشعبة",
     chooseClass: "اختر صفك",
     class10ABoys: "الصف العاشر أ - بنين",
@@ -227,8 +226,8 @@ const translations = {
     studentId: "رقم الطالب",
     password: "كلمة المرور",
     mfaTitle: "أدخل رمز التحقق",
-    mfaText: "تم إرسال رمز من 6 أرقام برسالة نصية إلى الرقم المحفوظ.",
-    mfaTextWithPhone: "تم إرسال رمز من 6 أرقام برسالة نصية إلى {phone}.",
+    mfaText: "تم إرسال رمز من 6 أرقام إلى البريد الإلكتروني المحفوظ.",
+    mfaTextWithEmail: "تم إرسال رمز من 6 أرقام إلى {email}.",
     verificationCode: "رمز التحقق",
     verifyCode: "تحقق من الرمز",
     backToSignIn: "العودة إلى تسجيل الدخول",
@@ -304,16 +303,15 @@ const translations = {
     invalidLogin: "رقم الطالب أو كلمة المرور غير صحيحة.",
     waitingPermission: "Waiting for admin permission.",
     loginLocked: "محاولات كثيرة غير صحيحة. تم إيقاف تسجيل الدخول لمدة 15 دقيقة.",
-    mfaPrompt: "أدخل رمز الرسالة النصية المكون من 6 أرقام والمرسل إلى {phone}.",
-    mfaRequired: "أدخل رمز التحقق النصي لإكمال تسجيل الدخول.",
+    mfaPrompt: "أدخل رمز البريد الإلكتروني المكون من 6 أرقام والمرسل إلى {email}.",
+    mfaRequired: "أدخل رمز التحقق من البريد الإلكتروني لإكمال تسجيل الدخول.",
     invalidMfa: "رمز التحقق غير صحيح أو انتهت صلاحيته.",
     mfaLocked: "محاولات تحقق كثيرة غير صحيحة. يرجى تسجيل الدخول مرة أخرى.",
-    mfaUnavailable: "التحقق عبر الرسائل غير متاح الآن. يرجى التواصل مع مكتب المدرسة.",
-    phoneLookupUnavailable: "التحقق من رقم الهاتف غير متاح الآن. يرجى التواصل مع مكتب المدرسة.",
+    mfaUnavailable: "التحقق عبر البريد الإلكتروني غير متاح الآن. يرجى التواصل مع مكتب المدرسة.",
     genericError: "حدث خطأ. يرجى المحاولة مرة أخرى.",
     registerLimited: "طلبات حسابات كثيرة جدا. يرجى المحاولة لاحقا.",
     nameRequired: "أدخل اسم الطالب الكامل.",
-    phoneError: "أدخل رقم موبايل أردني صحيح.",
+    emailError: "أدخل بريدا إلكترونيا صحيحا.",
     passwordError: "يجب أن تكون كلمة المرور من 8 إلى 128 حرفا وأن تحتوي على حرف ورقم.",
     invalidClass: "اختر إحدى الشعب المتاحة.",
     detailsSaved: "تم حفظ بيانات التسجيل.",
@@ -369,15 +367,12 @@ function messageForError(error) {
     invalid_mfa: "invalidMfa",
     mfa_locked: "mfaLocked",
     mfa_not_configured: "mfaUnavailable",
-    mfa_phone_missing: "mfaUnavailable",
-    mfa_phone_invalid: "phoneError",
+    mfa_email_missing: "mfaUnavailable",
     mfa_send_failed: "mfaUnavailable",
     mfa_check_failed: "mfaUnavailable",
-    phone_lookup_not_configured: "phoneLookupUnavailable",
-    phone_lookup_failed: "phoneLookupUnavailable",
     register_limited: "registerLimited",
     name_required: "nameRequired",
-    phone_rule: "phoneError",
+    email_rule: "emailError",
     password_rule: "passwordError",
     invalid_class: "invalidClass"
   };
@@ -396,7 +391,7 @@ function showMfaForm(result, endpoint) {
   pendingMfaChallenge = {
     endpoint,
     challengeId: result.challengeId,
-    phoneHint: result.phoneHint || ""
+    emailHint: result.emailHint || ""
   };
   loginForm.hidden = true;
   registerForm.hidden = true;
@@ -404,8 +399,8 @@ function showMfaForm(result, endpoint) {
   loginStatus.textContent = "";
   registerStatus.textContent = "";
   mfaStatus.textContent = text("mfaRequired");
-  mfaCopy.textContent = pendingMfaChallenge.phoneHint
-    ? text("mfaTextWithPhone").replace("{phone}", pendingMfaChallenge.phoneHint)
+  mfaCopy.textContent = pendingMfaChallenge.emailHint
+    ? text("mfaTextWithEmail").replace("{email}", pendingMfaChallenge.emailHint)
     : text("mfaText");
   mfaForm.elements.code.value = "";
   mfaForm.elements.code.focus();
@@ -442,8 +437,8 @@ function applyLanguage(nextLanguage) {
     element.textContent = text(element.dataset.i18n);
   });
   if (pendingMfaChallenge) {
-    mfaCopy.textContent = pendingMfaChallenge.phoneHint
-      ? text("mfaTextWithPhone").replace("{phone}", pendingMfaChallenge.phoneHint)
+    mfaCopy.textContent = pendingMfaChallenge.emailHint
+      ? text("mfaTextWithEmail").replace("{email}", pendingMfaChallenge.emailHint)
       : text("mfaText");
     mfaStatus.textContent = text("mfaRequired");
   }
@@ -837,7 +832,7 @@ registerForm.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify({
         name: values.get("name"),
-        phoneNumber: values.get("phoneNumber"),
+        email: values.get("email"),
         classCode: values.get("classCode"),
         password
       })

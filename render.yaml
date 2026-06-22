@@ -19,11 +19,13 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
-      - key: TWILIO_ACCOUNT_SID
+      - key: SMTP_HOST
         sync: false
-      - key: TWILIO_AUTH_TOKEN
+      - key: SMTP_PORT
         sync: false
-      - key: TWILIO_VERIFY_SERVICE_SID
+      - key: SMTP_USERNAME
         sync: false
-      - key: SSS_MFA_PHONE_NUMBERS
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
         sync: false
