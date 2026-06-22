@@ -26,6 +26,7 @@ const homepageEntrySource = fs.readFileSync(path.join(root, "src", "site", "inde
 const homepageDataSource = fs.readFileSync(path.join(root, "src", "site", "data", "homepage-content.js"), "utf8");
 const errorBoundarySource = fs.readFileSync(path.join(root, "src", "site", "components", "ErrorBoundary.jsx"), "utf8");
 const contactSectionSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "ContactSection.jsx"), "utf8");
+const siteHeaderSource = fs.readFileSync(path.join(root, "src", "site", "components", "layout", "SiteHeader.jsx"), "utf8");
 const tailwindConfig = fs.readFileSync(path.join(root, "tailwind.config.js"), "utf8");
 const tailwindCardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "TailwindCard.jsx"), "utf8");
 const inspiredDashboardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "InspiredStudentDashboardCards.jsx"), "utf8");
@@ -666,6 +667,19 @@ test("homepage has mobile-first responsive guardrails", () => {
   assert.match(contactSectionSource, /inputMode="tel"/);
   assert.match(contactSectionSource, /enterKeyHint="next"/);
   assert.match(contactSectionSource, /enterKeyHint="send"/);
+});
+
+test("homepage mobile navigation uses an accessible transforming hamburger", () => {
+  assert.match(siteHeaderSource, /aria-controls="primary-navigation-menu"/);
+  assert.match(siteHeaderSource, /aria-expanded=\{menuOpen\}/);
+  assert.match(siteHeaderSource, /className="hamburger-icon"/);
+  assert.match(siteHeaderSource, /className="hamburger-line"/);
+  assert.doesNotMatch(siteHeaderSource, /Menu, X/);
+  assert.match(homepageCss, /\.hamburger-icon/);
+  assert.match(homepageCss, /\.menu-button\[aria-expanded="true"\] \.hamburger-line:nth-child\(1\)[\s\S]*?rotate\(45deg\)/);
+  assert.match(homepageCss, /\.menu-button\[aria-expanded="true"\] \.hamburger-line:nth-child\(3\)[\s\S]*?rotate\(-45deg\)/);
+  assert.match(homepageCss, /\.nav-panel[\s\S]*?transform: translateX\(104%\)/);
+  assert.match(homepageCss, /\.nav-panel\.open[\s\S]*?transform: translateX\(0\)/);
 });
 
 test("build pipeline uses local React, Vite, Vercel, and Render CI/CD", () => {

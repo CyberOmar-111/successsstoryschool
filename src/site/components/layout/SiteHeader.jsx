@@ -1,5 +1,5 @@
 ﻿import { navItems } from "../../data/homepage-content.js";
-import { Globe2, Menu, X } from "../../icons/index.jsx";
+import { Globe2 } from "../../icons/index.jsx";
 import { cx } from "../../utils/cx.js";
 import { ActionLink, BrandLockup } from "../primitives.jsx";
 
@@ -16,7 +16,11 @@ export function SiteHeader({ t, menuOpen, closeMenu, toggleMenu, toggleLanguage 
           aria-expanded={menuOpen}
           onClick={toggleMenu}
         >
-          {menuOpen ? <X size={24} strokeWidth={2.2} aria-hidden="true" /> : <Menu size={24} strokeWidth={2.2} aria-hidden="true" />}
+          <span className="hamburger-icon" aria-hidden="true">
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
+          </span>
         </button>
         <button
           className={cx("nav-backdrop", menuOpen && "open")}
