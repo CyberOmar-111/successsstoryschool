@@ -228,16 +228,27 @@ deployments, including Render, Vercel, public hosts, or any deployment using
 Postgres/Neon through `DATABASE_URL`, the server enables MFA unless
 `SSS_MFA_ENABLED=0` explicitly disables it. This prevents a missing environment
 variable from silently falling back to password-only login. Student emails are
-collected on signup and stored in the `students.email` column. Before deploying
-that config, configure an SMTP sender and add these secret environment variables
-in Render:
+collected on signup and stored in the `students.email` column. The simplest
+production setup is Brevo's Transactional Email API, which uses normal HTTPS
+instead of SMTP ports. Add these secret environment variables in Render:
 
 ```text
 SSS_MFA_ENABLED=1
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USERNAME=your-smtp-username
-SMTP_PASSWORD=your-smtp-password
+BREVO_API_KEY=your-brevo-api-key
+BREVO_SENDER_EMAIL=office@example.com
+BREVO_SENDER_NAME=Success Story School
+```
+
+`BREVO_SENDER_EMAIL` must be a sender email verified in Brevo. If
+`BREVO_API_KEY` is present, the server sends MFA codes through Brevo's
+`/v3/smtp/email` API. SMTP remains supported only as a fallback when no Brevo API
+key is configured:
+
+```text
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=2525
+SMTP_USERNAME=your-smtp-login
+SMTP_PASSWORD=your-smtp-key
 SMTP_FROM=office@example.com
 ```
 
@@ -245,8 +256,8 @@ Student signup accepts a normal email address. Administrators and teachers do
 not use MFA; those staff accounts remain ID/password only.
 
 Important: once this is deployed in production with MFA enabled, student logins
-will not finish unless the SMTP settings are valid and the student has a saved
-email address.
+will not finish unless the Brevo API key or SMTP settings are valid and the
+student has a saved email address.
 
 The MFA flow is:
 

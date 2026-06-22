@@ -221,6 +221,12 @@ test("server sends HSTS and a strict self-hosted CSP", () => {
 
 test("Email MFA is wired as a post-password session gate", () => {
   assert.doesNotMatch(requirements, /twilio/);
+  assert.match(server, /BREVO_API_KEY = os\.environ\.get\("BREVO_API_KEY"/);
+  assert.match(server, /BREVO_SENDER_EMAIL = os\.environ\.get\("BREVO_SENDER_EMAIL"/);
+  assert.match(server, /https:\/\/api\.brevo\.com\/v3\/smtp\/email/);
+  assert.match(server, /"api-key": BREVO_API_KEY/);
+  assert.match(server, /def send_brevo_mfa_code\(email, code\):/);
+  assert.match(server, /if BREVO_API_KEY:/);
   assert.match(server, /SMTP_HOST = os\.environ\.get\("SMTP_HOST"/);
   assert.match(server, /SMTP_USERNAME = os\.environ\.get\("SMTP_USERNAME"/);
   assert.match(server, /SMTP_PASSWORD = os\.environ\.get\("SMTP_PASSWORD"/);
@@ -275,16 +281,17 @@ test("Email MFA is wired as a post-password session gate", () => {
   assert.doesNotMatch(adminJs, /studentVerifiedCodeSent/);
   assert.doesNotMatch(adminJs, /mfaNotificationSent \?/);
   assert.match(readme, /SSS_MFA_ENABLED=1/);
-  assert.match(readme, /SMTP_HOST/);
-  assert.match(readme, /SMTP_PASSWORD/);
+  assert.match(readme, /BREVO_API_KEY/);
+  assert.match(readme, /BREVO_SENDER_EMAIL/);
+  assert.match(readme, /SMTP remains supported only as a fallback/);
   assert.match(readme, /students\.email/);
   assert.match(readme, /Email MFA/);
   assert.match(readme, /in-page verification form/);
   assert.match(readme, /Neon through `DATABASE_URL`/);
   assert.match(readme, /server enables MFA unless/);
   assert.match(renderConfig, /- key: SSS_MFA_ENABLED\n        value: "1"/);
-  assert.match(renderConfig, /- key: SMTP_HOST\n        sync: false/);
-  assert.match(renderConfig, /- key: SMTP_PASSWORD\n        sync: false/);
+  assert.match(renderConfig, /- key: BREVO_API_KEY\n        sync: false/);
+  assert.match(renderConfig, /- key: BREVO_SENDER_EMAIL\n        sync: false/);
 });
 
 test("backend enforces setup secret, JSON validation, and reset re-auth", async (t) => {
@@ -694,6 +701,9 @@ test("build pipeline uses local React, Vite, Vercel, and Render CI/CD", () => {
   assert.match(renderConfig, /- key: SSS_MFA_ENABLED\n        value: "1"/);
   assert.match(renderConfig, /- key: ADMIN_SETUP_SECRET\n        sync: false/);
   assert.match(renderConfig, /- key: DATABASE_URL\n        sync: false/);
+  assert.match(renderConfig, /- key: BREVO_API_KEY\n        sync: false/);
+  assert.match(renderConfig, /- key: BREVO_SENDER_EMAIL\n        sync: false/);
+  assert.match(renderConfig, /- key: BREVO_SENDER_NAME\n        value: Success Story School/);
   assert.match(renderConfig, /- key: SMTP_HOST\n        sync: false/);
   assert.match(renderConfig, /- key: SMTP_PORT\n        sync: false/);
   assert.match(renderConfig, /- key: SMTP_USERNAME\n        sync: false/);

@@ -13,7 +13,9 @@ from email.utils import formatdate, parsedate_to_datetime
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlparse
+from urllib.request import Request, urlopen
 
 
 def env_flag(name):
@@ -25,6 +27,9 @@ DATA_DIR = Path(os.environ.get("SSS_DATA_DIR", str(ROOT / ".data")))
 DB_PATH = DATA_DIR / "portal.db"
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 ADMIN_SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "").strip()
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
+BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "").strip()
+BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Success Story School").strip()
 SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "").strip() or "587")
 SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "").strip()
@@ -799,18 +804,52 @@ def mfa_code_hash(challenge_id, code):
 
 
 def email_mfa_ready():
-    return bool(SMTP_HOST and SMTP_PORT and SMTP_FROM)
+    return bool((BREVO_API_KEY and (BREVO_SENDER_EMAIL or SMTP_FROM)) or (SMTP_HOST and SMTP_PORT and SMTP_FROM))
 
 
-def send_email_mfa_code(email, code):
+def email_mfa_body(code):
+    return (
+        "Your Success Story School verification code is "
+        f"{code}.\n\nThis code expires in 5 minutes."
+    )
+
+
+def send_brevo_mfa_code(email, code):
+    payload = {
+        "sender": {
+            "name": BREVO_SENDER_NAME or "Success Story School",
+            "email": BREVO_SENDER_EMAIL or SMTP_FROM,
+        },
+        "to": [{"email": email}],
+        "subject": "Your Success Story School verification code",
+        "textContent": email_mfa_body(code),
+    }
+    request = Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "accept": "application/json",
+            "api-key": BREVO_API_KEY,
+            "content-type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=12) as response:
+            response.read()
+    except HTTPError as error:
+        detail = error.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Brevo API HTTP {error.code}: {detail}") from error
+    except URLError as error:
+        raise RuntimeError(f"Brevo API connection failed: {error.reason}") from error
+
+
+def send_smtp_mfa_code(email, code):
     message = EmailMessage()
     message["From"] = SMTP_FROM
     message["To"] = email
     message["Subject"] = "Your Success Story School verification code"
-    message.set_content(
-        "Your Success Story School verification code is "
-        f"{code}.\n\nThis code expires in 5 minutes."
-    )
+    message.set_content(email_mfa_body(code))
     smtp_class = smtplib.SMTP_SSL if SMTP_USE_SSL else smtplib.SMTP
     with smtp_class(SMTP_HOST, SMTP_PORT, timeout=12) as client:
         if SMTP_USE_TLS:
@@ -818,6 +857,13 @@ def send_email_mfa_code(email, code):
         if SMTP_USERNAME:
             client.login(SMTP_USERNAME, SMTP_PASSWORD)
         client.send_message(message)
+
+
+def send_email_mfa_code(email, code):
+    if BREVO_API_KEY:
+        send_brevo_mfa_code(email, code)
+        return
+    send_smtp_mfa_code(email, code)
 
 
 def public_student(row):
@@ -1753,6 +1799,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             if not email_mfa_ready():
                 print(
                     "Email MFA is not configured: "
+                    f"BREVO_API_KEY={bool(BREVO_API_KEY)} "
+                    f"BREVO_SENDER_EMAIL={bool(BREVO_SENDER_EMAIL or SMTP_FROM)} "
                     f"SMTP_HOST={bool(SMTP_HOST)} SMTP_PORT={SMTP_PORT} SMTP_FROM={bool(SMTP_FROM)}",
                     flush=True,
                 )

@@ -19,6 +19,12 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: Success Story School
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
