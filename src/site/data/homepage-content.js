@@ -116,6 +116,13 @@ export const copy = {
     heroStatPortal: "school accounts",
     heroStatLocation: "Irbid campus",
     heroStatLanguage: "Arabic + English",
+    schoolActionsLabel: "Start here",
+    campusActionContactTitle: "Contact the office",
+    campusActionContactText: "Call, WhatsApp, or send a prepared inquiry to ask about grades, fees, and visits.",
+    campusActionTourTitle: "Plan a campus visit",
+    campusActionTourText: "Use the admissions path to prepare a visit behind Irbid Specialty Hospital.",
+    campusActionAccountTitle: "Open school accounts",
+    campusActionAccountText: "Students and staff use protected account pages after access is issued.",
     proofEyebrow: "Built for Success Story School",
     proofTitle: "A live school system for daily communication.",
     proofText: "This site was built for Success Story School so families can understand the school quickly and staff can manage accounts without scattered messages. It supports real workflows: admissions questions, class records, homework, announcements, transportation, and secure account access.",
@@ -295,6 +302,13 @@ export const copy = {
     heroStatPortal: "حسابات آمنة",
     heroStatLocation: "مبنى إربد",
     heroStatLanguage: "عربي + إنجليزي",
+    schoolActionsLabel: "ابدأ من هنا",
+    campusActionContactTitle: "تواصل مع الإدارة",
+    campusActionContactText: "اتصل أو راسل واتساب أو افتح استفساراً جاهزاً عن الصفوف والرسوم والزيارات.",
+    campusActionTourTitle: "خطط لزيارة المدرسة",
+    campusActionTourText: "استخدم مسار التسجيل للتحضير لزيارة المدرسة خلف مستشفى إربد التخصصي.",
+    campusActionAccountTitle: "افتح حسابات المدرسة",
+    campusActionAccountText: "يستخدم الطلاب والكوادر صفحات حسابات محمية بعد إصدار الوصول.",
     proofEyebrow: "لماذا تثق العائلات بنا",
     proofTitle: "موقع مدرسي يشعر بنفس تنظيم المدرسة.",
     proofText: "تجربة جديدة تجمع المبنى، التسجيل، الأكاديميات، حسابات المدرسة، والتواصل في مسار واضح للأهل.",
@@ -409,6 +423,30 @@ export const highlights = [
   ["curriculum", BookOpen],
   ["language", Globe2],
   ["transport", Bus]
+];
+
+export const schoolActions = [
+  {
+    number: "01",
+    title: "campusActionContactTitle",
+    text: "campusActionContactText",
+    href: "#contact",
+    icon: MessageCircle
+  },
+  {
+    number: "02",
+    title: "campusActionTourTitle",
+    text: "campusActionTourText",
+    href: "#admissions",
+    icon: UsersRound
+  },
+  {
+    number: "03",
+    title: "campusActionAccountTitle",
+    text: "campusActionAccountText",
+    href: "#portals",
+    icon: LayoutDashboard
+  }
 ];
 
 export const heroStats = [

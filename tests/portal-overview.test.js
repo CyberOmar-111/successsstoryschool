@@ -499,6 +499,18 @@ test("teacher and administration dashboards expose live command centers", () => 
   assert.match(adminCss, /\.admin-workspace/);
 });
 
+test("portal dashboards have compact mobile spacing", () => {
+  assert.match(css, /Compact mobile dashboard pass/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.dashboard-grid,[\s\S]*?\.teacher-grid,[\s\S]*?\.admin-grid[\s\S]*?padding: 14px 0 24px/);
+  assert.match(css, /\.command-center article[\s\S]*?min-height: 86px/);
+  assert.match(css, /\.student-dashboard-card[\s\S]*?min-height: 0/);
+  assert.match(css, /\.table-wrap,[\s\S]*?\.attendance-table[\s\S]*?overflow-x: auto/);
+  assert.match(teacherCss, /Compact mobile teacher dashboard/);
+  assert.match(teacherCss, /\.assignment-list button[\s\S]*?min-height: 50px/);
+  assert.match(adminCss, /Compact mobile admin dashboard/);
+  assert.match(adminCss, /\.admin-placeholder[\s\S]*?min-height: 150px/);
+});
+
 test("palette is role-based and context-aware", () => {
   const paletteCss = `${css}\n${homepageCss}`;
   assert.match(indexHtml, /<link rel="stylesheet" href="school-react\.css(?:\?v=[^\"]+)?">/);
@@ -654,6 +666,23 @@ test("motion is subtle, accessible, and uses animated dashboard widgets", () => 
   assert.match(primitivesSource, /export function AnimatedDashboardWidget/);
   assert.match(portalPreviewSource, /AnimatedDashboardWidget/);
   assert.match(portalPreviewSource, /dashboard-preview-widget/);
+});
+
+test("homepage uses an original Jordan school inspired entry layout", () => {
+  const heroSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "HeroSection.jsx"), "utf8");
+  const highlightsSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "HighlightsSection.jsx"), "utf8");
+  const inspirationSurface = `${heroSource}\n${highlightsSource}\n${homepageDataSource}\n${homepageCss}`;
+
+  assert.match(heroSource, /heroStats/);
+  assert.match(highlightsSource, /schoolActions/);
+  assert.match(highlightsSource, /data-inspiration="jordan-school-pattern"/);
+  assert.match(homepageDataSource, /campusActionContactTitle/);
+  assert.match(homepageDataSource, /campusActionTourTitle/);
+  assert.match(homepageDataSource, /campusActionAccountTitle/);
+  assert.match(homepageCss, /Jordan school inspiration pass/);
+  assert.match(homepageCss, /\.entry-action-card/);
+  assert.match(homepageCss, /\.hero-stats/);
+  assert.doesNotMatch(inspirationSurface, /Jordan International|jis\.edu\.jo/i);
 });
 
 test("homepage has mobile-first responsive guardrails", () => {

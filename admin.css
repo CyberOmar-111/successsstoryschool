@@ -511,3 +511,130 @@
 .remove-member {
   border-radius: 999px;
 }
+
+/* === Compact mobile admin dashboard === */
+@media (max-width: 760px) {
+  .admin-auth {
+    padding: 36px 0;
+  }
+
+  .admin-dashboard-header {
+    gap: 12px;
+    margin-top: 14px;
+    margin-bottom: 12px;
+    padding: 15px;
+    border-radius: 18px;
+  }
+
+  .admin-dashboard-header h1 {
+    font-size: clamp(1.28rem, 7vw, 1.72rem);
+  }
+
+  .admin-command-center {
+    margin-bottom: 14px;
+  }
+
+  .admin-grid {
+    gap: 14px;
+    padding-bottom: 24px;
+  }
+
+  .admin-sidebar {
+    gap: 12px;
+  }
+
+  .admin-list-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .admin-list-card h2 {
+    margin-bottom: 9px;
+    font-size: 1.08rem;
+  }
+
+  .admin-list {
+    gap: 7px;
+  }
+
+  .admin-list button,
+  .account-list .admin-account {
+    padding: 10px 11px;
+    border-radius: 14px;
+  }
+
+  .admin-add-button {
+    margin-top: 10px;
+  }
+
+  .admin-workspace {
+    gap: 14px;
+  }
+
+  .admin-placeholder {
+    min-height: 150px;
+    padding: 18px;
+  }
+
+  .editor-header {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .editor-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .class-chip {
+    padding: 8px 12px;
+  }
+
+  .record-form,
+  .teacher-assignment-row,
+  .assignment-form,
+  .roster-add-form {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .record-form {
+    gap: 10px;
+  }
+
+  .record-form input,
+  .record-form select,
+  .record-form textarea {
+    padding: 9px 10px;
+  }
+
+  .editor-grid,
+  .summary-records,
+  .teacher-assignment-row,
+  .assignment-form,
+  .roster-add-form {
+    gap: 10px;
+  }
+
+  .verification-actions {
+    gap: 8px;
+  }
+
+  .summary-records article {
+    padding: 11px 12px;
+    border-radius: 14px;
+  }
+
+  .admin-members {
+    margin-bottom: 16px;
+  }
+
+  .admin-members .member-row {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .remove-member {
+    width: 100%;
+  }
+}

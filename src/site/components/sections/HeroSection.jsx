@@ -1,4 +1,5 @@
 ﻿import { CheckCircle2, LayoutDashboard, Phone } from "../../icons/index.jsx";
+import { heroStats } from "../../data/homepage-content.js";
 import { ActionLink } from "../primitives.jsx";
 
 export function HeroSection({ t, phoneHref, isArabic }) {
@@ -24,6 +25,14 @@ export function HeroSection({ t, phoneHref, isArabic }) {
             <ActionLink href="#portals" variant="secondary" icon={LayoutDashboard}>{t.openPortals}</ActionLink>
             <ActionLink href={phoneHref} variant="ghost" icon={Phone}>{t.callOffice}</ActionLink>
           </div>
+          <dl className="hero-stats" aria-label="School quick facts">
+            {heroStats.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{t[value]}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
         <aside className="hero-card" aria-label={t.heroCardKicker}>
