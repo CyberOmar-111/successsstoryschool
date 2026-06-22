@@ -3839,14 +3839,6 @@ canvas {
     rgba(32, 50, 86, 0.82);
 }
 
-.hero-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 6px;
-  background: linear-gradient(90deg, #e0ac3d, #0f766e);
-}
-
 .school-entry-strip {
   position: relative;
   z-index: 3;
