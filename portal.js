@@ -549,6 +549,27 @@ function updateMetric(name, value) {
   }
 }
 
+function updateDashboardCard(name, value, badge, detail) {
+  const card = document.querySelector(`[data-dashboard-card="${name}"]`);
+  const valueTarget = document.querySelector(`[data-dashboard-card-value="${name}"]`);
+  const badgeTarget = document.querySelector(`[data-dashboard-card-badge="${name}"]`);
+  const detailTarget = document.querySelector(`[data-dashboard-card-detail="${name}"]`);
+  const hasUpdates = Number(badge) > 0;
+  if (card) {
+    card.dataset.state = hasUpdates ? "ready" : "empty";
+    card.setAttribute("aria-label", `${text(name)} - ${detail}. ${text("openModule")}`);
+  }
+  if (valueTarget) {
+    valueTarget.textContent = value;
+  }
+  if (badgeTarget) {
+    badgeTarget.textContent = badge;
+  }
+  if (detailTarget) {
+    detailTarget.textContent = detail;
+  }
+}
+
 function formatPostMeta(primary, audience) {
   const parts = [];
   if (primary) {
@@ -760,6 +781,24 @@ function renderRecords(records) {
   const feesOverview = fees.length ? `${dueAmount.toFixed(2)} JOD` : "--";
   document.querySelector("[data-fees-overview]").textContent = feesOverview;
   updateMetric("fees", feesOverview);
+  updateDashboardCard(
+    "grades",
+    averageOverview,
+    grades.length,
+    grades.length ? `${grades.length} ${text("grades")}` : text("noGrades")
+  );
+  updateDashboardCard(
+    "attendance",
+    attendanceOverview,
+    attendance.length,
+    attendance.length ? `${attendance.length} ${text("attendance")}` : text("noAttendance")
+  );
+  updateDashboardCard(
+    "homework",
+    String(homework.length),
+    homework.length,
+    homework[0] ? homework[0].subject : text("noHomework")
+  );
   renderOverviewCards({ grades, attendance, homework, announcements, fees });
 }
 

@@ -260,6 +260,35 @@
                   </article>
                 </div>
               </div>
+              <div class="student-card-grid" aria-label="Student dashboard cards">
+                <button class="student-dashboard-card" type="button" data-open-tab="grades" data-dashboard-card="grades">
+                  <span class="student-card-icon"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-grades"></use></svg></span>
+                  <span class="student-card-copy">
+                    <span data-i18n="grades">Grades</span>
+                    <strong data-dashboard-card-value="grades">--</strong>
+                    <small data-dashboard-card-detail="grades" data-i18n="noGrades">No grades have been entered for this student yet.</small>
+                  </span>
+                  <span class="student-card-badge" data-dashboard-card-badge="grades">0</span>
+                </button>
+                <button class="student-dashboard-card" type="button" data-open-tab="attendance" data-dashboard-card="attendance">
+                  <span class="student-card-icon"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-attendance"></use></svg></span>
+                  <span class="student-card-copy">
+                    <span data-i18n="attendance">Attendance</span>
+                    <strong data-dashboard-card-value="attendance">--</strong>
+                    <small data-dashboard-card-detail="attendance" data-i18n="noAttendance">No attendance records have been entered for this student yet.</small>
+                  </span>
+                  <span class="student-card-badge" data-dashboard-card-badge="attendance">0</span>
+                </button>
+                <button class="student-dashboard-card" type="button" data-open-tab="homework" data-dashboard-card="homework">
+                  <span class="student-card-icon"><svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-homework"></use></svg></span>
+                  <span class="student-card-copy">
+                    <span data-i18n="homework">Homework</span>
+                    <strong data-dashboard-card-value="homework">0</strong>
+                    <small data-dashboard-card-detail="homework" data-i18n="noHomework">No homework has been posted to this account.</small>
+                  </span>
+                  <span class="student-card-badge" data-dashboard-card-badge="homework">0</span>
+                </button>
+              </div>
               <div class="metrics">
                 <article data-metric-card="attendance">
                   <span data-i18n="attendanceThisTerm">Attendance this term</span>

@@ -23,9 +23,9 @@ export function IconLabel({ icon: Icon, children }) {
   );
 }
 
-export function ActionLink({ href, children, icon: Icon = ArrowRight, variant = "primary", ...props }) {
+export function ActionLink({ href, children, icon: Icon = ArrowRight, variant = "primary", className = "", ...props }) {
   return (
-    <a className={cx("action-link", variant)} href={href} {...props}>
+    <a className={cx("action-link", variant, className)} href={href} {...props}>
       <span>{children}</span>
       <Icon size={18} strokeWidth={2.4} aria-hidden="true" />
     </a>

@@ -457,11 +457,17 @@ test("student overview has premium responsive visual states", () => {
   assert.match(html, /student-dashboard-shell/);
   assert.match(html, /data-inspiration="stripe-clean"/);
   assert.match(html, /account-path/);
+  assert.match(html, /student-card-grid/);
+  assert.match(html, /data-dashboard-card="grades"/);
+  assert.match(html, /data-dashboard-card="attendance"/);
+  assert.match(html, /data-dashboard-card="homework"/);
   assert.match(js, /data-summary-updates/);
   assert.match(js, /data-summary-transport/);
+  assert.match(js, /function updateDashboardCard/);
   assert.match(css, /\.overview-snapshot/);
   assert.match(css, /\.overview-quick/);
   assert.match(css, /\.command-center/);
+  assert.match(css, /\.student-dashboard-card:hover/);
   assert.match(css, /\.account-path/);
   assert.match(css, /\.metrics article\[data-state="ready"\]/);
   assert.match(css, /\.content-card\[data-state="ready"\]/);

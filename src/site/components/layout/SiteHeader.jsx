@@ -12,12 +12,21 @@ export function SiteHeader({ t, menuOpen, closeMenu, toggleMenu, toggleLanguage 
           className="menu-button"
           type="button"
           aria-label={menuOpen ? t.menuClose : t.menuOpen}
+          aria-controls="primary-navigation-menu"
           aria-expanded={menuOpen}
           onClick={toggleMenu}
         >
           {menuOpen ? <X size={24} strokeWidth={2.2} aria-hidden="true" /> : <Menu size={24} strokeWidth={2.2} aria-hidden="true" />}
         </button>
-        <div className={cx("nav-panel", menuOpen && "open")}>
+        <button
+          className={cx("nav-backdrop", menuOpen && "open")}
+          type="button"
+          aria-label={t.menuClose}
+          aria-hidden={!menuOpen}
+          tabIndex={menuOpen ? 0 : -1}
+          onClick={closeMenu}
+        />
+        <div id="primary-navigation-menu" className={cx("nav-panel", menuOpen && "open")}>
           <div className="nav-links">
             {navItems.map(([label, href]) => (
               <a key={href} href={href} onClick={closeMenu}>{t[label]}</a>

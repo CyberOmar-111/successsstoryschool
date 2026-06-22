@@ -60,6 +60,21 @@ export function useSchoolSiteState() {
   }, [menuOpen]);
 
   useEffect(() => {
+    if (!menuOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [menuOpen]);
+
+  useEffect(() => {
     const cards = Array.from(document.querySelectorAll("[data-reveal-card]"));
     if (!cards.length) {
       return undefined;

@@ -20,7 +20,7 @@ export function HeroSection({ t, phoneHref, isArabic }) {
           </h1>
           <p className="hero-text">{t.heroText}</p>
           <div className="hero-actions">
-            <ActionLink href="#contact" variant="primary">{t.beginEnrollment}</ActionLink>
+            <ActionLink href="#contact" variant="primary" className="hero-primary-cta">{t.beginEnrollment}</ActionLink>
             <ActionLink href="#portals" variant="secondary" icon={LayoutDashboard}>{t.openPortals}</ActionLink>
             <ActionLink href={phoneHref} variant="ghost" icon={Phone}>{t.callOffice}</ActionLink>
           </div>

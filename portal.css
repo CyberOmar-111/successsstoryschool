@@ -993,6 +993,126 @@ html[dir="rtl"] .module-tabs button.active {
   white-space: nowrap;
 }
 
+.student-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.student-dashboard-card {
+  --student-card-accent: var(--teal);
+  --student-card-soft: var(--soft-teal);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  min-height: 172px;
+  width: 100%;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--student-card-accent) 18%, white);
+  border-radius: 20px;
+  color: var(--navy);
+  text-align: start;
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--student-card-accent) 14%, transparent), transparent 42%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), color-mix(in srgb, var(--student-card-soft) 72%, white));
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--student-card-accent) 9%, transparent);
+  transition:
+    transform 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
+}
+
+.student-dashboard-card[data-dashboard-card="grades"] {
+  --student-card-accent: var(--accent-grades);
+  --student-card-soft: var(--soft-teal);
+}
+
+.student-dashboard-card[data-dashboard-card="attendance"] {
+  --student-card-accent: var(--accent-attendance);
+  --student-card-soft: var(--soft-cobalt);
+}
+
+.student-dashboard-card[data-dashboard-card="homework"] {
+  --student-card-accent: var(--accent-homework);
+  --student-card-soft: var(--soft-emerald);
+}
+
+.student-dashboard-card:hover,
+.student-dashboard-card:focus-visible {
+  border-color: color-mix(in srgb, var(--student-card-accent) 42%, white);
+  box-shadow: 0 24px 56px color-mix(in srgb, var(--student-card-accent) 16%, transparent);
+  transform: translateY(-4px);
+}
+
+.student-card-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  color: var(--paper);
+  background: linear-gradient(135deg, var(--student-card-accent), color-mix(in srgb, var(--student-card-accent) 66%, var(--navy)));
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--student-card-accent) 22%, transparent);
+}
+
+.student-card-icon .portal-icon {
+  width: 25px;
+  height: 25px;
+  stroke-width: 2.1;
+}
+
+.student-card-copy {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.student-card-copy span {
+  color: color-mix(in srgb, var(--navy) 62%, white);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.student-card-copy strong {
+  color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  line-height: 0.95;
+}
+
+.student-card-copy small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.student-card-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border: 2px solid rgba(255, 255, 255, 0.88);
+  border-radius: 999px;
+  color: var(--paper);
+  background: var(--student-card-accent);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--student-card-accent) 22%, transparent);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.student-dashboard-card[data-state="empty"] .student-card-badge {
+  color: color-mix(in srgb, var(--navy) 58%, white);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: none;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1590,6 +1710,7 @@ html[dir="rtl"] .portal-brand {
   }
 
   .metrics,
+  .student-card-grid,
   .overview-cards,
   .overview-quick,
   .account-path,
@@ -2038,6 +2159,7 @@ textarea:focus {
 .student-dashboard-shell .portal-panel,
 .student-dashboard-shell .command-center article,
 .student-dashboard-shell .metrics article,
+.student-dashboard-shell .student-dashboard-card,
 .student-dashboard-shell .content-card,
 .student-dashboard-shell .assignment-list article,
 .student-dashboard-shell .notices article,
@@ -2114,6 +2236,8 @@ textarea:focus {
 .student-dashboard-shell .command-center article:focus-within,
 .student-dashboard-shell .metrics article:hover,
 .student-dashboard-shell .metrics article:focus-within,
+.student-dashboard-shell .student-dashboard-card:hover,
+.student-dashboard-shell .student-dashboard-card:focus-visible,
 .student-dashboard-shell .content-card:hover,
 .student-dashboard-shell .content-card:focus-within,
 .student-dashboard-shell .assignment-list article:hover,
@@ -2126,11 +2250,13 @@ textarea:focus {
 }
 
 .student-dashboard-shell .metrics article,
+.student-dashboard-shell .student-dashboard-card,
 .student-dashboard-shell .content-card {
   isolation: isolate;
 }
 
 .student-dashboard-shell .metrics article::before,
+.student-dashboard-shell .student-dashboard-card::before,
 .student-dashboard-shell .content-card::before {
   content: "";
   position: absolute;
@@ -2138,7 +2264,11 @@ textarea:focus {
   z-index: -1;
   border-radius: inherit;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--metric-accent, var(--card-accent, var(--teal))) 13%, transparent), transparent 58%);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--metric-accent, var(--student-card-accent, var(--card-accent, var(--teal)))) 13%, transparent), transparent 58%);
+}
+
+.student-dashboard-shell .student-dashboard-card {
+  overflow: hidden;
 }
 
 .student-dashboard-shell .content-card {
@@ -2174,6 +2304,8 @@ textarea:focus {
   .student-dashboard-shell .command-center article:focus-within,
   .student-dashboard-shell .metrics article:hover,
   .student-dashboard-shell .metrics article:focus-within,
+  .student-dashboard-shell .student-dashboard-card:hover,
+  .student-dashboard-shell .student-dashboard-card:focus-visible,
   .student-dashboard-shell .content-card:hover,
   .student-dashboard-shell .content-card:focus-within,
   .student-dashboard-shell .assignment-list article:hover,
@@ -2230,6 +2362,7 @@ textarea:focus {
   .loading-card-grid,
   .overview-quick,
   .metrics,
+  .student-card-grid,
   .overview-cards,
   .attendance-grid,
   .bus-grid,
