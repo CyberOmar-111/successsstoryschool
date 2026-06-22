@@ -1751,6 +1751,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             return False
         if account_type == "student":
             if not email_mfa_ready():
+                print(
+                    "Email MFA is not configured: "
+                    f"SMTP_HOST={bool(SMTP_HOST)} SMTP_PORT={SMTP_PORT} SMTP_FROM={bool(SMTP_FROM)}",
+                    flush=True,
+                )
                 self.send_json(503, {"code": "mfa_not_configured", "error": "Email verification is not configured."})
                 return True
             email = self.account_email(account_id)
@@ -1762,7 +1767,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             expires_at = int(time.time()) + MFA_TTL_SECONDS
             try:
                 send_email_mfa_code(email, code)
-            except Exception:
+            except Exception as error:
+                print(
+                    f"Email MFA send failed for {account_id}: {type(error).__name__}: {error}",
+                    flush=True,
+                )
                 self.send_json(502, {"code": "mfa_send_failed", "error": "Could not send the MFA verification code."})
                 return True
             with db_connection() as connection:
