@@ -25,11 +25,11 @@ export function ContactSection({ t, isArabic, formStatus, handleInquiry }) {
         <form className="inquiry-form" onSubmit={handleInquiry}>
           <label>
             <span>{t.parentName}</span>
-            <input name="name" type="text" autoComplete="name" required />
+            <input name="name" type="text" autoComplete="name" enterKeyHint="next" required />
           </label>
           <label>
             <span>{t.parentPhone}</span>
-            <input name="phone" type="tel" autoComplete="tel" required />
+            <input name="phone" type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" required />
           </label>
           <label>
             <span>{t.interestedGrade}</span>
@@ -42,7 +42,7 @@ export function ContactSection({ t, isArabic, formStatus, handleInquiry }) {
           </label>
           <label>
             <span>{t.message}</span>
-            <textarea name="message" rows={4} placeholder={t.messagePlaceholder} />
+            <textarea name="message" rows={4} placeholder={t.messagePlaceholder} enterKeyHint="send" />
           </label>
           <button className="form-submit" type="submit">
             <span>{t.sendInquiry}</span>

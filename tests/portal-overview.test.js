@@ -25,6 +25,7 @@ const tailwindInputCss = fs.readFileSync(path.join(root, "src", "site", "styles"
 const homepageEntrySource = fs.readFileSync(path.join(root, "src", "site", "index.jsx"), "utf8");
 const homepageDataSource = fs.readFileSync(path.join(root, "src", "site", "data", "homepage-content.js"), "utf8");
 const errorBoundarySource = fs.readFileSync(path.join(root, "src", "site", "components", "ErrorBoundary.jsx"), "utf8");
+const contactSectionSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "ContactSection.jsx"), "utf8");
 const tailwindConfig = fs.readFileSync(path.join(root, "tailwind.config.js"), "utf8");
 const tailwindCardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "TailwindCard.jsx"), "utf8");
 const inspiredDashboardSource = fs.readFileSync(path.join(root, "src", "site", "components", "examples", "InspiredStudentDashboardCards.jsx"), "utf8");
@@ -652,6 +653,19 @@ test("motion is subtle, accessible, and uses animated dashboard widgets", () => 
   assert.match(primitivesSource, /export function AnimatedDashboardWidget/);
   assert.match(portalPreviewSource, /AnimatedDashboardWidget/);
   assert.match(portalPreviewSource, /dashboard-preview-widget/);
+});
+
+test("homepage has mobile-first responsive guardrails", () => {
+  assert.match(homepageCss, /Mobile responsiveness pass/);
+  assert.match(homepageCss, /html,[\s\S]*?body,[\s\S]*?#root[\s\S]*?overflow-x: hidden/);
+  assert.match(homepageCss, /img,[\s\S]*?picture,[\s\S]*?video,[\s\S]*?canvas[\s\S]*?height: auto/);
+  assert.match(homepageCss, /\.contact-grid,[\s\S]*?\.proof-layout,[\s\S]*?\.life-grid,[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(homepageCss, /\.inquiry-form input,[\s\S]*?\.inquiry-form select,[\s\S]*?\.inquiry-form textarea[\s\S]*?font-size: 16px/);
+  assert.match(homepageCss, /@media \(max-width: 720px\)[\s\S]*?\.action-link,[\s\S]*?\.form-submit,[\s\S]*?min-height: 52px/);
+  assert.match(homepageCss, /@media \(max-width: 420px\)[\s\S]*?\.nav-panel[\s\S]*?max-width: calc\(100vw - 8px\)/);
+  assert.match(contactSectionSource, /inputMode="tel"/);
+  assert.match(contactSectionSource, /enterKeyHint="next"/);
+  assert.match(contactSectionSource, /enterKeyHint="send"/);
 });
 
 test("build pipeline uses local React, Vite, Vercel, and Render CI/CD", () => {
