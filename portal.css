@@ -995,7 +995,7 @@ html[dir="rtl"] .module-tabs button.active {
 
 .student-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 15px;
   margin-bottom: 22px;
 }
@@ -1004,6 +1004,7 @@ html[dir="rtl"] .module-tabs button.active {
   --student-card-accent: var(--teal);
   --student-card-soft: var(--soft-teal);
   position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
@@ -1014,6 +1015,8 @@ html[dir="rtl"] .module-tabs button.active {
   border: 1px solid color-mix(in srgb, var(--student-card-accent) 18%, white);
   border-radius: 20px;
   color: var(--navy);
+  cursor: pointer;
+  overflow: hidden;
   text-align: start;
   background:
     radial-gradient(circle at 100% 0, color-mix(in srgb, var(--student-card-accent) 14%, transparent), transparent 42%),
@@ -1023,6 +1026,17 @@ html[dir="rtl"] .module-tabs button.active {
     transform 180ms var(--ease-out),
     border-color 180ms var(--ease-out),
     box-shadow 180ms var(--ease-out);
+}
+
+.student-dashboard-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 18px 18px auto;
+  z-index: -1;
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--student-card-accent) 12%, transparent);
 }
 
 .student-dashboard-card[data-dashboard-card="grades"] {
@@ -1111,6 +1125,8 @@ html[dir="rtl"] .module-tabs button.active {
   color: color-mix(in srgb, var(--navy) 58%, white);
   background: rgba(255, 255, 255, 0.84);
   box-shadow: none;
+  opacity: 0;
+  transform: scale(0.86);
 }
 
 .metrics {
@@ -2677,6 +2693,202 @@ textarea:focus {
   .command-center,
   .student-card-grid,
   .overview-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === Mobile content and touch target pass === */
+html,
+body,
+#portal-main {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.portal-container,
+.dashboard-content,
+.portal-panel,
+.content-card,
+.student-dashboard-card,
+.student-card-copy {
+  min-width: 0;
+}
+
+img,
+picture,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.portal-panel,
+.content-card,
+.student-dashboard-card,
+.assignment-list article,
+.notices article,
+.empty-state {
+  overflow-wrap: anywhere;
+}
+
+.table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+}
+
+.table-wrap table {
+  min-width: 560px;
+}
+
+.student-dashboard-card:focus-visible,
+.module-tabs button:focus-visible,
+.text-action:focus-visible,
+.dismiss-action:focus-visible,
+.portal-button:focus-visible,
+.auth-tabs button:focus-visible,
+.back-link:focus-visible,
+.lang-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--gold) 74%, white);
+  outline-offset: 3px;
+}
+
+@media (pointer: coarse), (max-width: 760px) {
+  button,
+  a,
+  .portal-button,
+  .module-tabs button,
+  .text-action,
+  .dismiss-action,
+  .auth-tabs button,
+  .back-link,
+  .lang-button {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 48px;
+    padding: 13px 15px;
+    font-size: 16px;
+    line-height: 1.35;
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+
+  .student-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-dashboard-card {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 96px;
+    padding: 15px;
+  }
+
+  .student-card-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .student-card-copy small {
+    font-size: 0.84rem;
+  }
+
+  .student-card-badge {
+    min-width: 30px;
+    height: 30px;
+    padding-inline: 9px;
+  }
+
+  .table-wrap {
+    margin-inline: -2px;
+    padding-bottom: 6px;
+  }
+}
+
+/* === Two-column mobile portal density pass === */
+@media (min-width: 390px) and (max-width: 760px) {
+  .command-center,
+  .overview-quick,
+  .metrics,
+  .student-card-grid,
+  .overview-cards,
+  .attendance-grid,
+  .bus-grid,
+  .loading-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .module-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .module-tabs button {
+    min-width: 0;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .module-tabs button span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .student-dashboard-card {
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: start;
+    min-height: 128px;
+    padding: 14px;
+  }
+
+  .student-card-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .student-card-badge {
+    position: absolute;
+    top: 10px;
+    inset-inline-end: 10px;
+  }
+
+  .student-card-copy strong {
+    font-size: clamp(1.28rem, 6vw, 1.72rem);
+  }
+
+  .student-card-copy small {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .overview-cards .content-card {
+    min-height: 184px;
+  }
+}
+
+@media (max-width: 389px) {
+  .command-center,
+  .overview-quick,
+  .metrics,
+  .student-card-grid,
+  .overview-cards,
+  .attendance-grid,
+  .bus-grid,
+  .loading-card-grid,
+  .module-tabs {
     grid-template-columns: 1fr;
   }
 }

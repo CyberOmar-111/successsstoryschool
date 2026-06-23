@@ -191,6 +191,10 @@
   gap: 14px;
 }
 
+.gradebook-card {
+  grid-column: 1 / -1;
+}
+
 .attendance-card {
   grid-row: span 2;
 }
@@ -206,8 +210,21 @@
   overflow-x: auto;
 }
 
+.gradebook-table {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--neutral) 52%, white);
+}
+
 .attendance-table table {
   width: 100%;
+  border-collapse: collapse;
+}
+
+.gradebook-table table {
+  width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
 }
 
@@ -216,6 +233,43 @@
   padding: 10px 7px;
   border-bottom: 1px solid var(--line);
   text-align: start;
+}
+
+.gradebook-table th,
+.gradebook-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: start;
+}
+
+.gradebook-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.gradebook-table td strong,
+.gradebook-table td small {
+  display: block;
+}
+
+.gradebook-table td small {
+  margin-top: 3px;
+  color: var(--muted);
+}
+
+.gradebook-table input {
+  width: 100%;
+  max-width: 128px;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  font: inherit;
+}
+
+.gradebook-table input:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  border-color: var(--accent);
 }
 
 .attendance-table select {
@@ -365,9 +419,20 @@
   }
 
   .attendance-table th,
-  .attendance-table td {
+  .attendance-table td,
+  .gradebook-table th,
+  .gradebook-table td {
     padding: 8px 6px;
     font-size: 0.84rem;
+  }
+
+  .gradebook-table table {
+    min-width: 460px;
+  }
+
+  .gradebook-table input {
+    min-height: 42px;
+    max-width: 104px;
   }
 
   .recent-posts div {
@@ -378,5 +443,37 @@
   .recent-posts article {
     padding: 12px;
     border-radius: 14px;
+  }
+}
+
+/* === Two-column mobile teacher density pass === */
+@media (min-width: 390px) and (max-width: 760px) {
+  .teacher-command-center,
+  .assignment-list,
+  .teacher-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .teacher-card,
+  .assignment-list button {
+    min-width: 0;
+  }
+
+  .attendance-card {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .workspace-header,
+  .class-header {
+    align-items: start;
+  }
+}
+
+@media (max-width: 389px) {
+  .teacher-command-center,
+  .assignment-list,
+  .teacher-cards {
+    grid-template-columns: 1fr;
   }
 }

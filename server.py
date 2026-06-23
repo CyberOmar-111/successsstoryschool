@@ -129,6 +129,72 @@ CONTENT_SECURITY_POLICY = (
     "object-src 'none'; "
     "frame-ancestors 'none'"
 )
+ROLE_STUDENT = "Student"
+ROLE_TEACHER = "Teacher"
+ROLE_ADMIN = "Admin"
+ROLE_ALIASES = {
+    "student": ROLE_STUDENT,
+    "teacher": ROLE_TEACHER,
+    "admin": ROLE_ADMIN,
+}
+RBAC_PERMISSIONS = {
+    "role:student": {ROLE_STUDENT},
+    "role:teacher": {ROLE_TEACHER},
+    "role:admin": {ROLE_ADMIN},
+    "student:read_portal": {ROLE_STUDENT},
+    "student:update_profile": {ROLE_STUDENT},
+    "student:dismiss_post": {ROLE_STUDENT},
+    "teacher:read_assignments": {ROLE_TEACHER},
+    "teacher:read_class": {ROLE_TEACHER},
+    "teacher:post_homework": {ROLE_TEACHER},
+    "teacher:post_announcement": {ROLE_TEACHER},
+    "teacher:delete_posts": {ROLE_TEACHER},
+    "teacher:post_grades": {ROLE_TEACHER},
+    "teacher:post_attendance": {ROLE_TEACHER},
+    "admin:read_dashboard": {ROLE_ADMIN},
+    "admin:read_students": {ROLE_ADMIN},
+    "admin:read_accounts": {ROLE_ADMIN},
+    "admin:read_teachers": {ROLE_ADMIN},
+    "admin:read_classes": {ROLE_ADMIN},
+    "admin:manage_accounts": {ROLE_ADMIN},
+    "admin:manage_students": {ROLE_ADMIN},
+    "admin:write_records": {ROLE_ADMIN},
+    "admin:manage_classes": {ROLE_ADMIN},
+}
+ROUTE_PERMISSIONS = {
+    "GET": {
+        "/api/portal": "student:read_portal",
+        "/api/admin/dashboard": "admin:read_dashboard",
+        "/api/admin/students": "admin:read_students",
+        "/api/admin/accounts": "admin:read_accounts",
+        "/api/admin/teachers": "admin:read_teachers",
+        "/api/admin/classes": "admin:read_classes",
+        "/api/admin/student": "admin:read_students",
+        "/api/admin/class": "admin:read_classes",
+        "/api/teacher/assignments": "teacher:read_assignments",
+        "/api/teacher/class": "teacher:read_class",
+    },
+    "POST": {
+        "/api/portal/profile": "student:update_profile",
+        "/api/portal/dismiss": "student:dismiss_post",
+        "/api/admin/accounts": "admin:manage_accounts",
+        "/api/admin/change-password": "admin:manage_accounts",
+        "/api/admin/teachers": "admin:manage_accounts",
+        "/api/admin/record": "admin:write_records",
+        "/api/admin/reset-password": "admin:manage_students",
+        "/api/admin/reset-students": "admin:manage_students",
+        "/api/admin/class-assignment": "admin:manage_students",
+        "/api/admin/student-decline": "admin:manage_students",
+        "/api/admin/class-removal": "admin:manage_students",
+        "/api/admin/class-record": "admin:manage_classes",
+        "/api/admin/class-record-delete": "admin:manage_classes",
+        "/api/teacher/homework": "teacher:post_homework",
+        "/api/teacher/announcement": "teacher:post_announcement",
+        "/api/teacher/post-delete": "teacher:delete_posts",
+        "/api/teacher/grades": "teacher:post_grades",
+        "/api/teacher/attendance": "teacher:post_attendance",
+    },
+}
 ERROR_PAGE_COPY = {
     404: {
         "code": "404",
@@ -152,6 +218,10 @@ class RequestValidationError(ValueError):
         super().__init__(message)
         self.code = code
         self.message = message
+
+
+def normalize_role(role):
+    return ROLE_ALIASES.get(str(role or "").strip().lower())
 
 
 class PostgresConnection:
@@ -1175,17 +1245,70 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 (token_hash, now),
             ).fetchone()
 
+    def authenticated_for_role(self, role):
+        normalized = normalize_role(role)
+        if normalized == ROLE_STUDENT:
+            return self.authenticated_student()
+        if normalized == ROLE_TEACHER:
+            return self.authenticated_teacher()
+        if normalized == ROLE_ADMIN:
+            return self.authenticated_admin()
+        return None
+
+    def authenticated_principal(self):
+        for role in (ROLE_ADMIN, ROLE_TEACHER, ROLE_STUDENT):
+            account = self.authenticated_for_role(role)
+            if account:
+                return {"role": role, "account": account}
+        return None
+
+    @staticmethod
+    def permission_roles(permission):
+        return RBAC_PERMISSIONS.get(permission, set())
+
+    @staticmethod
+    def role_label(roles):
+        return " or ".join(sorted(roles))
+
+    def require_permission(self, permission):
+        allowed_roles = self.permission_roles(permission)
+        if not allowed_roles:
+            self.send_json(500, {"code": "rbac_missing", "error": "Route permission is not configured."})
+            return None
+        for role in (ROLE_ADMIN, ROLE_TEACHER, ROLE_STUDENT):
+            if role not in allowed_roles:
+                continue
+            account = self.authenticated_for_role(role)
+            if account:
+                return {"role": role, "account": account, "permission": permission}
+        if self.authenticated_principal():
+            self.send_json(403, {"code": "forbidden", "error": f"{self.role_label(allowed_roles)} role required."})
+        else:
+            self.send_json(401, {"code": "auth_required", "error": f"{self.role_label(allowed_roles)} authentication required."})
+        return None
+
+    def require_role(self, role):
+        normalized = normalize_role(role)
+        if not normalized:
+            self.send_json(500, {"code": "rbac_missing", "error": "Role is not configured."})
+            return None
+        principal = self.require_permission(f"role:{normalized.lower()}")
+        return principal["account"] if principal else None
+
+    def require_route_permission(self, method, request_path):
+        permission = ROUTE_PERMISSIONS.get(method, {}).get(request_path)
+        if not permission:
+            return True
+        return bool(self.require_permission(permission))
+
     def require_admin(self):
-        admin = self.authenticated_admin()
-        if not admin:
-            self.send_json(401, {"code": "auth_required", "error": "Administrator authentication required."})
-        return admin
+        return self.require_role(ROLE_ADMIN)
 
     def require_teacher(self):
-        teacher = self.authenticated_teacher()
-        if not teacher:
-            self.send_json(401, {"code": "auth_required", "error": "Teacher authentication required."})
-        return teacher
+        return self.require_role(ROLE_TEACHER)
+
+    def require_student(self):
+        return self.require_role(ROLE_STUDENT)
 
     def teacher_assignment(self, connection, teacher_id, assignment_id):
         return connection.execute(
@@ -1272,6 +1395,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed_path, request_path = self.api_path()
+        if not self.require_route_permission("GET", request_path):
+            return
         if request_path == "/api/auth/session":
             student = self.authenticated_student()
             self.send_json(
@@ -1280,9 +1405,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             )
             return
         if request_path == "/api/portal":
-            student = self.authenticated_student()
+            student = self.require_student()
             if not student:
-                self.send_json(401, {"code": "auth_required", "error": "Authentication required."})
                 return
             with db_connection() as connection:
                 records, class_data = self.portal_records(connection, student)
@@ -1519,6 +1643,21 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     """,
                     (school_date, assignment["class_id"]),
                 ).fetchall()
+                grade_rows = connection.execute(
+                    """
+                    SELECT grades.student_id, grades.term_one, grades.term_two
+                    FROM grades
+                    JOIN (
+                        SELECT grades.student_id, MAX(grades.id) AS latest_id
+                        FROM grades
+                        JOIN students ON students.student_id = grades.student_id
+                        WHERE grades.subject = ? AND students.class_id = ? AND students.is_approved = TRUE
+                        GROUP BY grades.student_id
+                    ) latest_grades ON latest_grades.latest_id = grades.id
+                    ORDER BY grades.student_id
+                    """,
+                    (assignment["subject"], assignment["class_id"]),
+                ).fetchall()
                 homework = connection.execute(
                     """
                     SELECT id, subject, details, due_date, posted_by_teacher_id, posted_at
@@ -1537,10 +1676,18 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     """,
                     (assignment["class_id"], teacher["teacher_id"]),
                 ).fetchall()
+            grades_by_student = {
+                row["student_id"]: {"termOne": row["term_one"], "termTwo": row["term_two"]}
+                for row in grade_rows
+            }
             self.send_json(200, {
                 "assignment": public_teacher_assignment(assignment),
                 "students": [
-                    {**public_student(member), "attendanceStatus": member["attendance_status"] or "present"}
+                    {
+                        **public_student(member),
+                        "attendanceStatus": member["attendance_status"] or "present",
+                        "subjectGrade": grades_by_student.get(member["student_id"], {"termOne": None, "termTwo": None}),
+                    }
                     for member in members
                 ],
                 "homework": [{**dict(row), "canDelete": True} for row in homework],
@@ -1576,6 +1723,9 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             }
         ):
             initialize_database()
+
+        if not self.require_route_permission("POST", request_path):
+            return
 
         if request_path == "/api/auth/register":
             self.handle_register(body)
@@ -2260,10 +2410,11 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             {"Set-Cookie": self.session_cookie("sss_teacher_session", "", 0)},
         )
 
-    def required_teacher_assignment(self, body):
-        teacher = self.require_teacher()
-        if not teacher:
+    def required_teacher_assignment(self, body, permission="teacher:read_class"):
+        principal = self.require_permission(permission)
+        if not principal:
             return None, None
+        teacher = principal["account"]
         try:
             assignment_id = int(body.get("assignmentId"))
         except (TypeError, ValueError):
@@ -2276,7 +2427,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         return teacher, assignment
 
     def handle_teacher_homework(self, body):
-        teacher, assignment = self.required_teacher_assignment(body)
+        teacher, assignment = self.required_teacher_assignment(body, "teacher:post_homework")
         if not assignment:
             return
         details = clean_text(body.get("details"), 500)
@@ -2295,7 +2446,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         self.send_json(201, {"ok": True})
 
     def handle_teacher_announcement(self, body):
-        teacher, assignment = self.required_teacher_assignment(body)
+        teacher, assignment = self.required_teacher_assignment(body, "teacher:post_announcement")
         if not assignment:
             return
         title = clean_text(body.get("title"), 100)
@@ -2314,7 +2465,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         self.send_json(201, {"ok": True})
 
     def handle_teacher_post_delete(self, body):
-        teacher, assignment = self.required_teacher_assignment(body)
+        teacher, assignment = self.required_teacher_assignment(body, "teacher:delete_posts")
         if not assignment:
             return
         post_type = clean_text(body.get("type"), 20)
@@ -2353,31 +2504,49 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         self.send_json(200, {"ok": True})
 
     def handle_teacher_grades(self, body):
-        _teacher, assignment = self.required_teacher_assignment(body)
+        _teacher, assignment = self.required_teacher_assignment(body, "teacher:post_grades")
         if not assignment:
             return
-        student_id = clean_text(body.get("studentId"), 20).upper()
-        term_one = self.score_value(body.get("termOne"))
-        term_two = self.score_value(body.get("termTwo"))
-        if term_one is None and term_two is None:
+        grade_items = body.get("grades")
+        if grade_items is None:
+            grade_items = [body]
+        if not isinstance(grade_items, list) or not grade_items or len(grade_items) > 80:
             self.send_json(400, {"code": "invalid_record", "error": "Enter at least one grade from 0 to 100."})
             return
         with db_connection() as connection:
-            student = connection.execute(
-                "SELECT 1 FROM students WHERE student_id = ? AND class_id = ? AND is_approved = TRUE",
-                (student_id, assignment["class_id"]),
-            ).fetchone()
-            if not student:
-                self.send_json(403, {"code": "assignment_required", "error": "Student is outside your assigned class."})
+            members = connection.execute(
+                "SELECT student_id FROM students WHERE class_id = ? AND is_approved = TRUE",
+                (assignment["class_id"],),
+            ).fetchall()
+            member_ids = {member["student_id"] for member in members}
+            seen_students = set()
+            grade_rows = []
+            for item in grade_items:
+                if not isinstance(item, dict):
+                    self.send_json(400, {"code": "invalid_record", "error": "Enter valid grade rows."})
+                    return
+                student_id = clean_text(item.get("studentId"), 20).upper()
+                if student_id in seen_students or student_id not in member_ids:
+                    self.send_json(403, {"code": "assignment_required", "error": "Student is outside your assigned class."})
+                    return
+                term_one = self.score_value(item.get("termOne"))
+                term_two = self.score_value(item.get("termTwo"))
+                if term_one is None and term_two is None:
+                    self.send_json(400, {"code": "invalid_record", "error": "Enter at least one grade from 0 to 100."})
+                    return
+                seen_students.add(student_id)
+                grade_rows.append((student_id, assignment["subject"], term_one, term_two))
+            if not grade_rows:
+                self.send_json(400, {"code": "invalid_record", "error": "Enter at least one grade from 0 to 100."})
                 return
-            connection.execute(
+            connection.executemany(
                 "INSERT INTO grades (student_id, subject, term_one, term_two) VALUES (?, ?, ?, ?)",
-                (student_id, assignment["subject"], term_one, term_two),
+                grade_rows,
             )
-        self.send_json(201, {"ok": True})
+        self.send_json(201, {"ok": True, "saved": len(grade_rows)})
 
     def handle_teacher_attendance(self, body):
-        _teacher, assignment = self.required_teacher_assignment(body)
+        _teacher, assignment = self.required_teacher_assignment(body, "teacher:post_attendance")
         if not assignment:
             return
         school_date = clean_text(body.get("schoolDate"), 10)
@@ -2689,9 +2858,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         self.send_json(200, {"ok": True})
 
     def handle_post_dismissal(self, body):
-        student = self.authenticated_student()
+        student = self.require_student()
         if not student:
-            self.send_json(401, {"code": "auth_required", "error": "Authentication required."})
             return
         post_type = clean_text(body.get("type"), 20)
         audience = clean_text(body.get("audience"), 20)
@@ -2730,9 +2898,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         self.send_json(200, {"ok": True})
 
     def handle_profile(self, body):
-        student = self.authenticated_student()
+        student = self.require_student()
         if not student:
-            self.send_json(401, {"code": "auth_required", "error": "Authentication required."})
             return
         transport = str(body.get("transport", ""))
         if transport not in {"bus", "none"}:

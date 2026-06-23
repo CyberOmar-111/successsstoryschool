@@ -5,6 +5,7 @@ const setupForm = document.querySelector("[data-setup-form]");
 const loginForm = document.querySelector("[data-login-form]");
 const setupStatus = document.querySelector("[data-setup-status]");
 const loginStatus = document.querySelector("[data-login-status]");
+const userSearchInput = document.querySelector("[data-user-search]");
 
 const translations = {
   en: {
@@ -43,6 +44,22 @@ const translations = {
     administrators: "Administrators",
     addAdministrator: "Manage administrators",
     teachers: "Teachers",
+    userManagementEyebrow: "Accounts overview",
+    userManagementTitle: "Admin User Management",
+    userManagementText: "Search every school account, check status, and approve new student registrations from one table.",
+    searchUsers: "Search users",
+    userSearchPlaceholder: "Search by name, ID, role, or class",
+    allUsers: "All",
+    active: "Active",
+    pending: "Pending",
+    user: "User",
+    role: "Role",
+    action: "Action",
+    approve: "Approve",
+    openRecord: "Open",
+    noAction: "No action",
+    noUserResults: "No users match this search.",
+    studentApproved: "Student approved.",
     addTeacher: "Add teacher",
     newTeacher: "Create teacher account",
     teacherText: "Choose each class and subject this teacher is permitted to teach. Homework subjects are fixed by these assignments.",
@@ -153,6 +170,22 @@ const translations = {
   ar: {
     teacherPortal: "حساب المعلم",
     teachers: "المعلمون",
+    userManagementEyebrow: "Accounts overview",
+    userManagementTitle: "Admin User Management",
+    userManagementText: "Search every school account, check status, and approve new student registrations from one table.",
+    searchUsers: "Search users",
+    userSearchPlaceholder: "Search by name, ID, role, or class",
+    allUsers: "All",
+    active: "Active",
+    pending: "Pending",
+    user: "User",
+    role: "Role",
+    action: "Action",
+    approve: "Approve",
+    openRecord: "Open",
+    noAction: "No action",
+    noUserResults: "No users match this search.",
+    studentApproved: "Student approved.",
     addTeacher: "إضافة معلم",
     newTeacher: "إنشاء حساب معلم",
     teacherText: "اختر كل شعبة ومادة يسمح لهذا المعلم بتدريسها. تكون مادة الواجب محددة حسب هذه التعيينات.",
@@ -327,6 +360,7 @@ let administrators = [];
 let teachers = [];
 let studentDetails = null;
 let classDetails = null;
+let userStatusFilter = "all";
 
 const text = (key) => translations[language][key] || translations.en[key] || key;
 
@@ -379,6 +413,9 @@ function applyLanguage(nextLanguage) {
     element.textContent = text(element.dataset.i18n);
   });
   languageToggle.textContent = language === "ar" ? "English" : "العربية";
+  if (userSearchInput) {
+    userSearchInput.placeholder = text("userSearchPlaceholder");
+  }
   renderLists();
   if (studentDetails) {
     renderStudent(studentDetails);
@@ -436,6 +473,7 @@ function createListButton(primary, secondary, onClick, active) {
 
 function renderLists() {
   updateAdminSummary();
+  renderUserManagement();
   const studentList = document.querySelector("[data-student-list]");
   const classList = document.querySelector("[data-class-list]");
   const adminList = document.querySelector("[data-admin-list]");
@@ -497,6 +535,140 @@ function renderLists() {
     item.append(name, assignments);
     teacherList.appendChild(item);
   });
+}
+
+function userRoleLabel(role) {
+  const labels = {
+    student: text("students"),
+    teacher: text("teachers"),
+    admin: text("administrators")
+  };
+  return labels[role] || role;
+}
+
+function allUserRows() {
+  return [
+    ...students.map((student) => {
+      const classroom = classes.find((group) => group.id === student.classId);
+      const homeroom = classroom ? className(classroom) : student.requestedClassName || text("noClass");
+      const status = student.approvalStatus === "approved" ? "active" : "pending";
+      return {
+        role: "student",
+        id: student.studentId,
+        name: student.name,
+        status,
+        statusLabel: status === "active" ? text("active") : text("pending"),
+        detail: homeroom,
+        searchText: `${student.name} ${student.studentId} student ${homeroom} ${status}`,
+        student
+      };
+    }),
+    ...teachers.map((teacher) => ({
+      role: "teacher",
+      id: teacher.teacherId,
+      name: teacher.name,
+      status: "active",
+      statusLabel: text("active"),
+      detail: (teacher.assignments || []).length
+        ? teacher.assignments.map((assignment) => `${className(assignment.class)} / ${assignment.subject}`).join(", ")
+        : text("noClass"),
+      searchText: `${teacher.name} ${teacher.teacherId} teacher active`
+    })),
+    ...administrators.map((account) => ({
+      role: "admin",
+      id: account.adminId,
+      name: account.name,
+      status: "active",
+      statusLabel: text("active"),
+      detail: text("administrators"),
+      searchText: `${account.name} ${account.adminId} admin active`
+    }))
+  ];
+}
+
+function renderUserManagement() {
+  const body = document.querySelector("[data-user-table-body]");
+  const empty = document.querySelector("[data-user-table-empty]");
+  if (!body || !empty) {
+    return;
+  }
+  const term = (userSearchInput?.value || "").trim().toLowerCase();
+  const rows = allUserRows().filter((row) => {
+    const statusMatch = userStatusFilter === "all" || row.status === userStatusFilter;
+    const textMatch = !term || row.searchText.toLowerCase().includes(term);
+    return statusMatch && textMatch;
+  });
+  body.replaceChildren();
+  document.querySelectorAll("[data-user-status-filter]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.userStatusFilter === userStatusFilter);
+  });
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    const userCell = document.createElement("td");
+    const name = document.createElement("strong");
+    const id = document.createElement("small");
+    name.textContent = row.name;
+    id.textContent = row.id;
+    userCell.append(name, id);
+
+    const role = document.createElement("td");
+    role.textContent = userRoleLabel(row.role);
+
+    const status = document.createElement("td");
+    const statusPill = document.createElement("span");
+    statusPill.className = `status-pill ${row.status}`;
+    statusPill.textContent = row.statusLabel;
+    status.appendChild(statusPill);
+
+    const detail = document.createElement("td");
+    detail.textContent = row.detail;
+
+    const action = document.createElement("td");
+    if (row.role === "student") {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = row.status === "pending" ? "table-action approve" : "table-action";
+      button.textContent = row.status === "pending" ? text("approve") : text("openRecord");
+      button.addEventListener("click", () => {
+        if (row.status === "pending") {
+          approveStudentFromTable(row.student);
+        } else {
+          loadStudent(row.id);
+        }
+      });
+      action.appendChild(button);
+    } else {
+      const label = document.createElement("span");
+      label.className = "table-action muted";
+      label.textContent = text("noAction");
+      action.appendChild(label);
+    }
+    tr.append(userCell, role, status, detail, action);
+    body.appendChild(tr);
+  });
+  empty.hidden = Boolean(rows.length);
+}
+
+async function approveStudentFromTable(student) {
+  const status = document.querySelector("[data-user-management-status]");
+  if (!student.requestedClassCode) {
+    status.textContent = text("chooseClass");
+    await loadStudent(student.studentId);
+    return;
+  }
+  try {
+    await api("/api/admin/class-assignment", {
+      method: "POST",
+      body: JSON.stringify({ studentId: student.studentId, classCode: student.requestedClassCode })
+    });
+    status.textContent = text("studentApproved");
+    await loadLists();
+    if (studentDetails?.student?.studentId === student.studentId) {
+      await loadStudent(student.studentId);
+    }
+  } catch (error) {
+    status.textContent = errorText(error);
+  }
 }
 
 function recordArticle(title, details) {
@@ -774,6 +946,13 @@ loginForm.addEventListener("submit", async (event) => {
 document.querySelector("[data-new-admin]").addEventListener("click", openAdminEditor);
 document.querySelector("[data-new-teacher]").addEventListener("click", openTeacherEditor);
 document.querySelector("[data-add-assignment]").addEventListener("click", () => createAssignmentRow());
+userSearchInput?.addEventListener("input", renderUserManagement);
+document.querySelectorAll("[data-user-status-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    userStatusFilter = button.dataset.userStatusFilter || "all";
+    renderUserManagement();
+  });
+});
 
 document.querySelector("[data-admin-account-form]").addEventListener("submit", async (event) => {
   event.preventDefault();

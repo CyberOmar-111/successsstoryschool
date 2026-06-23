@@ -564,6 +564,8 @@ function updateDashboardCard(name, value, badge, detail) {
   }
   if (badgeTarget) {
     badgeTarget.textContent = badge;
+    badgeTarget.hidden = !hasUpdates;
+    badgeTarget.setAttribute("aria-label", `${badge} ${text("schoolUpdates")}`);
   }
   if (detailTarget) {
     detailTarget.textContent = detail;

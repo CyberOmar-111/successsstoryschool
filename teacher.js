@@ -50,9 +50,13 @@ const translations = {
     dueDate: "Due date",
     publish: "Publish to class",
     addGrades: "Add grades",
+    teacherGradebook: "Teacher Gradebook",
+    gradebookNote: "Edit student grades in the table, then save all changes together.",
     termOne: "Term 1",
     termTwo: "Term 2",
     saveGrade: "Save grade",
+    saveGradeChanges: "Save changes",
+    noGradeChanges: "No grade changes to save.",
     postAnnouncement: "Post announcement",
     announcementTitle: "Title",
     recentPosts: "Recent posts for this assignment",
@@ -118,9 +122,13 @@ const translations = {
     dueDate: "تاريخ التسليم",
     publish: "نشر للصف",
     addGrades: "إضافة علامات",
+    teacherGradebook: "دفتر علامات المعلم",
+    gradebookNote: "عدّل علامات الطلاب في الجدول ثم احفظ كل التغييرات معاً.",
     termOne: "الفصل الأول",
     termTwo: "الفصل الثاني",
     saveGrade: "حفظ العلامة",
+    saveGradeChanges: "حفظ التغييرات",
+    noGradeChanges: "لا توجد تغييرات في العلامات للحفظ.",
     postAnnouncement: "نشر إعلان",
     announcementTitle: "العنوان",
     recentPosts: "المنشورات الأخيرة لهذا التعيين",
@@ -287,6 +295,49 @@ function statusSelect(student) {
   return select;
 }
 
+function gradebookInput(student, termKey) {
+  const input = document.createElement("input");
+  const value = student.subjectGrade?.[termKey] ?? "";
+  input.type = "number";
+  input.min = "0";
+  input.max = "100";
+  input.step = "0.01";
+  input.inputMode = "decimal";
+  input.value = value === null ? "" : value;
+  input.dataset.studentId = student.studentId;
+  input.dataset.term = termKey;
+  input.dataset.original = input.value;
+  input.setAttribute("aria-label", `${student.name} ${text(termKey === "termOne" ? "termOne" : "termTwo")}`);
+  return input;
+}
+
+function renderGradebook() {
+  const body = document.querySelector("[data-gradebook-body]");
+  const empty = document.querySelector("[data-gradebook-empty]");
+  body.replaceChildren();
+  classroom.students.forEach((student) => {
+    const row = document.createElement("tr");
+    row.dataset.gradebookRow = "";
+    row.dataset.studentId = student.studentId;
+
+    const studentCell = document.createElement("td");
+    const studentName = document.createElement("strong");
+    const studentId = document.createElement("small");
+    studentName.textContent = student.name;
+    studentId.textContent = student.studentId;
+    studentCell.append(studentName, studentId);
+
+    const termOne = document.createElement("td");
+    const termTwo = document.createElement("td");
+    termOne.appendChild(gradebookInput(student, "termOne"));
+    termTwo.appendChild(gradebookInput(student, "termTwo"));
+    row.append(studentCell, termOne, termTwo);
+    body.appendChild(row);
+  });
+  empty.hidden = Boolean(classroom.students.length);
+  document.querySelector("[data-grade-form] button[type=submit]").disabled = !classroom.students.length;
+}
+
 function addPost(container, heading, details) {
   const article = document.createElement("article");
   const title = document.createElement("strong");
@@ -326,15 +377,7 @@ function renderClassroom() {
   empty.hidden = Boolean(classroom.students.length);
   document.querySelector("[data-attendance-form] button[type=submit]").disabled = !classroom.students.length;
 
-  const choices = document.querySelector("[data-grade-form] select[name=studentId]");
-  choices.replaceChildren();
-  classroom.students.forEach((student) => {
-    const option = document.createElement("option");
-    option.value = student.studentId;
-    option.textContent = `${student.name} (${student.studentId})`;
-    choices.appendChild(option);
-  });
-  document.querySelector("[data-grade-form] button[type=submit]").disabled = !classroom.students.length;
+  renderGradebook();
 
   const posts = document.querySelector("[data-recent-posts]");
   posts.replaceChildren();
@@ -446,21 +489,30 @@ document.querySelector("[data-homework-form]").addEventListener("submit", async 
 
 document.querySelector("[data-grade-form]").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const form = event.currentTarget;
   const status = document.querySelector("[data-grade-status]");
-  const values = new FormData(form);
+  const grades = Array.from(document.querySelectorAll("[data-gradebook-row]")).map((row) => {
+    const termOne = row.querySelector('[data-term="termOne"]');
+    const termTwo = row.querySelector('[data-term="termTwo"]');
+    const changed = termOne.value !== termOne.dataset.original || termTwo.value !== termTwo.dataset.original;
+    return changed ? {
+      studentId: row.dataset.studentId,
+      termOne: termOne.value,
+      termTwo: termTwo.value
+    } : null;
+  }).filter(Boolean);
+  if (!grades.length) {
+    status.textContent = text("noGradeChanges");
+    return;
+  }
   try {
     await api("/api/teacher/grades", {
       method: "POST",
       body: JSON.stringify({
         assignmentId: selectedAssignmentId,
-        studentId: values.get("studentId"),
-        termOne: values.get("termOne"),
-        termTwo: values.get("termTwo")
+        grades
       })
     });
-    form.elements.termOne.value = "";
-    form.elements.termTwo.value = "";
+    await loadClassroom(selectedAssignmentId);
     status.textContent = text("saved");
   } catch (error) {
     status.textContent = errorText(error);

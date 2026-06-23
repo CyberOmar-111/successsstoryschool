@@ -110,6 +110,42 @@
             <strong data-admin-total-admins>0</strong>
           </article>
         </section>
+        <section class="portal-container portal-panel user-management-panel" data-user-management>
+          <div class="user-management-header">
+            <div>
+              <p class="eyebrow" data-i18n="userManagementEyebrow">Accounts overview</p>
+              <h2 data-i18n="userManagementTitle">Admin User Management</h2>
+              <p data-i18n="userManagementText">Search every school account, check status, and approve new student registrations from one table.</p>
+            </div>
+            <div class="user-management-controls">
+              <label class="user-search">
+                <span data-i18n="searchUsers">Search users</span>
+                <input type="search" data-user-search autocomplete="off" placeholder="Search by name, ID, role, or class">
+              </label>
+              <div class="status-toggle" role="group" aria-label="User status filter">
+                <button type="button" class="active" data-user-status-filter="all" data-i18n="allUsers">All</button>
+                <button type="button" data-user-status-filter="active" data-i18n="active">Active</button>
+                <button type="button" data-user-status-filter="pending" data-i18n="pending">Pending</button>
+              </div>
+            </div>
+          </div>
+          <div class="user-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="user">User</th>
+                  <th data-i18n="role">Role</th>
+                  <th data-i18n="status">Status</th>
+                  <th data-i18n="classroom">Classroom</th>
+                  <th data-i18n="action">Action</th>
+                </tr>
+              </thead>
+              <tbody data-user-table-body></tbody>
+            </table>
+          </div>
+          <p class="empty-note" data-user-table-empty hidden data-i18n="noUserResults">No users match this search.</p>
+          <p class="form-status" data-user-management-status aria-live="polite"></p>
+        </section>
         <div class="portal-container admin-grid">
           <aside class="admin-sidebar">
             <section class="admin-list-card">

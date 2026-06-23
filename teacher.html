@@ -142,13 +142,24 @@
                   <button class="portal-button primary" type="submit" data-i18n="publish">Publish to class</button>
                   <p class="form-status" data-homework-status></p>
                 </form>
-                <form class="portal-panel teacher-card" data-grade-form>
-                  <h3 data-i18n="addGrades">Add grades</h3>
+                <form class="portal-panel teacher-card gradebook-card" data-grade-form>
+                  <h3 data-i18n="teacherGradebook">Teacher Gradebook</h3>
                   <p class="locked-subject"><span data-i18n="subject">Subject</span>: <strong data-grade-subject></strong></p>
-                  <label><span data-i18n="student">Student</span><select name="studentId" required></select></label>
-                  <label><span data-i18n="termOne">Term 1</span><input name="termOne" type="number" min="0" max="100"></label>
-                  <label><span data-i18n="termTwo">Term 2</span><input name="termTwo" type="number" min="0" max="100"></label>
-                  <button class="portal-button primary" type="submit" data-i18n="saveGrade">Save grade</button>
+                  <p data-i18n="gradebookNote">Edit student grades in the table, then save all changes together.</p>
+                  <div class="gradebook-table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th data-i18n="student">Student</th>
+                          <th data-i18n="termOne">Term 1</th>
+                          <th data-i18n="termTwo">Term 2</th>
+                        </tr>
+                      </thead>
+                      <tbody data-gradebook-body></tbody>
+                    </table>
+                  </div>
+                  <p class="empty-note" data-gradebook-empty hidden data-i18n="noStudents">There are no students in this class.</p>
+                  <button class="portal-button primary" type="submit" data-i18n="saveGradeChanges">Save changes</button>
                   <p class="form-status" data-grade-status></p>
                 </form>
                 <form class="portal-panel teacher-card" data-announcement-form>

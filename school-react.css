@@ -3766,8 +3766,27 @@ canvas {
 
 /* === Jordan school inspiration pass === */
 .site-header {
-  border-bottom: 1px solid rgba(26, 43, 76, 0.08);
-  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(26, 43, 76, 0.96);
+  box-shadow: 0 10px 30px rgba(7, 18, 38, 0.16);
+}
+
+/* Keep the admissions, student life, and language controls on the navy bar. */
+.site-header .brand,
+.site-header .nav-links a,
+.site-header .language-button,
+.site-header .menu-button {
+  color: #ffffff;
+}
+
+.site-header .brand small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.site-header .language-button,
+.site-header .menu-button {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .hero {

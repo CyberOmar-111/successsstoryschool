@@ -206,6 +206,25 @@ test("POST bodies are validated as JSON objects before routing", () => {
   assert.match(server, /except RequestValidationError as error:/);
 });
 
+test("server enforces role based access control for portal APIs", () => {
+  assert.match(server, /ROLE_STUDENT = "Student"/);
+  assert.match(server, /ROLE_TEACHER = "Teacher"/);
+  assert.match(server, /ROLE_ADMIN = "Admin"/);
+  assert.match(server, /RBAC_PERMISSIONS = \{/);
+  assert.match(server, /"student:update_profile": \{ROLE_STUDENT\}/);
+  assert.match(server, /"teacher:post_grades": \{ROLE_TEACHER\}/);
+  assert.match(server, /"admin:write_records": \{ROLE_ADMIN\}/);
+  assert.match(server, /ROUTE_PERMISSIONS = \{/);
+  assert.match(server, /"\/api\/portal\/profile": "student:update_profile"/);
+  assert.match(server, /"\/api\/teacher\/grades": "teacher:post_grades"/);
+  assert.match(server, /"\/api\/admin\/record": "admin:write_records"/);
+  assert.match(server, /def require_permission\(self, permission\):/);
+  assert.match(server, /def require_route_permission\(self, method, request_path\):/);
+  assert.match(server, /if self\.authenticated_principal\(\):[\s\S]*?self\.send_json\(403, \{"code": "forbidden"/);
+  assert.match(server, /teacher, assignment = self\.required_teacher_assignment\(body, "teacher:post_homework"\)/);
+  assert.match(server, /_teacher, assignment = self\.required_teacher_assignment\(body, "teacher:post_grades"\)/);
+});
+
 test("server sends HSTS and a strict self-hosted CSP", () => {
   const endHeadersBlock = server.slice(
     server.indexOf("def end_headers"),
@@ -467,10 +486,14 @@ test("student overview has premium responsive visual states", () => {
   assert.match(js, /data-summary-updates/);
   assert.match(js, /data-summary-transport/);
   assert.match(js, /function updateDashboardCard/);
+  assert.match(js, /badgeTarget\.hidden = !hasUpdates/);
   assert.match(css, /\.overview-snapshot/);
   assert.match(css, /\.overview-quick/);
   assert.match(css, /\.command-center/);
+  assert.match(css, /\.student-card-grid[\s\S]*?repeat\(auto-fit, minmax\(min\(100%, 240px\), 1fr\)\)/);
   assert.match(css, /\.student-dashboard-card:hover/);
+  assert.match(css, /\.student-dashboard-card::after/);
+  assert.match(css, /\.student-dashboard-card\[data-state="empty"\] \.student-card-badge[\s\S]*?opacity: 0/);
   assert.match(css, /\.account-path/);
   assert.match(css, /\.metrics article\[data-state="ready"\]/);
   assert.match(css, /\.content-card\[data-state="ready"\]/);
@@ -500,16 +523,64 @@ test("teacher and administration dashboards expose live command centers", () => 
   assert.match(adminCss, /\.admin-workspace/);
 });
 
+test("admin dashboard has searchable user management with approval actions", () => {
+  assert.match(adminHtml, /data-user-management/);
+  assert.match(adminHtml, /data-user-search/);
+  assert.match(adminHtml, /data-user-status-filter="active"/);
+  assert.match(adminHtml, /data-user-status-filter="pending"/);
+  assert.match(adminHtml, /data-user-table-body/);
+  assert.match(adminJs, /let userStatusFilter = "all"/);
+  assert.match(adminJs, /function renderUserManagement/);
+  assert.match(adminJs, /function allUserRows/);
+  assert.match(adminJs, /approvalStatus === "approved" \? "active" : "pending"/);
+  assert.match(adminJs, /function approveStudentFromTable\(student\)/);
+  assert.match(adminJs, /"\/api\/admin\/class-assignment"/);
+  assert.match(adminJs, /userSearchInput\?\.addEventListener\("input", renderUserManagement\)/);
+  assert.match(adminCss, /\.user-management-panel/);
+  assert.match(adminCss, /\.user-table-wrap[\s\S]*?overflow-x: auto/);
+  assert.match(adminCss, /\.status-pill\.pending/);
+  assert.match(adminCss, /\.table-action\.approve/);
+});
+
+test("teacher gradebook saves edited student grades as one batch", () => {
+  assert.match(teacherHtml, /data-gradebook-body/);
+  assert.match(teacherHtml, /data-i18n="teacherGradebook"/);
+  assert.match(teacherHtml, /data-i18n="saveGradeChanges"/);
+  assert.doesNotMatch(teacherHtml, /select name="studentId"/);
+  assert.match(teacherJs, /function renderGradebook/);
+  assert.match(teacherJs, /data-gradebook-row/);
+  assert.match(teacherJs, /const grades = Array\.from\(document\.querySelectorAll\("\[data-gradebook-row\]"\)\)/);
+  assert.match(teacherJs, /body: JSON\.stringify\(\{\s*assignmentId: selectedAssignmentId,\s*grades\s*\}\)/);
+  assert.match(teacherCss, /\.gradebook-card[\s\S]*?grid-column: 1 \/ -1/);
+  assert.match(teacherCss, /\.gradebook-table[\s\S]*?overflow-x: auto/);
+  assert.match(server, /"subjectGrade": grades_by_student\.get/);
+  assert.match(server, /grade_items = body\.get\("grades"\)/);
+  assert.match(server, /connection\.executemany\([\s\S]*?INSERT INTO grades/);
+  assert.match(server, /"saved": len\(grade_rows\)/);
+});
+
 test("portal dashboards have compact mobile spacing", () => {
   assert.match(css, /Compact mobile dashboard pass/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.dashboard-grid,[\s\S]*?\.teacher-grid,[\s\S]*?\.admin-grid[\s\S]*?padding: 14px 0 24px/);
   assert.match(css, /\.command-center article[\s\S]*?min-height: 86px/);
   assert.match(css, /\.student-dashboard-card[\s\S]*?min-height: 0/);
   assert.match(css, /\.table-wrap,[\s\S]*?\.attendance-table[\s\S]*?overflow-x: auto/);
+  assert.match(css, /Mobile content and touch target pass/);
+  assert.match(css, /html,[\s\S]*?body,[\s\S]*?#portal-main[\s\S]*?overflow-x: hidden/);
+  assert.match(css, /img,[\s\S]*?picture,[\s\S]*?video,[\s\S]*?canvas[\s\S]*?max-width: 100%/);
+  assert.match(css, /\.table-wrap table[\s\S]*?min-width: 560px/);
+  assert.match(css, /@media \(pointer: coarse\), \(max-width: 760px\)[\s\S]*?button,[\s\S]*?a,[\s\S]*?\.portal-button,[\s\S]*?min-height: 48px/);
+  assert.match(css, /@media \(pointer: coarse\), \(max-width: 760px\)[\s\S]*?input,[\s\S]*?select,[\s\S]*?textarea[\s\S]*?font-size: 16px/);
+  assert.match(css, /Two-column mobile portal density pass/);
+  assert.match(css, /@media \(min-width: 390px\) and \(max-width: 760px\)[\s\S]*?\.student-card-grid,[\s\S]*?\.overview-cards,[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(teacherCss, /Compact mobile teacher dashboard/);
   assert.match(teacherCss, /\.assignment-list button[\s\S]*?min-height: 50px/);
+  assert.match(teacherCss, /Two-column mobile teacher density pass/);
+  assert.match(teacherCss, /@media \(min-width: 390px\) and \(max-width: 760px\)[\s\S]*?\.teacher-command-center,[\s\S]*?\.assignment-list,[\s\S]*?\.teacher-cards[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(adminCss, /Compact mobile admin dashboard/);
   assert.match(adminCss, /\.admin-placeholder[\s\S]*?min-height: 150px/);
+  assert.match(adminCss, /Two-column mobile admin density pass/);
+  assert.match(adminCss, /@media \(min-width: 390px\) and \(max-width: 760px\)[\s\S]*?\.admin-command-center,[\s\S]*?\.admin-sidebar[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 });
 
 test("palette is role-based and context-aware", () => {
@@ -714,6 +785,8 @@ test("homepage mobile navigation uses an accessible transforming hamburger", () 
   assert.match(siteHeaderSource, /className="hamburger-icon"/);
   assert.match(siteHeaderSource, /className="hamburger-line"/);
   assert.doesNotMatch(siteHeaderSource, /Menu, X/);
+  assert.match(homepageCss, /\.site-header\s*\{[\s\S]*?background: rgba\(26, 43, 76, 0\.96\)/);
+  assert.match(homepageCss, /Keep the admissions, student life, and language controls on the navy bar/);
   assert.match(homepageCss, /\.hamburger-icon/);
   assert.match(homepageCss, /\.menu-button\[aria-expanded="true"\] \.hamburger-line:nth-child\(1\)[\s\S]*?rotate\(45deg\)/);
   assert.match(homepageCss, /\.menu-button\[aria-expanded="true"\] \.hamburger-line:nth-child\(3\)[\s\S]*?rotate\(-45deg\)/);
