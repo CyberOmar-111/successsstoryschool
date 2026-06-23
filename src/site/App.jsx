@@ -15,6 +15,7 @@ import { OverviewSection } from "./components/sections/OverviewSection.jsx";
 import { PortalHubSection } from "./components/sections/PortalHubSection.jsx";
 import { PortalPreviewSection } from "./components/sections/PortalPreviewSection.jsx";
 import { ProofSection } from "./components/sections/ProofSection.jsx";
+import { SchoolShowcaseSection } from "./components/sections/SchoolShowcaseSection.jsx";
 import { StudentLifeSection } from "./components/sections/StudentLifeSection.jsx";
 import { TrustSection } from "./components/sections/TrustSection.jsx";
 
@@ -58,6 +59,7 @@ export function App() {
         <AcademicsSection t={t} />
         <StudentLifeSection t={t} />
         <GallerySection galleryCopy={galleryCopy} isArabic={isArabic} />
+        <SchoolShowcaseSection t={t} />
         <AdmissionsSection t={t} />
         <ContactSection t={t} isArabic={isArabic} formStatus={formStatus} handleInquiry={handleInquiry} />
       </main>

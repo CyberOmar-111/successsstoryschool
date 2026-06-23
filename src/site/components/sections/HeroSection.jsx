@@ -1,4 +1,4 @@
-﻿import { CheckCircle2, LayoutDashboard, Phone } from "../../icons/index.jsx";
+﻿import { LayoutDashboard, Phone } from "../../icons/index.jsx";
 import { heroStats } from "../../data/homepage-content.js";
 import { ActionLink } from "../primitives.jsx";
 
@@ -35,20 +35,6 @@ export function HeroSection({ t, phoneHref, isArabic }) {
           </dl>
         </div>
 
-        <aside className="hero-card" aria-label={t.heroCardKicker}>
-          <img src="assets/success-story-logo.jpg" alt="" width={84} height={84} />
-          <span className="hero-card-kicker">{t.heroCardKicker}</span>
-          <h2>{t.heroCardTitle}</h2>
-          <p>{t.heroCardText}</p>
-          <ul>
-            {[t.heroCardPointOne, t.heroCardPointTwo, t.heroCardPointThree].map((item) => (
-              <li key={item}>
-                <CheckCircle2 size={18} aria-hidden="true" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </aside>
       </div>
     </section>
   );

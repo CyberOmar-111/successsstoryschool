@@ -1,4 +1,4 @@
-import { BookOpen, Bus, ClipboardList, Globe2, GraduationCap, LayoutDashboard, MessageCircle, ShieldCheck, Trophy, UsersRound } from "../icons/index.jsx";
+import { BookOpen, Bus, ClipboardList, Globe2, GraduationCap, LayoutDashboard, MapPin, MessageCircle, School, ShieldCheck, Trophy, UsersRound } from "../icons/index.jsx";
 
 export const copy = {
   en: {
@@ -185,6 +185,27 @@ export const copy = {
     faqThreeA: "No. Account pages show only values posted by authorized school staff.",
     faqFourQ: "Who updates student information?",
     faqFourA: "Authorized school staff update class records, homework, announcements, attendance, and grades from protected accounts.",
+    showcaseEyebrow: "School highlights",
+    showcaseTitle: "A homepage that helps families move quickly.",
+    showcaseText:
+      "Find updates, campus links, account access, and contact paths in one organized place.",
+    latestUpdatesTitle: "Latest school paths",
+    updateAdmissionsTitle: "Admissions inquiries",
+    updateAdmissionsText:
+      "Families can ask about Grades 1 to 10 and prepare a visit with the school office.",
+    updateGalleryTitle: "Campus gallery",
+    updateGalleryText:
+      "Real school photos show the building, outdoor spaces, and classroom environment.",
+    updateAccountsTitle: "School accounts",
+    updateAccountsText:
+      "Students and staff use protected account areas once access is issued.",
+    exploreTitle: "Explore Success Story",
+    exploreCampusTitle: "Campus visit",
+    exploreAcademicsTitle: "Academics",
+    exploreLifeTitle: "Student life",
+    exploreGalleryTitle: "Gallery",
+    exploreAccountsTitle: "School accounts",
+    exploreTransportTitle: "Transportation",
     footerText: "Success Story School. Building the new generation."
   },
   ar: {
@@ -334,6 +355,27 @@ export const copy = {
     previewRoster: "قائمة الصف",
     previewAverage: "المعدل",
     previewAnnouncement: "إعلان",
+    showcaseEyebrow: "أبرز أقسام المدرسة",
+    showcaseTitle: "صفحة تساعد العائلات على الوصول بسرعة.",
+    showcaseText:
+      "تجد العائلات التحديثات وروابط المدرسة والحسابات وطرق التواصل في مكان منظم واحد.",
+    latestUpdatesTitle: "مسارات المدرسة",
+    updateAdmissionsTitle: "استفسارات التسجيل",
+    updateAdmissionsText:
+      "يمكن للعائلات السؤال عن الصفوف من الأول حتى العاشر والتحضير لزيارة الإدارة.",
+    updateGalleryTitle: "معرض المدرسة",
+    updateGalleryText:
+      "تعرض الصور الحقيقية المبنى والمساحات الخارجية وبيئة الصفوف.",
+    updateAccountsTitle: "حسابات المدرسة",
+    updateAccountsText:
+      "يستخدم الطلاب والكوادر حسابات محمية بعد إصدار الوصول من المدرسة.",
+    exploreTitle: "استكشف مدرسة قصة نجاح",
+    exploreCampusTitle: "زيارة المدرسة",
+    exploreAcademicsTitle: "الأكاديميات",
+    exploreLifeTitle: "حياة الطلاب",
+    exploreGalleryTitle: "المعرض",
+    exploreAccountsTitle: "حسابات المدرسة",
+    exploreTransportTitle: "المواصلات",
     footerText: "مدرسة قصة نجاح. نبني الجيل الجديد."
   }
 };
@@ -508,6 +550,60 @@ export const trustBadges = [
   "trustBadgeSessions",
   "trustBadgePasswords",
   "trustBadgeHonest"
+];
+
+export const showcaseUpdates = [
+  {
+    title: "updateAdmissionsTitle",
+    text: "updateAdmissionsText",
+    href: "#admissions",
+    icon: ClipboardList
+  },
+  {
+    title: "updateGalleryTitle",
+    text: "updateGalleryText",
+    href: "#gallery",
+    icon: School
+  },
+  {
+    title: "updateAccountsTitle",
+    text: "updateAccountsText",
+    href: "#portals",
+    icon: ShieldCheck
+  }
+];
+
+export const exploreTiles = [
+  {
+    title: "exploreCampusTitle",
+    href: "#contact",
+    icon: MapPin
+  },
+  {
+    title: "exploreAcademicsTitle",
+    href: "#academics",
+    icon: BookOpen
+  },
+  {
+    title: "exploreLifeTitle",
+    href: "#life",
+    icon: UsersRound
+  },
+  {
+    title: "exploreGalleryTitle",
+    href: "#gallery",
+    icon: School
+  },
+  {
+    title: "exploreAccountsTitle",
+    href: "#portals",
+    icon: LayoutDashboard
+  },
+  {
+    title: "exploreTransportTitle",
+    href: "#contact",
+    icon: Bus
+  }
 ];
 
 export const faqItems = [

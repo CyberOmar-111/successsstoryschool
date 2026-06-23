@@ -23,6 +23,7 @@ const designSystemCss = fs.readFileSync(path.join(root, "design-system.css"), "u
 const tailwindCss = fs.readFileSync(path.join(root, "school-tailwind.css"), "utf8");
 const tailwindInputCss = fs.readFileSync(path.join(root, "src", "site", "styles", "tailwind.css"), "utf8");
 const homepageEntrySource = fs.readFileSync(path.join(root, "src", "site", "index.jsx"), "utf8");
+const appSource = fs.readFileSync(path.join(root, "src", "site", "App.jsx"), "utf8");
 const homepageDataSource = fs.readFileSync(path.join(root, "src", "site", "data", "homepage-content.js"), "utf8");
 const errorBoundarySource = fs.readFileSync(path.join(root, "src", "site", "components", "ErrorBoundary.jsx"), "utf8");
 const contactSectionSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "ContactSection.jsx"), "utf8");
@@ -671,17 +672,26 @@ test("motion is subtle, accessible, and uses animated dashboard widgets", () => 
 test("homepage uses an original Jordan school inspired entry layout", () => {
   const heroSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "HeroSection.jsx"), "utf8");
   const highlightsSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "HighlightsSection.jsx"), "utf8");
-  const inspirationSurface = `${heroSource}\n${highlightsSource}\n${homepageDataSource}\n${homepageCss}`;
+  const showcaseSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "SchoolShowcaseSection.jsx"), "utf8");
+  const inspirationSurface = `${heroSource}\n${highlightsSource}\n${showcaseSource}\n${homepageDataSource}\n${homepageCss}`;
 
   assert.match(heroSource, /heroStats/);
   assert.match(highlightsSource, /schoolActions/);
   assert.match(highlightsSource, /data-inspiration="jordan-school-pattern"/);
+  assert.match(appSource, /SchoolShowcaseSection/);
+  assert.match(showcaseSource, /showcaseUpdates/);
+  assert.match(showcaseSource, /exploreTiles/);
   assert.match(homepageDataSource, /campusActionContactTitle/);
   assert.match(homepageDataSource, /campusActionTourTitle/);
   assert.match(homepageDataSource, /campusActionAccountTitle/);
+  assert.match(homepageDataSource, /showcaseUpdates/);
+  assert.match(homepageDataSource, /exploreTiles/);
   assert.match(homepageCss, /Jordan school inspiration pass/);
   assert.match(homepageCss, /\.entry-action-card/);
   assert.match(homepageCss, /\.hero-stats/);
+  assert.match(homepageCss, /\.school-showcase-grid/);
+  assert.match(homepageCss, /\.showcase-update-card/);
+  assert.match(homepageCss, /\.explore-tile-grid/);
   assert.doesNotMatch(inspirationSurface, /Jordan International|jis\.edu\.jo/i);
 });
 
