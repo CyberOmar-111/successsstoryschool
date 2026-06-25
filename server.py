@@ -308,6 +308,10 @@ def initialize_sqlite_database():
                 password_salt BLOB NOT NULL,
                 password_hash BLOB NOT NULL,
                 phone_number TEXT NOT NULL,
+                registration_source TEXT,
+                registration_device TEXT,
+                registration_user_agent TEXT,
+                registration_ip TEXT,
                 grade INTEGER CHECK (grade BETWEEN 1 AND 10),
                 transport TEXT CHECK (transport IN ('bus', 'none') OR transport IS NULL),
                 class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
@@ -463,6 +467,14 @@ def initialize_sqlite_database():
             connection.execute("ALTER TABLE students ADD COLUMN phone_number TEXT")
         if "email" not in student_columns:
             connection.execute("ALTER TABLE students ADD COLUMN email TEXT")
+        if "registration_source" not in student_columns:
+            connection.execute("ALTER TABLE students ADD COLUMN registration_source TEXT")
+        if "registration_device" not in student_columns:
+            connection.execute("ALTER TABLE students ADD COLUMN registration_device TEXT")
+        if "registration_user_agent" not in student_columns:
+            connection.execute("ALTER TABLE students ADD COLUMN registration_user_agent TEXT")
+        if "registration_ip" not in student_columns:
+            connection.execute("ALTER TABLE students ADD COLUMN registration_ip TEXT")
         if "requested_class_id" not in student_columns:
             connection.execute(
                 "ALTER TABLE students ADD COLUMN requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL"
@@ -555,6 +567,10 @@ def initialize_postgres_database():
             password_salt BYTEA NOT NULL,
             password_hash BYTEA NOT NULL,
             phone_number TEXT,
+            registration_source TEXT,
+            registration_device TEXT,
+            registration_user_agent TEXT,
+            registration_ip TEXT,
             grade INTEGER CHECK (grade BETWEEN 1 AND 10),
             transport TEXT CHECK (transport IN ('bus', 'none') OR transport IS NULL),
             class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
@@ -730,6 +746,10 @@ def initialize_postgres_database():
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS requested_class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS phone_number TEXT")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS email TEXT")
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS registration_source TEXT")
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS registration_device TEXT")
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS registration_user_agent TEXT")
+        connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS registration_ip TEXT")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS is_approved BOOLEAN NOT NULL DEFAULT TRUE")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS approved_at TEXT")
         connection.execute("ALTER TABLE mfa_challenges ADD COLUMN IF NOT EXISTS code_hash TEXT")
@@ -936,7 +956,7 @@ def send_email_mfa_code(email, code):
     send_smtp_mfa_code(email, code)
 
 
-def public_student(row):
+def public_student(row, include_private=False):
     class_name = None
     class_id = row["class_id"] if "class_id" in row.keys() else None
     if class_id and "class_grade" in row.keys() and row["class_grade"]:
@@ -948,7 +968,7 @@ def public_student(row):
         requested_class_name = f"Grade {row['requested_class_grade']} {row['requested_class_section']}"
         requested_class_code = f"{row['requested_class_grade']}-{row['requested_class_section']}"
     is_approved = bool(row["is_approved"]) if "is_approved" in row.keys() else True
-    return {
+    payload = {
         "studentId": row["student_id"],
         "name": row["full_name"],
         "grade": row["grade"],
@@ -963,6 +983,15 @@ def public_student(row):
         "approved": is_approved,
         "createdAt": row["created_at"],
     }
+    if include_private:
+        payload.update({
+            "email": row["email"] if "email" in row.keys() else None,
+            "registrationSource": row["registration_source"] if "registration_source" in row.keys() else None,
+            "registrationDevice": row["registration_device"] if "registration_device" in row.keys() else None,
+            "registrationUserAgent": row["registration_user_agent"] if "registration_user_agent" in row.keys() else None,
+            "registrationIp": row["registration_ip"] if "registration_ip" in row.keys() else None,
+        })
+    return payload
 
 
 def public_class(row):
@@ -1460,7 +1489,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             for assignment in assignments:
                 by_teacher.setdefault(assignment["teacher_id"], []).append(public_teacher_assignment(assignment))
             self.send_json(200, {
-                "students": [public_student(student) for student in students],
+                "students": [public_student(student, include_private=True) for student in students],
                 "classes": [
                     {**public_class(class_row), "memberCount": class_row["member_count"]}
                     for class_row in classes
@@ -1480,7 +1509,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 students = connection.execute(
                     STUDENT_WITH_CLASS_SQL + " ORDER BY students.student_id"
                 ).fetchall()
-            self.send_json(200, {"students": [public_student(student) for student in students]})
+            self.send_json(200, {"students": [public_student(student, include_private=True) for student in students]})
             return
         if request_path == "/api/admin/accounts":
             if not self.require_admin():
@@ -1547,7 +1576,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     self.send_json(404, {"code": "student_not_found", "error": "Student not found."})
                     return
                 records, class_data = self.portal_records(connection, student, hide_dismissed=False)
-            self.send_json(200, {"student": public_student(student), "records": records, "class": class_data})
+            self.send_json(200, {"student": public_student(student, include_private=True), "records": records, "class": class_data})
             return
         if request_path == "/api/admin/class":
             if not self.require_admin():
@@ -1815,6 +1844,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         password = str(body.get("password", ""))
         homeroom = parse_homeroom_code(body.get("classCode"))
         email = normalize_email(body.get("email"))
+        registration_source = clean_text(body.get("registrationSource") or "web_portal", 40)
+        if registration_source not in {"web_portal", "ios_app"}:
+            registration_source = "web_portal"
+        registration_device = clean_text(body.get("registrationDevice") or "Unknown device", 160)
+        registration_user_agent = clean_text(self.headers.get("User-Agent", ""), 240)
+        registration_ip = clean_text(self.request_ip(), 64)
         if len(name) < 2:
             self.send_json(400, {"code": "name_required", "error": "Enter the student's full name."})
             return
@@ -1860,11 +1895,17 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 """
                 INSERT INTO students (
                     student_id, full_name, email, password_salt, password_hash,
-                    phone_number, grade, class_id, requested_class_id, is_approved
+                    phone_number, registration_source, registration_device,
+                    registration_user_agent, registration_ip, grade, class_id,
+                    requested_class_id, is_approved
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
                 """,
-                (student_id, name, email, salt, hashed, "", grade, class_row["id"], False),
+                (
+                    student_id, name, email, salt, hashed, "", registration_source,
+                    registration_device, registration_user_agent, registration_ip,
+                    grade, class_row["id"], False,
+                ),
             )
             connection.commit()
         self.send_json(201, {"studentId": student_id})

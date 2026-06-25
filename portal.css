@@ -422,11 +422,87 @@ textarea {
   overflow: hidden;
 }
 
+.portal-button,
+.module-tabs button,
+.auth-tabs button,
+.dismiss-action,
+.contact-button,
+.back-link,
+.lang-button,
+.logout,
+.assignment-list button,
+.admin-list button,
+.table-action,
+.status-toggle button,
+.remove-member {
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 150ms ease,
+              background 180ms ease,
+              border-color 180ms ease,
+              box-shadow 180ms ease;
+}
+
+.portal-button:active,
+.module-tabs button:active,
+.auth-tabs button:active,
+.dismiss-action:active,
+.contact-button:active,
+.back-link:active,
+.lang-button:active,
+.logout:active,
+.assignment-list button:active,
+.admin-list button:active,
+.table-action:active,
+.status-toggle button:active,
+.remove-member:active {
+  transform: scale(0.97);
+}
+
+.portal-button:disabled,
+.dismiss-action:disabled,
+.table-action:disabled,
+.logout:disabled,
+.assignment-list button:disabled,
+.admin-list button:disabled,
+.remove-member:disabled,
+button[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.72;
+}
+
+button[aria-busy="true"]::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-inline-start: 8px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 999px;
+  vertical-align: -2px;
+  animation: feedback-spin 700ms linear infinite;
+}
+
+@keyframes feedback-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button[aria-busy="true"]::after {
+    animation: none;
+  }
+}
+
 .portal-button.primary {
   color: var(--paper);
   background: var(--primary);
   box-shadow: 0 12px 24px color-mix(in srgb, var(--primary) 20%, transparent);
-  transition: background 180ms ease, box-shadow 180ms ease;
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 150ms ease,
+              background 180ms ease,
+              box-shadow 180ms ease;
 }
 
 .portal-button.primary:hover,

@@ -25,6 +25,7 @@ const translations = {
     password: "Password",
     rateLimit: "Five failed attempts lock sign-in for 15 minutes.",
     signIn: "Sign in",
+    working: "Working...",
     secureBanner: "Teacher area. You can update only your assigned classes and subjects.",
     assignments: "Teaching assignments",
     workspace: "Class workspace",
@@ -102,6 +103,7 @@ const translations = {
     password: "كلمة المرور",
     rateLimit: "بعد خمس محاولات خاطئة يتوقف الدخول لمدة 15 دقيقة.",
     signIn: "تسجيل الدخول",
+    working: "جاري التنفيذ...",
     secureBanner: "منطقة المعلم. يمكنك تحديث الشعب والمواد المعيّنة لك فقط.",
     assignments: "تعيينات التدريس",
     workspace: "مساحة الصف",
@@ -207,6 +209,36 @@ function clearStatuses() {
   });
 }
 
+function setButtonBusy(button, isBusy) {
+  if (!button) {
+    return;
+  }
+  if (isBusy) {
+    button.dataset.originalHtml = button.innerHTML;
+    button.dataset.wasDisabled = button.disabled ? "true" : "false";
+    button.textContent = text("working");
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    return;
+  }
+  if (button.dataset.originalHtml) {
+    button.innerHTML = button.dataset.originalHtml;
+  }
+  button.disabled = button.dataset.wasDisabled === "true";
+  button.removeAttribute("aria-busy");
+  delete button.dataset.originalHtml;
+  delete button.dataset.wasDisabled;
+}
+
+async function withButtonFeedback(button, action) {
+  setButtonBusy(button, true);
+  try {
+    return await action();
+  } finally {
+    setButtonBusy(button, false);
+  }
+}
+
 function applyLanguage(nextLanguage) {
   language = nextLanguage === "ar" ? "ar" : "en";
   document.documentElement.lang = language;
@@ -277,7 +309,7 @@ function renderAssignments() {
     name.textContent = className(assignment.class);
     subject.textContent = assignment.subject;
     button.append(name, subject);
-    button.addEventListener("click", () => loadClassroom(assignment.id));
+    button.addEventListener("click", () => withButtonFeedback(button, () => loadClassroom(assignment.id)));
     list.appendChild(button);
   });
 }
@@ -422,11 +454,12 @@ loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   loginStatus.textContent = "";
   const values = new FormData(loginForm);
+  const submitButton = loginForm.querySelector("[type=submit]");
   try {
-    const result = await api("/api/teacher/login", {
+    const result = await withButtonFeedback(submitButton, () => api("/api/teacher/login", {
       method: "POST",
       body: JSON.stringify({ teacherId: values.get("teacherId"), password: values.get("password") })
-    });
+    }));
     teacher = result.teacher;
     loginForm.reset();
     await openDashboard();
@@ -452,11 +485,12 @@ document.querySelector("[data-attendance-form]").addEventListener("submit", asyn
     studentId: select.dataset.studentId,
     status: select.value
   }));
+  const submitButton = event.currentTarget.querySelector("[type=submit]");
   try {
-    await api("/api/teacher/attendance", {
+    await withButtonFeedback(submitButton, () => api("/api/teacher/attendance", {
       method: "POST",
       body: JSON.stringify({ assignmentId: selectedAssignmentId, schoolDate: attendanceDate.value, records })
-    });
+    }));
     status.textContent = text("saved");
     await loadClassroom(selectedAssignmentId);
     document.querySelector("[data-attendance-status]").textContent = text("saved");
@@ -470,15 +504,16 @@ document.querySelector("[data-homework-form]").addEventListener("submit", async 
   const form = event.currentTarget;
   const status = document.querySelector("[data-homework-status]");
   const values = new FormData(form);
+  const submitButton = form.querySelector("[type=submit]");
   try {
-    await api("/api/teacher/homework", {
+    await withButtonFeedback(submitButton, () => api("/api/teacher/homework", {
       method: "POST",
       body: JSON.stringify({
         assignmentId: selectedAssignmentId,
         details: values.get("details"),
         dueDate: values.get("dueDate")
       })
-    });
+    }));
     form.reset();
     await loadClassroom(selectedAssignmentId);
     document.querySelector("[data-homework-status]").textContent = text("saved");
@@ -504,14 +539,15 @@ document.querySelector("[data-grade-form]").addEventListener("submit", async (ev
     status.textContent = text("noGradeChanges");
     return;
   }
+  const submitButton = event.currentTarget.querySelector("[type=submit]");
   try {
-    await api("/api/teacher/grades", {
+    await withButtonFeedback(submitButton, () => api("/api/teacher/grades", {
       method: "POST",
       body: JSON.stringify({
         assignmentId: selectedAssignmentId,
         grades
       })
-    });
+    }));
     await loadClassroom(selectedAssignmentId);
     status.textContent = text("saved");
   } catch (error) {
@@ -524,15 +560,16 @@ document.querySelector("[data-announcement-form]").addEventListener("submit", as
   const form = event.currentTarget;
   const status = document.querySelector("[data-announcement-status]");
   const values = new FormData(form);
+  const submitButton = form.querySelector("[type=submit]");
   try {
-    await api("/api/teacher/announcement", {
+    await withButtonFeedback(submitButton, () => api("/api/teacher/announcement", {
       method: "POST",
       body: JSON.stringify({
         assignmentId: selectedAssignmentId,
         title: values.get("title"),
         details: values.get("details")
       })
-    });
+    }));
     form.reset();
     await loadClassroom(selectedAssignmentId);
     document.querySelector("[data-announcement-status]").textContent = text("saved");
@@ -542,7 +579,8 @@ document.querySelector("[data-announcement-form]").addEventListener("submit", as
 });
 
 document.querySelector("[data-logout]").addEventListener("click", async () => {
-  await api("/api/teacher/logout", { method: "POST", body: "{}" });
+  const button = document.querySelector("[data-logout]");
+  await withButtonFeedback(button, () => api("/api/teacher/logout", { method: "POST", body: "{}" }));
   teacher = null;
   assignments = [];
   selectedAssignmentId = null;

@@ -15,6 +15,12 @@ const profileStatus = document.querySelector("[data-profile-status]");
 const dashboardLoading = document.querySelector("[data-dashboard-loading]");
 const toastRegion = document.querySelector("[data-toast-region]");
 
+function registrationDeviceLabel() {
+  const platform = navigator.userAgentData?.platform || navigator.platform || "Unknown platform";
+  const browser = navigator.userAgentData?.brands?.map((brand) => brand.brand).join(", ") || "Browser";
+  return `${browser} on ${platform}`;
+}
+
 const translations = {
   en: {
     title: "Success Story School | Student Account",
@@ -46,6 +52,7 @@ const translations = {
     secureBadge: "Protected student account",
     createAccount: "Create account",
     signIn: "Sign in",
+    working: "Working...",
     createTitle: "Create a student account",
     createText: "Enter the student's name, request the correct homeroom, and create a private password. School staff approve class access after review.",
     studentName: "Student full name",
@@ -198,6 +205,7 @@ const translations = {
     secureBadge: "حساب طالب محمي",
     createAccount: "إنشاء حساب",
     signIn: "تسجيل الدخول",
+    working: "جاري التنفيذ...",
     createTitle: "إنشاء حساب طالب",
     createText: "أدخل اسم الطالب واختر الشعبة الصحيحة وأنشئ كلمة مرور خاصة. سيصدر نظام المدرسة رقم الطالب.",
     studentName: "اسم الطالب الكامل",
@@ -420,6 +428,36 @@ function showToast(message, type = "info") {
   }, 4200);
 }
 
+function setButtonBusy(button, isBusy) {
+  if (!button) {
+    return;
+  }
+  if (isBusy) {
+    button.dataset.originalHtml = button.innerHTML;
+    button.dataset.wasDisabled = button.disabled ? "true" : "false";
+    button.textContent = text("working");
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    return;
+  }
+  if (button.dataset.originalHtml) {
+    button.innerHTML = button.dataset.originalHtml;
+  }
+  button.disabled = button.dataset.wasDisabled === "true";
+  button.removeAttribute("aria-busy");
+  delete button.dataset.originalHtml;
+  delete button.dataset.wasDisabled;
+}
+
+async function withButtonFeedback(button, action) {
+  setButtonBusy(button, true);
+  try {
+    return await action();
+  } finally {
+    setButtonBusy(button, false);
+  }
+}
+
 function setDashboardLoading(isLoading) {
   dashboard.dataset.loading = isLoading ? "true" : "false";
   dashboard.setAttribute("aria-busy", isLoading ? "true" : "false");
@@ -606,11 +644,11 @@ function addDismissButton(item, type, post) {
   button.type = "button";
   button.textContent = text("markRead");
   button.addEventListener("click", async () => {
-    button.disabled = true;
+    setButtonBusy(button, true);
     try {
       await dismissPost(type, post);
     } catch (error) {
-      button.disabled = false;
+      setButtonBusy(button, false);
       showToast(messageForError(error), "error");
     }
   });
@@ -868,16 +906,19 @@ registerForm.addEventListener("submit", async (event) => {
     registerStatus.textContent = text("passwordsDoNotMatch");
     return;
   }
+  const submitButton = registerForm.querySelector("[type=submit]");
   try {
-    const result = await api("/api/auth/register", {
+    const result = await withButtonFeedback(submitButton, () => api("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
         name: values.get("name"),
         email: values.get("email"),
         classCode: values.get("classCode"),
+        registrationSource: "web_portal",
+        registrationDevice: registrationDeviceLabel(),
         password
       })
-    });
+    }));
     registerStatus.textContent = text("accountCreated");
     issuedId.textContent = result.studentId;
     idResult.hidden = false;
@@ -906,14 +947,15 @@ loginForm.addEventListener("submit", async (event) => {
   resetMfaForm();
   loginForm.hidden = false;
   const values = new FormData(loginForm);
+  const submitButton = loginForm.querySelector("[type=submit]");
   try {
-    const result = await api("/api/auth/login", {
+    const result = await withButtonFeedback(submitButton, () => api("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({
         studentId: values.get("studentId"),
         password: values.get("password")
       })
-    });
+    }));
     if (result.mfaRequired) {
       showMfaForm(result, "/api/auth/mfa");
       showToast(text("mfaRequired"), "info");
@@ -938,14 +980,15 @@ mfaForm.addEventListener("submit", async (event) => {
     return;
   }
   const values = new FormData(mfaForm);
+  const submitButton = mfaForm.querySelector("[type=submit]");
   try {
-    await api(pendingMfaChallenge.endpoint, {
+    await withButtonFeedback(submitButton, () => api(pendingMfaChallenge.endpoint, {
       method: "POST",
       body: JSON.stringify({
         challengeId: pendingMfaChallenge.challengeId,
         code: values.get("code")
       })
-    });
+    }));
     const opened = await openDashboard();
     if (opened) {
       loginForm.reset();
@@ -970,11 +1013,12 @@ profileForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   profileStatus.textContent = "";
   const values = new FormData(profileForm);
+  const submitButton = profileForm.querySelector("[type=submit]");
   try {
-    const result = await api("/api/portal/profile", {
+    const result = await withButtonFeedback(submitButton, () => api("/api/portal/profile", {
       method: "POST",
       body: JSON.stringify({ transport: values.get("transport") })
-    });
+    }));
     currentUser = result.user;
     profileForm.elements.transport.value = currentUser.transport || "";
     refreshUserDetails();
@@ -988,10 +1032,14 @@ profileForm.addEventListener("submit", async (event) => {
 });
 
 document.querySelector("[data-logout]").addEventListener("click", async () => {
+  const button = document.querySelector("[data-logout]");
+  setButtonBusy(button, true);
   try {
     await api("/api/auth/logout", { method: "POST", body: "{}" });
   } catch {
     // Local sign-out should still clear the screen if the network blips.
+  } finally {
+    setButtonBusy(button, false);
   }
   currentUser = null;
   currentClass = null;

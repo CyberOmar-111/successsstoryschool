@@ -135,8 +135,10 @@
                 <tr>
                   <th data-i18n="user">User</th>
                   <th data-i18n="role">Role</th>
+                  <th data-i18n="emailAddress">Email address</th>
                   <th data-i18n="status">Status</th>
                   <th data-i18n="classroom">Classroom</th>
+                  <th data-i18n="registrationSource">Created from</th>
                   <th data-i18n="action">Action</th>
                 </tr>
               </thead>
@@ -269,6 +271,25 @@
                   <span class="record-id" data-selected-student-status></span>
                 </div>
                 <strong class="class-chip" data-selected-student-class></strong>
+              </div>
+
+              <div class="student-meta-grid" aria-label="Student account details">
+                <span>
+                  <small data-i18n="emailAddress">Email address</small>
+                  <strong data-selected-student-email></strong>
+                </span>
+                <span>
+                  <small data-i18n="registrationSource">Created from</small>
+                  <strong data-selected-student-source></strong>
+                </span>
+                <span>
+                  <small data-i18n="registrationDevice">Device</small>
+                  <strong data-selected-student-device></strong>
+                </span>
+                <span>
+                  <small data-i18n="registrationIp">IP address</small>
+                  <strong data-selected-student-ip></strong>
+                </span>
               </div>
 
               <form class="record-form assignment-form verification-form" data-class-assignment-form>

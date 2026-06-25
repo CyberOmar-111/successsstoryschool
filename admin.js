@@ -36,6 +36,7 @@ const translations = {
     password: "Password",
     rateLimit: "Five failed attempts lock sign-in for 15 minutes.",
     signIn: "Sign in",
+    working: "Working...",
     dashboardBanner: "Administration area. Changes here appear in student accounts.",
     welcome: "Welcome,",
     logout: "Log out",
@@ -84,6 +85,13 @@ const translations = {
     chooseStudentText: "Select a student to update records, or select a class to publish work for everyone in that classroom.",
     studentRecord: "Student record",
     noClass: "No class assigned",
+    emailAddress: "Email address",
+    registrationSource: "Created from",
+    registrationDevice: "Device",
+    registrationIp: "IP address",
+    webPortal: "Website portal",
+    iosApp: "iOS app",
+    unknown: "Unknown",
     placeClass: "Student verification",
     studentVerification: "Student verification",
     approvedHomeroom: "Approved homeroom",
@@ -223,6 +231,7 @@ const translations = {
     password: "كلمة المرور",
     rateLimit: "بعد خمس محاولات خاطئة يتوقف الدخول لمدة 15 دقيقة.",
     signIn: "تسجيل الدخول",
+    working: "جاري التنفيذ...",
     dashboardBanner: "منطقة الإدارة. تظهر التغييرات هنا في حسابات الطلاب.",
     welcome: "مرحبا،",
     logout: "تسجيل الخروج",
@@ -243,6 +252,13 @@ const translations = {
     chooseStudentText: "اختر طالبا لتحديث سجله أو صفا لنشر العمل لجميع الطلاب في الغرفة الصفية.",
     studentRecord: "سجل الطالب",
     noClass: "لم يحدد صف",
+    emailAddress: "البريد الإلكتروني",
+    registrationSource: "مصدر الإنشاء",
+    registrationDevice: "الجهاز",
+    registrationIp: "عنوان IP",
+    webPortal: "بوابة الموقع",
+    iosApp: "تطبيق iOS",
+    unknown: "غير معروف",
     placeClass: "Student verification",
     studentVerification: "Student verification",
     approvedHomeroom: "الشعبة المعتمدة",
@@ -430,6 +446,36 @@ function applyLanguage(nextLanguage) {
   }
 }
 
+function setButtonBusy(button, isBusy) {
+  if (!button) {
+    return;
+  }
+  if (isBusy) {
+    button.dataset.originalHtml = button.innerHTML;
+    button.dataset.wasDisabled = button.disabled ? "true" : "false";
+    button.textContent = text("working");
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    return;
+  }
+  if (button.dataset.originalHtml) {
+    button.innerHTML = button.dataset.originalHtml;
+  }
+  button.disabled = button.dataset.wasDisabled === "true";
+  button.removeAttribute("aria-busy");
+  delete button.dataset.originalHtml;
+  delete button.dataset.wasDisabled;
+}
+
+async function withButtonFeedback(button, action) {
+  setButtonBusy(button, true);
+  try {
+    return await action();
+  } finally {
+    setButtonBusy(button, false);
+  }
+}
+
 function setAuthMode(mode) {
   setupForm.hidden = mode !== "setup";
   loginForm.hidden = mode !== "login";
@@ -558,8 +604,10 @@ function allUserRows() {
         name: student.name,
         status,
         statusLabel: status === "active" ? text("active") : text("pending"),
+        email: student.email || student.emailHint || "-",
         detail: homeroom,
-        searchText: `${student.name} ${student.studentId} student ${homeroom} ${status}`,
+        source: registrationSourceLabel(student.registrationSource),
+        searchText: `${student.name} ${student.studentId} ${student.email || ""} student ${homeroom} ${status} ${student.registrationSource || ""} ${student.registrationDevice || ""}`,
         student
       };
     }),
@@ -569,9 +617,11 @@ function allUserRows() {
       name: teacher.name,
       status: "active",
       statusLabel: text("active"),
+      email: "-",
       detail: (teacher.assignments || []).length
         ? teacher.assignments.map((assignment) => `${className(assignment.class)} / ${assignment.subject}`).join(", ")
         : text("noClass"),
+      source: "-",
       searchText: `${teacher.name} ${teacher.teacherId} teacher active`
     })),
     ...administrators.map((account) => ({
@@ -580,7 +630,9 @@ function allUserRows() {
       name: account.name,
       status: "active",
       statusLabel: text("active"),
+      email: "-",
       detail: text("administrators"),
+      source: "-",
       searchText: `${account.name} ${account.adminId} admin active`
     }))
   ];
@@ -614,6 +666,9 @@ function renderUserManagement() {
     const role = document.createElement("td");
     role.textContent = userRoleLabel(row.role);
 
+    const email = document.createElement("td");
+    email.textContent = row.email;
+
     const status = document.createElement("td");
     const statusPill = document.createElement("span");
     statusPill.className = `status-pill ${row.status}`;
@@ -623,6 +678,9 @@ function renderUserManagement() {
     const detail = document.createElement("td");
     detail.textContent = row.detail;
 
+    const source = document.createElement("td");
+    source.textContent = row.source;
+
     const action = document.createElement("td");
     if (row.role === "student") {
       const button = document.createElement("button");
@@ -631,9 +689,9 @@ function renderUserManagement() {
       button.textContent = row.status === "pending" ? text("approve") : text("openRecord");
       button.addEventListener("click", () => {
         if (row.status === "pending") {
-          approveStudentFromTable(row.student);
+          withButtonFeedback(button, () => approveStudentFromTable(row.student));
         } else {
-          loadStudent(row.id);
+          withButtonFeedback(button, () => loadStudent(row.id));
         }
       });
       action.appendChild(button);
@@ -643,7 +701,7 @@ function renderUserManagement() {
       label.textContent = text("noAction");
       action.appendChild(label);
     }
-    tr.append(userCell, role, status, detail, action);
+    tr.append(userCell, role, email, status, detail, source, action);
     body.appendChild(tr);
   });
   empty.hidden = Boolean(rows.length);
@@ -681,6 +739,12 @@ function recordArticle(title, details) {
   return article;
 }
 
+function registrationSourceLabel(source) {
+  if (source === "ios_app") return text("iosApp");
+  if (source === "web_portal") return text("webPortal");
+  return text("unknown");
+}
+
 function renderStudent(result) {
   studentDetails = result;
   classDetails = null;
@@ -696,6 +760,10 @@ function renderStudent(result) {
     student.approvalStatus === "approved" ? text("approved") : text("pendingApproval");
   document.querySelector("[data-selected-student-class]").textContent =
     result.class ? className(result.class) : student.requestedClassName || text("noClass");
+  document.querySelector("[data-selected-student-email]").textContent = student.email || student.emailHint || text("unknown");
+  document.querySelector("[data-selected-student-source]").textContent = registrationSourceLabel(student.registrationSource);
+  document.querySelector("[data-selected-student-device]").textContent = student.registrationDevice || student.registrationUserAgent || text("unknown");
+  document.querySelector("[data-selected-student-ip]").textContent = student.registrationIp || text("unknown");
   document.querySelectorAll("[data-student-editor] input[name=studentId]").forEach((input) => {
     input.value = student.studentId;
   });
@@ -756,7 +824,7 @@ function renderClass(result) {
     remove.type = "button";
     remove.className = "remove-member";
     remove.textContent = text("removeFromClass");
-    remove.addEventListener("click", () => removeClassMember(member.studentId, result.class.id));
+    remove.addEventListener("click", () => removeClassMember(member.studentId, result.class.id, remove));
     row.append(item, remove);
     members.appendChild(row);
   });
@@ -805,14 +873,14 @@ async function loadClass(classId) {
   renderClass(result);
 }
 
-async function removeClassMember(studentId, classId) {
+async function removeClassMember(studentId, classId, button) {
   const form = document.querySelector("[data-class-member-form]");
   const status = form.querySelector(".form-status");
   try {
-    await api("/api/admin/class-removal", {
+    await withButtonFeedback(button, () => api("/api/admin/class-removal", {
       method: "POST",
       body: JSON.stringify({ studentId, classId })
-    });
+    }));
     status.textContent = text("removed");
     await loadLists();
     await loadClass(classId);
@@ -909,8 +977,9 @@ setupForm.addEventListener("submit", async (event) => {
     setupStatus.textContent = text("passwordsDoNotMatch");
     return;
   }
+  const submitButton = setupForm.querySelector("[type=submit]");
   try {
-    await api("/api/admin/setup", {
+    await withButtonFeedback(submitButton, () => api("/api/admin/setup", {
       method: "POST",
       body: JSON.stringify({
         adminId: values.get("adminId"),
@@ -918,7 +987,7 @@ setupForm.addEventListener("submit", async (event) => {
         password,
         setupSecret: values.get("setupSecret")
       })
-    });
+    }));
     setAuthMode("login");
     loginStatus.textContent = text("setupDone");
   } catch (error) {
@@ -930,11 +999,12 @@ loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   loginStatus.textContent = "";
   const values = new FormData(loginForm);
+  const submitButton = loginForm.querySelector("[type=submit]");
   try {
-    const result = await api("/api/admin/login", {
+    const result = await withButtonFeedback(submitButton, () => api("/api/admin/login", {
       method: "POST",
       body: JSON.stringify({ adminId: values.get("adminId"), password: values.get("password") })
-    });
+    }));
     admin = result.admin;
     loginForm.reset();
     await openDashboard();
@@ -967,11 +1037,12 @@ document.querySelector("[data-admin-account-form]").addEventListener("submit", a
     status.textContent = text("passwordsDoNotMatch");
     return;
   }
+  const submitButton = form.querySelector("[type=submit]");
   try {
-    const result = await api("/api/admin/accounts", {
+    const result = await withButtonFeedback(submitButton, () => api("/api/admin/accounts", {
       method: "POST",
       body: JSON.stringify({ name: values.get("name"), password })
-    });
+    }));
     status.textContent = text("adminCreated");
     document.querySelector("[data-new-admin-id]").textContent = result.administrator.adminId;
     resultCard.hidden = false;
@@ -1004,11 +1075,12 @@ document.querySelector("[data-teacher-account-form]").addEventListener("submit",
     status.textContent = text("subjectRequired");
     return;
   }
+  const submitButton = form.querySelector("[type=submit]");
   try {
-    const result = await api("/api/admin/teachers", {
+    const result = await withButtonFeedback(submitButton, () => api("/api/admin/teachers", {
       method: "POST",
       body: JSON.stringify({ name: values.get("name"), password, assignments })
-    });
+    }));
     status.textContent = text("teacherCreated");
     document.querySelector("[data-new-teacher-id]").textContent = result.teacher.teacherId;
     resultCard.hidden = false;
@@ -1031,14 +1103,15 @@ document.querySelector("[data-admin-password-form]").addEventListener("submit", 
     status.textContent = text("passwordsDoNotMatch");
     return;
   }
+  const submitButton = form.querySelector("[type=submit]");
   try {
-    await api("/api/admin/change-password", {
+    await withButtonFeedback(submitButton, () => api("/api/admin/change-password", {
       method: "POST",
       body: JSON.stringify({
         currentPassword: values.get("currentPassword"),
         newPassword
       })
-    });
+    }));
     admin = null;
     dashboard.hidden = true;
     authView.hidden = false;
@@ -1054,9 +1127,10 @@ document.querySelector("[data-class-assignment-form]").addEventListener("submit"
   event.preventDefault();
   const form = event.currentTarget;
   const status = form.querySelector("[data-class-assignment-status]");
+  const submitButton = form.querySelector("[type=submit]");
   try {
     const values = Object.fromEntries(new FormData(form));
-    await api("/api/admin/class-assignment", { method: "POST", body: JSON.stringify(values) });
+    await withButtonFeedback(submitButton, () => api("/api/admin/class-assignment", { method: "POST", body: JSON.stringify(values) }));
     status.textContent = text("studentVerified");
     await loadLists();
     await loadStudent(values.studentId);
@@ -1072,11 +1146,12 @@ document.querySelector("[data-decline-student]").addEventListener("click", async
   const form = document.querySelector("[data-class-assignment-form]");
   const status = form.querySelector("[data-class-assignment-status]");
   const studentId = studentDetails.student.studentId;
+  const button = document.querySelector("[data-decline-student]");
   try {
-    await api("/api/admin/student-decline", {
+    await withButtonFeedback(button, () => api("/api/admin/student-decline", {
       method: "POST",
       body: JSON.stringify({ studentId })
-    });
+    }));
     status.textContent = text("studentDeclined");
     studentDetails = null;
     document.querySelector("[data-student-editor]").hidden = true;
@@ -1092,14 +1167,15 @@ document.querySelector("[data-class-member-form]").addEventListener("submit", as
   const form = event.currentTarget;
   const status = form.querySelector(".form-status");
   const group = classDetails.class;
+  const submitButton = form.querySelector("[type=submit]");
   try {
-    await api("/api/admin/class-assignment", {
+    await withButtonFeedback(submitButton, () => api("/api/admin/class-assignment", {
       method: "POST",
       body: JSON.stringify({
         studentId: form.elements.studentId.value,
         classCode: `${group.grade}-${group.section}`
       })
-    });
+    }));
     status.textContent = text("saved");
     await loadLists();
     await loadClass(group.id);
@@ -1113,11 +1189,12 @@ document.querySelectorAll("[data-student-record-form]").forEach((form) => {
     event.preventDefault();
     const studentId = form.elements.studentId.value;
     const status = form.querySelector(".form-status");
+    const submitButton = form.querySelector("[type=submit]");
     try {
-      await api("/api/admin/record", {
+      await withButtonFeedback(submitButton, () => api("/api/admin/record", {
         method: "POST",
         body: JSON.stringify(Object.fromEntries(new FormData(form)))
-      });
+      }));
       form.reset();
       form.elements.studentId.value = studentId;
       status.textContent = text("saved");
@@ -1133,11 +1210,12 @@ document.querySelector("[data-password-reset-form]").addEventListener("submit", 
   const form = event.currentTarget;
   const studentId = form.elements.studentId.value;
   const status = form.querySelector(".form-status");
+  const submitButton = form.querySelector("[type=submit]");
   try {
-    await api("/api/admin/reset-password", {
+    await withButtonFeedback(submitButton, () => api("/api/admin/reset-password", {
       method: "POST",
       body: JSON.stringify(Object.fromEntries(new FormData(form)))
-    });
+    }));
     form.reset();
     form.elements.studentId.value = studentId;
     status.textContent = text("saved");
@@ -1151,11 +1229,12 @@ document.querySelectorAll("[data-class-record-form]").forEach((form) => {
     event.preventDefault();
     const classId = form.elements.classId.value;
     const status = form.querySelector(".form-status");
+    const submitButton = form.querySelector("[type=submit]");
     try {
-      await api("/api/admin/class-record", {
+      await withButtonFeedback(submitButton, () => api("/api/admin/class-record", {
         method: "POST",
         body: JSON.stringify(Object.fromEntries(new FormData(form)))
-      });
+      }));
       form.reset();
       form.elements.classId.value = classId;
       status.textContent = text("saved");
@@ -1167,7 +1246,8 @@ document.querySelectorAll("[data-class-record-form]").forEach((form) => {
 });
 
 document.querySelector("[data-logout]").addEventListener("click", async () => {
-  await api("/api/admin/logout", { method: "POST", body: "{}" });
+  const button = document.querySelector("[data-logout]");
+  await withButtonFeedback(button, () => api("/api/admin/logout", { method: "POST", body: "{}" }));
   admin = null;
   students = [];
   classes = [];

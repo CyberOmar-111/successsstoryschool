@@ -129,8 +129,12 @@ test("student registration is pending until school approval", () => {
   assert.match(server, /def normalize_email\(value\):/);
   assert.match(server, /email = normalize_email\(body\.get\("email"\)\)/);
   assert.match(server, /"code": "email_rule"/);
-  assert.match(server, /VALUES \(\?, \?, \?, \?, \?, \?, \?, NULL, \?, \?\)/);
-  assert.match(server, /\(student_id, name, email, salt, hashed, "", grade, class_row\["id"\], False\)/);
+  assert.match(server, /registration_source TEXT/);
+  assert.match(server, /registration_device TEXT/);
+  assert.match(server, /registration_ip TEXT/);
+  assert.match(server, /VALUES \(\?, \?, \?, \?, \?, \?, \?, \?, \?, \?, \?, NULL, \?, \?\)/);
+  assert.match(server, /student_id, name, email, salt, hashed, "", registration_source,/);
+  assert.match(server, /registration_device, registration_user_agent, registration_ip,/);
   assert.match(server, /if is_approved and student\["class_id"\]:/);
   const portalRecordsBlock = server.slice(
     server.indexOf("def portal_records"),
@@ -400,6 +404,7 @@ test("backend enforces setup secret, JSON validation, and reset re-auth", async 
 
     const register = await postJson(baseUrl, "/api/auth/register", {
       name: "Pending Student",
+      email: "pending.student@example.com",
       classCode: "8-A",
       password: "Studentpass1",
     });
