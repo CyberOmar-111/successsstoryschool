@@ -1,6 +1,4 @@
-﻿import { highlights, schoolActions } from "../../data/homepage-content.js";
-import { ArrowRight } from "../../icons/index.jsx";
-import { IconLabel } from "../primitives.jsx";
+﻿import { schoolActions } from "../../data/homepage-content.js";
 
 export function HighlightsSection({ t }) {
   return (
@@ -16,20 +14,9 @@ export function HighlightsSection({ t }) {
               </span>
               <strong>{t[action.title]}</strong>
               <p>{t[action.text]}</p>
-              <span className="entry-action-link">
-                {t.open}
-                <ArrowRight size={17} strokeWidth={2.4} aria-hidden="true" />
-              </span>
             </a>
           );
         })}
-      </div>
-      <div className="shell highlight-grid">
-        {highlights.map(([label, icon]) => (
-          <div className="highlight" key={label}>
-            <IconLabel icon={icon}>{t[label]}</IconLabel>
-          </div>
-        ))}
       </div>
     </section>
   );

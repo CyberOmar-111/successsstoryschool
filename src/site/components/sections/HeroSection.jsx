@@ -1,14 +1,19 @@
-﻿import { LayoutDashboard, Phone } from "../../icons/index.jsx";
-import { heroStats } from "../../data/homepage-content.js";
+﻿import { BookOpen, ClipboardList, LayoutDashboard, MapPin } from "../../icons/index.jsx";
 import { ActionLink } from "../primitives.jsx";
 
-export function HeroSection({ t, phoneHref, isArabic }) {
+const heroQuickLinks = [
+  { href: "#admissions", label: "navAdmissions", icon: ClipboardList, tone: "gold" },
+  { href: "#academics", label: "navAcademics", icon: BookOpen, tone: "blue" },
+  { href: "#portals", label: "navPortals", icon: LayoutDashboard, tone: "green" },
+  { href: "#contact", label: "navContact", icon: MapPin, tone: "orange" }
+];
+
+export function HeroSection({ t, isArabic }) {
   return (
     <section className="hero" id="top">
       <div className="hero-grid" aria-hidden="true" />
       <div className="shell hero-layout">
         <div className="hero-content">
-          <p className="eyebrow hero-eyebrow-pill">{t.heroEyebrow}</p>
           <h1 className="hero-title">
             {isArabic ? (
               <span>{t.heroTitle}</span>
@@ -19,22 +24,26 @@ export function HeroSection({ t, phoneHref, isArabic }) {
               </>
             )}
           </h1>
-          <p className="hero-text">{t.heroText}</p>
-          <div className="hero-actions">
-            <ActionLink href="#contact" variant="primary" className="hero-primary-cta">{t.beginEnrollment}</ActionLink>
-            <ActionLink href="#portals" variant="secondary" icon={LayoutDashboard}>{t.openPortals}</ActionLink>
-            <ActionLink href={phoneHref} variant="ghost" icon={Phone}>{t.callOffice}</ActionLink>
+          <div className="hero-caption-row">
+            <span aria-hidden="true" />
+            <p>{t.heroText}</p>
+            <ActionLink href="#contact" variant="primary" className="hero-caption-cta">{t.beginEnrollment}</ActionLink>
           </div>
-          <dl className="hero-stats" aria-label="School quick facts">
-            {heroStats.map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{t[value]}</dd>
-              </div>
-            ))}
-          </dl>
         </div>
 
+        <div className="hero-side-ui" aria-label={t.heroActionsLabel}>
+          <a className="hero-next-diamond" href="#admissions" aria-label={t.beginEnrollment}>
+            <span aria-hidden="true">→</span>
+          </a>
+          <div className="hero-diamond-cluster">
+            {heroQuickLinks.map(({ href, label, icon: Icon, tone }) => (
+              <a className={`hero-diamond-link ${tone}`} href={href} key={href}>
+                <Icon size={24} strokeWidth={2.2} aria-hidden="true" />
+                <span>{t[label]}</span>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

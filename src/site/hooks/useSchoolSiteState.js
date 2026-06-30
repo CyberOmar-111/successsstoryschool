@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { copy, profileModes, truthCopy } from "../data/homepage-content.js";
+import { copy, navItems, profileModes, truthCopy } from "../data/homepage-content.js";
 import { schoolEmail } from "../data/site-config.js";
 import { openInquiryComposer } from "../services/api.js";
 
@@ -29,6 +29,7 @@ export function useSchoolSiteState() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState("parents");
   const [formStatus, setFormStatus] = useState("");
+  const [activeSection, setActiveSection] = useState("");
 
   const t = useMemo(() => ({ ...copy[language], ...truthCopy }), [language]);
   const isArabic = language === "ar";
@@ -73,6 +74,41 @@ export function useSchoolSiteState() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [menuOpen]);
+
+  useEffect(() => {
+    const sections = navItems
+      .map(([, href]) => document.getElementById(href.slice(1)))
+      .filter(Boolean);
+
+    if (!sections.length) {
+      return undefined;
+    }
+
+    const updateActiveSection = () => {
+      if (window.scrollY < 180) {
+        setActiveSection("");
+        return;
+      }
+
+      const anchorLine = window.innerHeight * 0.34;
+      let current = "";
+      sections.forEach((section) => {
+        if (section.getBoundingClientRect().top <= anchorLine) {
+          current = `#${section.id}`;
+        }
+      });
+      setActiveSection(current);
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", updateActiveSection);
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
+    };
+  }, []);
 
   useEffect(() => {
     const cards = Array.from(document.querySelectorAll("[data-reveal-card]"));
@@ -131,6 +167,7 @@ export function useSchoolSiteState() {
 
   return {
     activeMode,
+    activeSection,
     closeMenu,
     formStatus,
     galleryCopy,

@@ -3,7 +3,7 @@ import { Globe2 } from "../../icons/index.jsx";
 import { cx } from "../../utils/cx.js";
 import { ActionLink, BrandLockup } from "../primitives.jsx";
 
-export function SiteHeader({ t, menuOpen, closeMenu, toggleMenu, toggleLanguage }) {
+export function SiteHeader({ t, activeSection, menuOpen, closeMenu, toggleMenu, toggleLanguage }) {
   return (
     <header className="site-header">
       <nav className="shell nav" aria-label="Primary navigation">
@@ -33,7 +33,15 @@ export function SiteHeader({ t, menuOpen, closeMenu, toggleMenu, toggleLanguage 
         <div id="primary-navigation-menu" className={cx("nav-panel", menuOpen && "open")}>
           <div className="nav-links">
             {navItems.map(([label, href]) => (
-              <a key={href} href={href} onClick={closeMenu}>{t[label]}</a>
+              <a
+                key={href}
+                className={cx(activeSection === href && "active")}
+                href={href}
+                aria-current={activeSection === href ? "location" : undefined}
+                onClick={closeMenu}
+              >
+                {t[label]}
+              </a>
             ))}
           </div>
           <div className="nav-actions">

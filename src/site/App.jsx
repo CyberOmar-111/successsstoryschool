@@ -22,6 +22,7 @@ import { TrustSection } from "./components/sections/TrustSection.jsx";
 export function App() {
   const {
     activeMode,
+    activeSection,
     closeMenu,
     formStatus,
     galleryCopy,
@@ -40,6 +41,7 @@ export function App() {
       <a className="skip-link" href="#main-content">{t.skip}</a>
       <SiteHeader
         t={t}
+        activeSection={activeSection}
         menuOpen={menuOpen}
         closeMenu={closeMenu}
         toggleMenu={toggleMenu}
