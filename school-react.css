@@ -6019,73 +6019,90 @@ h3,
 }
 
 .proof-grid {
+  order: -1;
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(22px, 3vw, 42px);
-  margin-top: clamp(34px, 5vw, 66px);
+  gap: clamp(30px, 4vw, 64px);
+  margin: 0 0 clamp(62px, 7vw, 108px);
+  padding: clamp(16px, 2vw, 28px) clamp(10px, 1.4vw, 20px) 0;
 }
 
 .proof-stat-card {
   position: relative;
   display: grid;
-  min-height: clamp(194px, 17vw, 246px);
+  min-height: clamp(220px, 19vw, 282px);
   place-items: center;
-  padding: 28px 20px;
-  border: 1px solid rgba(31, 107, 170, 0.18);
-  border-radius: 18px;
-  color: #2a2f35;
+  align-content: center;
+  gap: 10px;
+  padding: clamp(28px, 3.2vw, 42px) 20px;
+  border: 1px solid rgba(31, 107, 170, 0.16);
+  border-radius: 16px;
+  color: #24272c;
   background: #ffffff;
-  box-shadow: 0 18px 34px rgba(31, 107, 170, 0.12);
+  box-shadow: 0 22px 42px rgba(25, 24, 24, 0.08);
   text-align: center;
-  transform: rotate(-5deg);
+  transform: rotate(-4deg);
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .proof-stat-card::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -2px;
   z-index: -1;
-  border-radius: 18px;
+  border-radius: 17px;
   background: var(--blue);
-  transform: translate(18px, 16px) rotate(7deg);
+  box-shadow: 0 22px 34px rgba(31, 107, 170, 0.14);
+  transform: translate(20px, 18px) rotate(8deg);
 }
 
 .proof-stat-card.lime::before {
   background: var(--green);
+  box-shadow: 0 22px 34px rgba(209, 214, 77, 0.22);
+  transform: translate(20px, 18px) rotate(-8deg);
+}
+
+.proof-stat-card:nth-child(even) {
+  transform: rotate(4deg);
 }
 
 .proof-stat-card:hover,
 .proof-stat-card:focus-within {
-  box-shadow: 0 24px 44px rgba(31, 107, 170, 0.18);
-  transform: rotate(-2deg) translateY(-4px);
+  box-shadow: 0 28px 54px rgba(25, 24, 24, 0.12);
+  transform: rotate(0deg) translateY(-6px);
 }
 
 .proof-stat-card svg {
+  width: 54px;
+  height: 54px;
+  padding: 9px;
+  border-radius: 14px;
   color: var(--blue);
+  background: rgba(31, 107, 170, 0.09);
 }
 
 .proof-stat-card.lime svg {
   color: var(--navy);
+  background: rgba(209, 214, 77, 0.2);
 }
 
 .proof-stat-card strong {
   display: block;
-  margin-top: 12px;
+  margin-top: 4px;
   color: var(--navy);
   font-family: "Rubik", "League Spartan", Arial, sans-serif;
-  font-size: clamp(1.8rem, 2.6vw, 2.45rem);
+  font-size: clamp(2rem, 2.7vw, 2.7rem);
   font-weight: 950;
   line-height: 0.95;
 }
 
 .proof-stat-card span {
   display: block;
-  max-width: 18ch;
+  max-width: 19ch;
   color: #2f343a;
-  font-size: clamp(1rem, 1.12vw, 1.15rem);
-  font-weight: 780;
+  font-size: clamp(1rem, 1.08vw, 1.16rem);
+  font-weight: 720;
   line-height: 1.24;
 }
 
