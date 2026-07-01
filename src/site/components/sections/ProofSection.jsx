@@ -27,9 +27,11 @@ export function ProofSection({ t }) {
             const Icon = stat.icon;
             return (
               <article className={`proof-stat-card ${stat.tone}`} key={stat.value} data-reveal-card>
-                <Icon size={34} strokeWidth={1.9} aria-hidden="true" />
-                <strong>{t[stat.value]}</strong>
-                <span>{t[stat.label]}</span>
+                <div className="proof-stat-face">
+                  <Icon size={34} strokeWidth={1.9} aria-hidden="true" />
+                  <strong>{t[stat.value]}</strong>
+                  <span>{t[stat.label]}</span>
+                </div>
               </article>
             );
           })}

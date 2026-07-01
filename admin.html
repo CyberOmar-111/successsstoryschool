@@ -106,6 +106,10 @@
             <strong data-admin-total-teachers>0</strong>
           </article>
           <article>
+            <span data-i18n="parents">Parents</span>
+            <strong data-admin-total-parents>0</strong>
+          </article>
+          <article>
             <span data-i18n="administrators">Administrators</span>
             <strong data-admin-total-admins>0</strong>
           </article>
@@ -153,6 +157,10 @@
             <section class="admin-list-card">
               <h2 data-i18n="students">Students</h2>
               <div class="admin-list" data-student-list></div>
+            </section>
+            <section class="admin-list-card">
+              <h2 data-i18n="parents">Parents</h2>
+              <div class="admin-list account-list" data-parent-list></div>
             </section>
             <section class="admin-list-card">
               <h2 data-i18n="classes">Classes</h2>
@@ -253,13 +261,59 @@
                 <div class="teaching-assignments" data-teaching-assignments></div>
                 <button class="portal-button secondary add-assignment" type="button" data-add-assignment data-i18n="addTeachingAssignment">Add class and subject</button>
                 <button class="portal-button primary" type="submit" data-i18n="createTeacher">Create teacher account</button>
-                <p class="form-status" data-teacher-account-status aria-live="polite"></p>
-                <div class="id-result" data-new-teacher-result hidden>
-                  <span data-i18n="issuedTeacherId">New teacher ID</span>
-                  <strong data-new-teacher-id></strong>
-                  <p data-i18n="teacherLoginInfo">The teacher signs in using this ID and the private password entered above.</p>
+              <p class="form-status" data-teacher-account-status aria-live="polite"></p>
+              <div class="id-result" data-new-teacher-result hidden>
+                <span data-i18n="issuedTeacherId">New teacher ID</span>
+                <strong data-new-teacher-id></strong>
+                <p data-i18n="teacherLoginInfo">The teacher signs in using this ID and the private password entered above.</p>
+              </div>
+            </form>
+          </section>
+
+            <section class="portal-panel parent-editor" data-parent-editor hidden>
+              <div class="editor-header">
+                <div>
+                  <p class="eyebrow" data-i18n="parentRecord">Parent record</p>
+                  <h2 data-selected-parent-name></h2>
+                  <span class="record-id" data-selected-parent-id></span>
+                  <span class="record-id" data-selected-parent-status></span>
                 </div>
-              </form>
+                <strong class="class-chip" data-selected-parent-email></strong>
+              </div>
+
+              <div class="student-meta-grid" aria-label="Parent account details">
+                <span>
+                  <small data-i18n="username">Username</small>
+                  <strong data-selected-parent-username></strong>
+                </span>
+                <span>
+                  <small data-i18n="registrationSource">Created from</small>
+                  <strong data-selected-parent-source></strong>
+                </span>
+                <span>
+                  <small data-i18n="registrationDevice">Device</small>
+                  <strong data-selected-parent-device></strong>
+                </span>
+                <span>
+                  <small data-i18n="registrationIp">IP address</small>
+                  <strong data-selected-parent-ip></strong>
+                </span>
+              </div>
+
+              <div class="record-form verification-form">
+                <h3 data-i18n="parentVerification">Parent verification</h3>
+                <p class="panel-note" data-i18n="parentVerificationText">Approve the parent account, then approve each child connection before records appear.</p>
+                <div class="verification-actions">
+                  <button class="portal-button primary" type="button" data-approve-parent data-i18n="approveParent">Approve parent</button>
+                  <button class="portal-button secondary danger" type="button" data-decline-parent data-i18n="declineParent">Decline parent</button>
+                </div>
+                <p class="form-status" data-parent-status-message aria-live="polite"></p>
+              </div>
+
+              <div class="records-view">
+                <h3 data-i18n="linkedChildren">Linked children</h3>
+                <div class="summary-records parent-link-list" data-parent-child-links></div>
+              </div>
             </section>
 
             <section class="portal-panel student-editor" data-student-editor hidden>

@@ -43,6 +43,7 @@ const translations = {
     students: "Students",
     classes: "Classes",
     administrators: "Administrators",
+    parents: "Parents",
     addAdministrator: "Manage administrators",
     teachers: "Teachers",
     userManagementEyebrow: "Accounts overview",
@@ -53,6 +54,7 @@ const translations = {
     allUsers: "All",
     active: "Active",
     pending: "Pending",
+    declined: "Declined",
     user: "User",
     role: "Role",
     action: "Action",
@@ -61,6 +63,21 @@ const translations = {
     noAction: "No action",
     noUserResults: "No users match this search.",
     studentApproved: "Student approved.",
+    parentRecord: "Parent record",
+    parentVerification: "Parent verification",
+    parentVerificationText: "Approve the parent account, then approve each child connection before records appear.",
+    approveParent: "Approve parent",
+    declineParent: "Decline parent",
+    parentApproved: "Parent approved.",
+    parentDeclined: "Parent declined.",
+    linkedChildren: "Linked children",
+    approveChild: "Approve child",
+    declineChild: "Decline child",
+    childLinkApproved: "Child link approved.",
+    childLinkDeclined: "Child link declined.",
+    noParents: "No parent accounts yet.",
+    noLinkedChildren: "No child links requested yet.",
+    username: "Username",
     addTeacher: "Add teacher",
     newTeacher: "Create teacher account",
     teacherText: "Choose each class and subject this teacher is permitted to teach. Homework subjects are fixed by these assignments.",
@@ -186,6 +203,7 @@ const translations = {
     allUsers: "All",
     active: "Active",
     pending: "Pending",
+    declined: "Declined",
     user: "User",
     role: "Role",
     action: "Action",
@@ -194,6 +212,21 @@ const translations = {
     noAction: "No action",
     noUserResults: "No users match this search.",
     studentApproved: "Student approved.",
+    parentRecord: "Parent record",
+    parentVerification: "Parent verification",
+    parentVerificationText: "Approve the parent account, then approve each child connection before records appear.",
+    approveParent: "Approve parent",
+    declineParent: "Decline parent",
+    parentApproved: "Parent approved.",
+    parentDeclined: "Parent declined.",
+    linkedChildren: "Linked children",
+    approveChild: "Approve child",
+    declineChild: "Decline child",
+    childLinkApproved: "Child link approved.",
+    childLinkDeclined: "Child link declined.",
+    noParents: "No parent accounts yet.",
+    noLinkedChildren: "No child links requested yet.",
+    username: "Username",
     addTeacher: "إضافة معلم",
     newTeacher: "إنشاء حساب معلم",
     teacherText: "اختر كل شعبة ومادة يسمح لهذا المعلم بتدريسها. تكون مادة الواجب محددة حسب هذه التعيينات.",
@@ -238,6 +271,7 @@ const translations = {
     students: "الطلاب",
     classes: "الصفوف",
     administrators: "الإداريون",
+    parents: "أولياء الأمور",
     addAdministrator: "إدارة الإداريين",
     newAdministrator: "إنشاء حساب إداري",
     newAdminText: "يصدر رقم إداري جديد تلقائيا. أعط الرقم وكلمة المرور لذلك الموظف بشكل خاص.",
@@ -374,8 +408,10 @@ let students = [];
 let classes = [];
 let administrators = [];
 let teachers = [];
+let parents = [];
 let studentDetails = null;
 let classDetails = null;
+let parentDetails = null;
 let userStatusFilter = "all";
 
 const text = (key) => translations[language][key] || translations.en[key] || key;
@@ -439,6 +475,9 @@ function applyLanguage(nextLanguage) {
   if (classDetails) {
     renderClass(classDetails);
   }
+  if (parentDetails) {
+    renderParent(parentDetails);
+  }
   try {
     localStorage.setItem("sss-language", language);
   } catch {
@@ -501,6 +540,7 @@ function updateAdminSummary() {
   setAdminSummary("[data-admin-total-students]", students.length);
   setAdminSummary("[data-admin-total-classes]", classes.length);
   setAdminSummary("[data-admin-total-teachers]", teachers.length);
+  setAdminSummary("[data-admin-total-parents]", parents.length);
   setAdminSummary("[data-admin-total-admins]", administrators.length);
 }
 
@@ -524,13 +564,15 @@ function renderLists() {
   const classList = document.querySelector("[data-class-list]");
   const adminList = document.querySelector("[data-admin-list]");
   const teacherList = document.querySelector("[data-teacher-list]");
-  if (!studentList || !classList || !adminList || !teacherList) {
+  const parentList = document.querySelector("[data-parent-list]");
+  if (!studentList || !classList || !adminList || !teacherList || !parentList) {
     return;
   }
   studentList.replaceChildren();
   classList.replaceChildren();
   adminList.replaceChildren();
   teacherList.replaceChildren();
+  parentList.replaceChildren();
   if (!students.length) {
     studentList.textContent = text("emptyStudents");
   }
@@ -554,6 +596,19 @@ function renderLists() {
       `${group.memberCount} ${text("members")}`,
       () => loadClass(group.id),
       classDetails && classDetails.class.id === group.id
+    ));
+  });
+  if (!parents.length) {
+    parentList.textContent = text("noParents");
+  }
+  parents.forEach((parent) => {
+    const linked = (parent.children || []).length;
+    const status = parent.status === "active" ? text("active") : parent.status === "declined" ? "Declined" : text("pending");
+    parentList.appendChild(createListButton(
+      parent.name,
+      `${parent.parentId} - ${status} - ${linked} ${text("students")}`,
+      () => openParentEditor(parent.parentId),
+      parentDetails && parentDetails.parentId === parent.parentId
     ));
   });
   administrators.forEach((account) => {
@@ -587,7 +642,8 @@ function userRoleLabel(role) {
   const labels = {
     student: text("students"),
     teacher: text("teachers"),
-    admin: text("administrators")
+    admin: text("administrators"),
+    parent: text("parents")
   };
   return labels[role] || role;
 }
@@ -624,6 +680,23 @@ function allUserRows() {
       source: "-",
       searchText: `${teacher.name} ${teacher.teacherId} teacher active`
     })),
+    ...parents.map((parent) => {
+      const linked = (parent.children || []).length;
+      const pendingLinks = (parent.children || []).filter((child) => child.status === "pending").length;
+      const status = parent.status === "active" ? "active" : parent.status === "declined" ? "declined" : "pending";
+      return {
+        role: "parent",
+        id: parent.parentId,
+        name: parent.name,
+        status,
+        statusLabel: status === "active" ? text("active") : status === "pending" ? text("pending") : "Declined",
+        email: parent.email || parent.emailHint || "-",
+        detail: `${linked} ${text("students")}${pendingLinks ? `, ${pendingLinks} ${text("pending")}` : ""}`,
+        source: registrationSourceLabel(parent.registrationSource),
+        searchText: `${parent.name} ${parent.parentId} ${parent.email || ""} ${parent.username || ""} parent ${status} ${parent.registrationSource || ""} ${parent.registrationDevice || ""}`,
+        parent
+      };
+    }),
     ...administrators.map((account) => ({
       role: "admin",
       id: account.adminId,
@@ -695,6 +768,19 @@ function renderUserManagement() {
         }
       });
       action.appendChild(button);
+    } else if (row.role === "parent") {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = row.status === "pending" ? "table-action approve" : "table-action";
+      button.textContent = row.status === "pending" ? text("approve") : text("openRecord");
+      button.addEventListener("click", () => {
+        if (row.status === "pending") {
+          withButtonFeedback(button, () => approveParentFromTable(row.parent));
+        } else {
+          withButtonFeedback(button, () => openParentEditor(row.id));
+        }
+      });
+      action.appendChild(button);
     } else {
       const label = document.createElement("span");
       label.className = "table-action muted";
@@ -729,6 +815,20 @@ async function approveStudentFromTable(student) {
   }
 }
 
+async function approveParentFromTable(parent) {
+  const status = document.querySelector("[data-user-management-status]");
+  try {
+    await api("/api/admin/parents/approve", {
+      method: "POST",
+      body: JSON.stringify({ parentId: parent.parentId })
+    });
+    status.textContent = text("parentApproved");
+    await loadLists();
+  } catch (error) {
+    status.textContent = errorText(error);
+  }
+}
+
 function recordArticle(title, details) {
   const article = document.createElement("article");
   const heading = document.createElement("strong");
@@ -745,13 +845,78 @@ function registrationSourceLabel(source) {
   return text("unknown");
 }
 
-function renderStudent(result) {
-  studentDetails = result;
+function renderParent(parent) {
+  parentDetails = parent;
+  studentDetails = null;
   classDetails = null;
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-admin-editor]").hidden = true;
   document.querySelector("[data-teacher-editor]").hidden = true;
   document.querySelector("[data-class-editor]").hidden = true;
+  document.querySelector("[data-student-editor]").hidden = true;
+  document.querySelector("[data-parent-editor]").hidden = false;
+  document.querySelector("[data-selected-parent-name]").textContent = parent.name;
+  document.querySelector("[data-selected-parent-id]").textContent = parent.parentId;
+  document.querySelector("[data-selected-parent-status]").textContent =
+    parent.status === "active" ? text("active") : parent.status === "pending" ? text("pending") : "Declined";
+  document.querySelector("[data-selected-parent-email]").textContent = parent.email || parent.emailHint || text("unknown");
+  document.querySelector("[data-selected-parent-username]").textContent = parent.username || "-";
+  document.querySelector("[data-selected-parent-source]").textContent = registrationSourceLabel(parent.registrationSource);
+  document.querySelector("[data-selected-parent-device]").textContent = parent.registrationDevice || parent.registrationUserAgent || text("unknown");
+  document.querySelector("[data-selected-parent-ip]").textContent = parent.registrationIp || text("unknown");
+  document.querySelector("[data-approve-parent]").hidden = parent.status === "active";
+  document.querySelector("[data-decline-parent]").hidden = parent.status === "declined";
+  document.querySelector("[data-parent-status-message]").textContent = "";
+
+  const links = document.querySelector("[data-parent-child-links]");
+  links.replaceChildren();
+  (parent.children || []).forEach((link) => {
+    const article = document.createElement("article");
+    article.className = "parent-link-row";
+    const details = document.createElement("div");
+    const title = document.createElement("strong");
+    const meta = document.createElement("p");
+    const badge = document.createElement("span");
+    const actions = document.createElement("div");
+    title.textContent = link.student.name;
+    meta.textContent = `${link.student.studentId} - ${link.student.className || link.student.requestedClassName || text("noClass")} - ${link.relationship || "Parent"}`;
+    badge.className = `status-pill ${link.status}`;
+    badge.textContent = link.status === "approved" ? text("approved") : link.status === "pending" ? text("pending") : "Declined";
+    details.append(title, meta, badge);
+    if (link.status !== "approved") {
+      const approve = document.createElement("button");
+      approve.type = "button";
+      approve.className = "table-action approve";
+      approve.textContent = text("approveChild");
+      approve.addEventListener("click", () => withButtonFeedback(approve, () => updateParentChildLink(link.linkId, "approve")));
+      actions.appendChild(approve);
+    }
+    if (link.status !== "declined") {
+      const decline = document.createElement("button");
+      decline.type = "button";
+      decline.className = "table-action";
+      decline.textContent = text("declineChild");
+      decline.addEventListener("click", () => withButtonFeedback(decline, () => updateParentChildLink(link.linkId, "decline")));
+      actions.appendChild(decline);
+    }
+    article.append(details, actions);
+    links.appendChild(article);
+  });
+  if (!links.childNodes.length) {
+    links.textContent = text("noLinkedChildren");
+  }
+  renderLists();
+}
+
+function renderStudent(result) {
+  studentDetails = result;
+  classDetails = null;
+  parentDetails = null;
+  document.querySelector("[data-placeholder]").hidden = true;
+  document.querySelector("[data-admin-editor]").hidden = true;
+  document.querySelector("[data-teacher-editor]").hidden = true;
+  document.querySelector("[data-class-editor]").hidden = true;
+  document.querySelector("[data-parent-editor]").hidden = true;
   document.querySelector("[data-student-editor]").hidden = false;
   const student = result.student;
   document.querySelector("[data-selected-student-name]").textContent = student.name;
@@ -796,10 +961,12 @@ function renderStudent(result) {
 function renderClass(result) {
   classDetails = result;
   studentDetails = null;
+  parentDetails = null;
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-admin-editor]").hidden = true;
   document.querySelector("[data-teacher-editor]").hidden = true;
   document.querySelector("[data-student-editor]").hidden = true;
+  document.querySelector("[data-parent-editor]").hidden = true;
   document.querySelector("[data-class-editor]").hidden = false;
   document.querySelector("[data-selected-class-name]").textContent = className(result.class);
   const memberForm = document.querySelector("[data-class-member-form]");
@@ -849,16 +1016,18 @@ function renderClass(result) {
 }
 
 async function loadLists() {
-  const [studentResult, classResult, administratorResult, teacherResult] = await Promise.all([
+  const [studentResult, classResult, administratorResult, teacherResult, parentResult] = await Promise.all([
     api("/api/admin/students"),
     api("/api/admin/classes"),
     api("/api/admin/accounts"),
-    api("/api/admin/teachers")
+    api("/api/admin/teachers"),
+    api("/api/admin/parents")
   ]);
   students = studentResult.students;
   classes = classResult.classes;
   administrators = administratorResult.administrators;
   teachers = teacherResult.teachers;
+  parents = parentResult.parents || [];
   refreshAssignmentRows();
   renderLists();
 }
@@ -871,6 +1040,53 @@ async function loadStudent(studentId) {
 async function loadClass(classId) {
   const result = await api(`/api/admin/class?classId=${encodeURIComponent(classId)}`);
   renderClass(result);
+}
+
+function openParentEditor(parentId) {
+  const parent = parents.find((item) => item.parentId === parentId);
+  if (parent) {
+    renderParent(parent);
+  }
+}
+
+async function updateParentStatus(status) {
+  if (!parentDetails) {
+    return;
+  }
+  const endpoint = status === "active" ? "/api/admin/parents/approve" : "/api/admin/parents/decline";
+  const message = document.querySelector("[data-parent-status-message]");
+  try {
+    await api(endpoint, {
+      method: "POST",
+      body: JSON.stringify({ parentId: parentDetails.parentId })
+    });
+    message.textContent = status === "active" ? text("parentApproved") : text("parentDeclined");
+    await loadLists();
+    openParentEditor(parentDetails.parentId);
+  } catch (error) {
+    message.textContent = errorText(error);
+  }
+}
+
+async function updateParentChildLink(linkId, action) {
+  const endpoint = action === "approve"
+    ? "/api/admin/parents/children/approve"
+    : "/api/admin/parents/children/decline";
+  const message = document.querySelector("[data-parent-status-message]");
+  try {
+    await api(endpoint, {
+      method: "POST",
+      body: JSON.stringify({ linkId })
+    });
+    message.textContent = action === "approve" ? text("childLinkApproved") : text("childLinkDeclined");
+    const parentId = parentDetails?.parentId;
+    await loadLists();
+    if (parentId) {
+      openParentEditor(parentId);
+    }
+  } catch (error) {
+    message.textContent = errorText(error);
+  }
 }
 
 async function removeClassMember(studentId, classId, button) {
@@ -897,10 +1113,12 @@ async function openDashboard() {
 function openAdminEditor() {
   studentDetails = null;
   classDetails = null;
+  parentDetails = null;
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-student-editor]").hidden = true;
   document.querySelector("[data-class-editor]").hidden = true;
   document.querySelector("[data-teacher-editor]").hidden = true;
+  document.querySelector("[data-parent-editor]").hidden = true;
   document.querySelector("[data-admin-editor]").hidden = false;
   document.querySelector("[data-admin-account-status]").textContent = "";
   document.querySelector("[data-admin-password-status]").textContent = "";
@@ -955,10 +1173,12 @@ function refreshAssignmentRows() {
 function openTeacherEditor() {
   studentDetails = null;
   classDetails = null;
+  parentDetails = null;
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-student-editor]").hidden = true;
   document.querySelector("[data-class-editor]").hidden = true;
   document.querySelector("[data-admin-editor]").hidden = true;
+  document.querySelector("[data-parent-editor]").hidden = true;
   document.querySelector("[data-teacher-editor]").hidden = false;
   const form = document.querySelector("[data-teacher-account-form]");
   form.reset();
@@ -1016,6 +1236,12 @@ loginForm.addEventListener("submit", async (event) => {
 document.querySelector("[data-new-admin]").addEventListener("click", openAdminEditor);
 document.querySelector("[data-new-teacher]").addEventListener("click", openTeacherEditor);
 document.querySelector("[data-add-assignment]").addEventListener("click", () => createAssignmentRow());
+document.querySelector("[data-approve-parent]")?.addEventListener("click", (event) => {
+  withButtonFeedback(event.currentTarget, () => updateParentStatus("active"));
+});
+document.querySelector("[data-decline-parent]")?.addEventListener("click", (event) => {
+  withButtonFeedback(event.currentTarget, () => updateParentStatus("declined"));
+});
 userSearchInput?.addEventListener("input", renderUserManagement);
 document.querySelectorAll("[data-user-status-filter]").forEach((button) => {
   button.addEventListener("click", () => {

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#12324A">
+    <title>Success Story School | Parent Portal</title>
+    <link rel="icon" href="/assets/success-story-mark.png?v=3" type="image/png">
+    <link rel="stylesheet" href="/portal.css?v=20260624-parent-base">
+    <link rel="stylesheet" href="/parent.css?v=20260701-parent-portal">
+  </head>
+  <body class="parent-page">
+    <header class="parent-topbar">
+      <a class="parent-brand" href="/" aria-label="Success Story School home">
+        <img src="/assets/success-story-logo.jpg?v=4" alt="">
+        <span>
+          <strong>Success Story</strong>
+          <small>Parent Portal</small>
+        </span>
+      </a>
+      <nav aria-label="Parent portal navigation">
+        <a href="/">Website</a>
+        <a href="/student">Student</a>
+        <a href="/teacher">Teacher</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="parent-auth-shell" data-auth-view>
+        <div class="parent-auth-copy">
+          <span class="eyebrow">Family access</span>
+          <h1>Everything for your children in one clear place.</h1>
+          <p>
+            Parents can follow billing, grades, attendance, homework, announcements, and transportation after
+            school staff approve each child connection.
+          </p>
+          <div class="parent-auth-points" aria-label="Parent portal benefits">
+            <span>Multiple children</span>
+            <span>Billing overview</span>
+            <span>School records</span>
+          </div>
+        </div>
+
+        <section class="parent-auth-card" aria-label="Parent sign in and registration">
+          <div class="parent-tabs" role="tablist" aria-label="Parent portal mode">
+            <button type="button" class="active" data-auth-tab="login" role="tab" aria-selected="true">Sign in</button>
+            <button type="button" data-auth-tab="register" role="tab" aria-selected="false">Create account</button>
+          </div>
+
+          <form data-parent-login-form class="parent-form">
+            <h2>Parent sign in</h2>
+            <p>Use your email address or username. No parent ID needed.</p>
+            <label>
+              <span>Email or username</span>
+              <input name="identity" autocomplete="username" placeholder="parent@example.com" required>
+            </label>
+            <label>
+              <span>Password</span>
+              <input name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+            </label>
+            <button type="submit" class="parent-primary">Sign in</button>
+          </form>
+
+          <form data-parent-register-form class="parent-form" hidden>
+            <h2>Create parent account</h2>
+            <p>Your account and child links stay pending until a school admin approves them.</p>
+            <label>
+              <span>Parent full name</span>
+              <input name="name" autocomplete="name" required>
+            </label>
+            <label>
+              <span>Email</span>
+              <input name="email" type="email" autocomplete="email" required>
+            </label>
+            <label>
+              <span>Username <small>optional</small></span>
+              <input name="username" autocomplete="username" placeholder="omar.parent">
+            </label>
+            <div class="parent-field-grid">
+              <label>
+                <span>Child student ID <small>optional</small></span>
+                <input name="studentId" placeholder="SSS-001" autocomplete="off">
+              </label>
+              <label>
+                <span>Relationship</span>
+                <select name="relationship">
+                  <option>Parent</option>
+                  <option>Mother</option>
+                  <option>Father</option>
+                  <option>Guardian</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              <span>Password</span>
+              <input name="password" type="password" autocomplete="new-password" required>
+            </label>
+            <label>
+              <span>Confirm password</span>
+              <input name="confirmPassword" type="password" autocomplete="new-password" required>
+            </label>
+            <button type="submit" class="parent-primary">Request account</button>
+          </form>
+
+          <p class="parent-message" data-auth-message role="status" aria-live="polite"></p>
+        </section>
+      </section>
+
+      <section class="parent-dashboard-shell" data-dashboard hidden>
+        <div class="parent-dashboard-hero">
+          <div>
+            <span class="eyebrow">Parent overview</span>
+            <h1 data-parent-name>Welcome</h1>
+            <p>Approved child records appear here as soon as school staff publish them.</p>
+          </div>
+          <button type="button" class="parent-ghost" data-logout>Sign out</button>
+        </div>
+
+        <section class="parent-metrics" aria-label="Family summary">
+          <article>
+            <span>Children</span>
+            <strong data-metric-children>0</strong>
+          </article>
+          <article>
+            <span>Balance due</span>
+            <strong data-metric-due>0 JOD</strong>
+          </article>
+          <article>
+            <span>Paid</span>
+            <strong data-metric-paid>0 JOD</strong>
+          </article>
+          <article>
+            <span>Grade average</span>
+            <strong data-metric-average>-</strong>
+          </article>
+        </section>
+
+        <section class="parent-dashboard-grid">
+          <aside class="parent-panel parent-children-panel">
+            <div class="panel-heading">
+              <h2>Children</h2>
+              <span data-child-count>0 linked</span>
+            </div>
+            <div class="parent-child-list" data-child-list></div>
+            <form class="parent-add-child" data-add-child-form>
+              <h3>Add another child</h3>
+              <label>
+                <span>Student ID</span>
+                <input name="studentId" placeholder="SSS-001" autocomplete="off" required>
+              </label>
+              <label>
+                <span>Relationship</span>
+                <select name="relationship">
+                  <option>Parent</option>
+                  <option>Mother</option>
+                  <option>Father</option>
+                  <option>Guardian</option>
+                </select>
+              </label>
+              <button type="submit" class="parent-secondary">Send approval request</button>
+              <p data-add-child-message role="status" aria-live="polite"></p>
+            </form>
+          </aside>
+
+          <section class="parent-records" data-records>
+            <article class="parent-panel parent-empty">
+              <h2>No child selected</h2>
+              <p>Add a child student ID and wait for admin approval to see school records.</p>
+            </article>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="/parent.js?v=20260701-parent-portal" defer></script>
+  </body>
+</html>

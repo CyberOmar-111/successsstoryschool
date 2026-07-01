@@ -85,6 +85,9 @@ STATIC_FILES = {
     "/admin.html",
     "/admin.css",
     "/admin.js",
+    "/parent.html",
+    "/parent.css",
+    "/parent.js",
     "/teacher.html",
     "/teacher.css",
     "/teacher.js",
@@ -100,6 +103,7 @@ STATIC_FILES = {
 CLEAN_ROUTES = {
     "/student": "/portal.html",
     "/teacher": "/teacher.html",
+    "/parent": "/parent.html",
     "/office-access": "/admin.html",
     "/home": "/index.html",
 }
@@ -107,6 +111,7 @@ LEGACY_ROUTE_REDIRECTS = {
     "/index.html": "/",
     "/portal.html": "/student",
     "/teacher.html": "/teacher",
+    "/parent.html": "/parent",
     "/admin.html": "/office-access",
 }
 CONTENT_TYPES = {
@@ -133,18 +138,23 @@ CONTENT_SECURITY_POLICY = (
 ROLE_STUDENT = "Student"
 ROLE_TEACHER = "Teacher"
 ROLE_ADMIN = "Admin"
+ROLE_PARENT = "Parent"
 ROLE_ALIASES = {
     "student": ROLE_STUDENT,
     "teacher": ROLE_TEACHER,
     "admin": ROLE_ADMIN,
+    "parent": ROLE_PARENT,
 }
 RBAC_PERMISSIONS = {
     "role:student": {ROLE_STUDENT},
     "role:teacher": {ROLE_TEACHER},
     "role:admin": {ROLE_ADMIN},
+    "role:parent": {ROLE_PARENT},
     "student:read_portal": {ROLE_STUDENT},
     "student:update_profile": {ROLE_STUDENT},
     "student:dismiss_post": {ROLE_STUDENT},
+    "parent:read_dashboard": {ROLE_PARENT},
+    "parent:manage_children": {ROLE_PARENT},
     "teacher:read_assignments": {ROLE_TEACHER},
     "teacher:read_class": {ROLE_TEACHER},
     "teacher:post_homework": {ROLE_TEACHER},
@@ -168,10 +178,12 @@ ROUTE_PERMISSIONS = {
         "/api/admin/dashboard": "admin:read_dashboard",
         "/api/admin/students": "admin:read_students",
         "/api/admin/accounts": "admin:read_accounts",
+        "/api/admin/parents": "admin:read_accounts",
         "/api/admin/teachers": "admin:read_teachers",
         "/api/admin/classes": "admin:read_classes",
         "/api/admin/student": "admin:read_students",
         "/api/admin/class": "admin:read_classes",
+        "/api/parent/dashboard": "parent:read_dashboard",
         "/api/teacher/assignments": "teacher:read_assignments",
         "/api/teacher/class": "teacher:read_class",
     },
@@ -179,6 +191,10 @@ ROUTE_PERMISSIONS = {
         "/api/portal/profile": "student:update_profile",
         "/api/portal/dismiss": "student:dismiss_post",
         "/api/admin/accounts": "admin:manage_accounts",
+        "/api/admin/parents/approve": "admin:manage_accounts",
+        "/api/admin/parents/decline": "admin:manage_accounts",
+        "/api/admin/parents/children/approve": "admin:manage_accounts",
+        "/api/admin/parents/children/decline": "admin:manage_accounts",
         "/api/admin/change-password": "admin:manage_accounts",
         "/api/admin/teachers": "admin:manage_accounts",
         "/api/admin/record": "admin:write_records",
@@ -194,6 +210,7 @@ ROUTE_PERMISSIONS = {
         "/api/teacher/post-delete": "teacher:delete_posts",
         "/api/teacher/grades": "teacher:post_grades",
         "/api/teacher/attendance": "teacher:post_attendance",
+        "/api/parent/children": "parent:manage_children",
     },
 }
 ERROR_PAGE_COPY = {
@@ -294,6 +311,7 @@ def initialize_sqlite_database():
             INSERT OR IGNORE INTO sequences (name, value) VALUES ('student_id', 0);
             INSERT OR IGNORE INTO sequences (name, value) VALUES ('admin_id', 0);
             INSERT OR IGNORE INTO sequences (name, value) VALUES ('teacher_id', 0);
+            INSERT OR IGNORE INTO sequences (name, value) VALUES ('parent_id', 0);
 
             CREATE TABLE IF NOT EXISTS classes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -379,6 +397,39 @@ def initialize_sqlite_database():
                 token_hash TEXT PRIMARY KEY,
                 teacher_id TEXT NOT NULL REFERENCES teachers(teacher_id) ON DELETE CASCADE,
                 expires_at INTEGER NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS parents (
+                parent_id TEXT PRIMARY KEY,
+                full_name TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                username TEXT UNIQUE,
+                password_salt BLOB NOT NULL,
+                password_hash BLOB NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'declined')),
+                registration_source TEXT,
+                registration_device TEXT,
+                registration_user_agent TEXT,
+                registration_ip TEXT,
+                approved_at TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS parent_sessions (
+                token_hash TEXT PRIMARY KEY,
+                parent_id TEXT NOT NULL REFERENCES parents(parent_id) ON DELETE CASCADE,
+                expires_at INTEGER NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS parent_students (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                parent_id TEXT NOT NULL REFERENCES parents(parent_id) ON DELETE CASCADE,
+                student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
+                relationship TEXT,
+                status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'declined')),
+                approved_at TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (parent_id, student_id)
             );
 
             CREATE TABLE IF NOT EXISTS teacher_assignments (
@@ -538,9 +589,24 @@ def initialize_sqlite_database():
             WHERE name = 'teacher_id'
             """
         )
+        connection.execute(
+            """
+            UPDATE sequences
+            SET value = MAX(
+                value,
+                COALESCE(
+                    (SELECT MAX(CAST(SUBSTR(parent_id, 5) AS INTEGER))
+                     FROM parents WHERE parent_id GLOB 'PAR-[0-9]*'),
+                    0
+                )
+            )
+            WHERE name = 'parent_id'
+            """
+        )
         connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM admin_sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM teacher_sessions WHERE expires_at <= ?", (int(time.time()),))
+        connection.execute("DELETE FROM parent_sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM mfa_challenges WHERE expires_at <= ?", (int(time.time()),))
 
 
@@ -649,6 +715,42 @@ def initialize_postgres_database():
         )
         """,
         """
+        CREATE TABLE IF NOT EXISTS parents (
+            parent_id TEXT PRIMARY KEY,
+            full_name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            username TEXT UNIQUE,
+            password_salt BYTEA NOT NULL,
+            password_hash BYTEA NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'declined')),
+            registration_source TEXT,
+            registration_device TEXT,
+            registration_user_agent TEXT,
+            registration_ip TEXT,
+            approved_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS parent_sessions (
+            token_hash TEXT PRIMARY KEY,
+            parent_id TEXT NOT NULL REFERENCES parents(parent_id) ON DELETE CASCADE,
+            expires_at INTEGER NOT NULL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS parent_students (
+            id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+            parent_id TEXT NOT NULL REFERENCES parents(parent_id) ON DELETE CASCADE,
+            student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
+            relationship TEXT,
+            status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'declined')),
+            approved_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT),
+            UNIQUE (parent_id, student_id)
+        )
+        """,
+        """
         CREATE TABLE IF NOT EXISTS teacher_assignments (
             id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
             teacher_id TEXT NOT NULL REFERENCES teachers(teacher_id) ON DELETE CASCADE,
@@ -737,7 +839,7 @@ def initialize_postgres_database():
         for statement in schema:
             connection.execute(statement)
         connection.execute(
-            "INSERT INTO sequences (name, value) VALUES ('student_id', 0), ('admin_id', 0), ('teacher_id', 0) "
+            "INSERT INTO sequences (name, value) VALUES ('student_id', 0), ('admin_id', 0), ('teacher_id', 0), ('parent_id', 0) "
             "ON CONFLICT (name) DO NOTHING"
         )
         connection.executemany(
@@ -760,6 +862,7 @@ def initialize_postgres_database():
         connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM admin_sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM teacher_sessions WHERE expires_at <= ?", (int(time.time()),))
+        connection.execute("DELETE FROM parent_sessions WHERE expires_at <= ?", (int(time.time()),))
         connection.execute("DELETE FROM mfa_challenges WHERE expires_at <= ?", (int(time.time()),))
 
 
@@ -880,6 +983,15 @@ def normalize_email(value):
     if not re.fullmatch(r"[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+", email):
         return None
     return email
+
+
+def normalize_username(value):
+    username = clean_text(value, 40).lower()
+    if not username:
+        return None
+    if not re.fullmatch(r"[a-z0-9][a-z0-9_.-]{2,39}", username):
+        return None
+    return username
 
 
 def mask_email(email):
@@ -1019,6 +1131,27 @@ def public_teacher(row):
         "name": row["full_name"],
         "createdAt": row["created_at"],
     }
+
+
+def public_parent(row, include_private=False):
+    payload = {
+        "parentId": row["parent_id"],
+        "name": row["full_name"],
+        "email": row["email"],
+        "emailHint": mask_email(row["email"]),
+        "username": row["username"] if "username" in row.keys() else None,
+        "status": row["status"],
+        "createdAt": row["created_at"],
+    }
+    if include_private:
+        payload.update({
+            "registrationSource": row["registration_source"] if "registration_source" in row.keys() else None,
+            "registrationDevice": row["registration_device"] if "registration_device" in row.keys() else None,
+            "registrationUserAgent": row["registration_user_agent"] if "registration_user_agent" in row.keys() else None,
+            "registrationIp": row["registration_ip"] if "registration_ip" in row.keys() else None,
+            "approvedAt": row["approved_at"] if "approved_at" in row.keys() else None,
+        })
+    return payload
 
 
 def public_teacher_assignment(row):
@@ -1275,6 +1408,25 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 (token_hash, now),
             ).fetchone()
 
+    def authenticated_parent(self):
+        token = self.cookie_token("sss_parent_session")
+        if not token:
+            return None
+        token_hash = hashlib.sha256(token.encode("ascii")).hexdigest()
+        now = int(time.time())
+        with db_connection() as connection:
+            connection.execute("DELETE FROM parent_sessions WHERE expires_at <= ?", (now,))
+            return connection.execute(
+                """
+                SELECT parents.*
+                FROM parent_sessions
+                JOIN parents ON parents.parent_id = parent_sessions.parent_id
+                WHERE parent_sessions.token_hash = ? AND parent_sessions.expires_at > ?
+                  AND parents.status = 'active'
+                """,
+                (token_hash, now),
+            ).fetchone()
+
     def authenticated_for_role(self, role):
         normalized = normalize_role(role)
         if normalized == ROLE_STUDENT:
@@ -1283,10 +1435,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             return self.authenticated_teacher()
         if normalized == ROLE_ADMIN:
             return self.authenticated_admin()
+        if normalized == ROLE_PARENT:
+            return self.authenticated_parent()
         return None
 
     def authenticated_principal(self):
-        for role in (ROLE_ADMIN, ROLE_TEACHER, ROLE_STUDENT):
+        for role in (ROLE_ADMIN, ROLE_TEACHER, ROLE_PARENT, ROLE_STUDENT):
             account = self.authenticated_for_role(role)
             if account:
                 return {"role": role, "account": account}
@@ -1305,7 +1459,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         if not allowed_roles:
             self.send_json(500, {"code": "rbac_missing", "error": "Route permission is not configured."})
             return None
-        for role in (ROLE_ADMIN, ROLE_TEACHER, ROLE_STUDENT):
+        for role in (ROLE_ADMIN, ROLE_TEACHER, ROLE_PARENT, ROLE_STUDENT):
             if role not in allowed_roles:
                 continue
             account = self.authenticated_for_role(role)
@@ -1336,6 +1490,9 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
 
     def require_teacher(self):
         return self.require_role(ROLE_TEACHER)
+
+    def require_parent(self):
+        return self.require_role(ROLE_PARENT)
 
     def require_student(self):
         return self.require_role(ROLE_STUDENT)
@@ -1423,6 +1580,86 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             ]
         return records, class_data
 
+    def parent_children_payload(self, connection, parent_id):
+        rows = connection.execute(
+            """
+            SELECT parent_students.id AS link_id,
+                   parent_students.relationship AS parent_relationship,
+                   parent_students.status AS parent_link_status,
+                   parent_students.approved_at AS parent_link_approved_at,
+                   parent_students.created_at AS parent_link_created_at,
+                   students.*, classes.grade AS class_grade, classes.section AS class_section,
+                   requested_classes.grade AS requested_class_grade,
+                   requested_classes.section AS requested_class_section
+            FROM parent_students
+            JOIN students ON students.student_id = parent_students.student_id
+            LEFT JOIN classes ON classes.id = students.class_id
+            LEFT JOIN classes AS requested_classes ON requested_classes.id = students.requested_class_id
+            WHERE parent_students.parent_id = ?
+            ORDER BY parent_students.created_at DESC, students.full_name
+            """,
+            (parent_id,),
+        ).fetchall()
+        children = []
+        empty_records = {"grades": [], "attendance": [], "homework": [], "announcements": [], "fees": []}
+        for row in rows:
+            link_approved = row["parent_link_status"] == "approved" and bool(row["is_approved"])
+            records, class_data = self.portal_records(connection, row) if link_approved else (empty_records, None)
+            children.append({
+                "linkId": row["link_id"],
+                "relationship": row["parent_relationship"],
+                "status": row["parent_link_status"],
+                "approvedAt": row["parent_link_approved_at"],
+                "createdAt": row["parent_link_created_at"],
+                "student": public_student(row),
+                "records": records,
+                "class": class_data,
+                "canViewRecords": link_approved,
+            })
+        return children
+
+    def admin_parent_payloads(self, connection):
+        parent_rows = connection.execute(
+            "SELECT * FROM parents ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'active' THEN 1 ELSE 2 END, created_at DESC"
+        ).fetchall()
+        payloads = {
+            parent["parent_id"]: {**public_parent(parent, include_private=True), "children": []}
+            for parent in parent_rows
+        }
+        if not payloads:
+            return []
+        link_rows = connection.execute(
+            """
+            SELECT parent_students.id AS link_id,
+                   parent_students.parent_id AS link_parent_id,
+                   parent_students.relationship AS parent_relationship,
+                   parent_students.status AS parent_link_status,
+                   parent_students.approved_at AS parent_link_approved_at,
+                   parent_students.created_at AS parent_link_created_at,
+                   students.*, classes.grade AS class_grade, classes.section AS class_section,
+                   requested_classes.grade AS requested_class_grade,
+                   requested_classes.section AS requested_class_section
+            FROM parent_students
+            JOIN students ON students.student_id = parent_students.student_id
+            LEFT JOIN classes ON classes.id = students.class_id
+            LEFT JOIN classes AS requested_classes ON requested_classes.id = students.requested_class_id
+            ORDER BY parent_students.created_at DESC
+            """
+        ).fetchall()
+        for row in link_rows:
+            parent = payloads.get(row["link_parent_id"])
+            if not parent:
+                continue
+            parent["children"].append({
+                "linkId": row["link_id"],
+                "relationship": row["parent_relationship"],
+                "status": row["parent_link_status"],
+                "approvedAt": row["parent_link_approved_at"],
+                "createdAt": row["parent_link_created_at"],
+                "student": public_student(row, include_private=True),
+            })
+        return list(payloads.values())
+
     def do_GET(self):
         parsed_path, request_path = self.api_path()
         if not self.require_route_permission("GET", request_path):
@@ -1434,6 +1671,13 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 {"authenticated": bool(student), "user": public_student(student) if student else None},
             )
             return
+        if request_path == "/api/parent/session":
+            parent = self.authenticated_parent()
+            self.send_json(
+                200,
+                {"authenticated": bool(parent), "parent": public_parent(parent) if parent else None},
+            )
+            return
         if request_path == "/api/portal":
             student = self.require_student()
             if not student:
@@ -1441,6 +1685,14 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             with db_connection() as connection:
                 records, class_data = self.portal_records(connection, student)
             self.send_json(200, {"user": public_student(student), "records": records, "class": class_data})
+            return
+        if request_path == "/api/parent/dashboard":
+            parent = self.require_parent()
+            if not parent:
+                return
+            with db_connection() as connection:
+                children = self.parent_children_payload(connection, parent["parent_id"])
+            self.send_json(200, {"parent": public_parent(parent), "children": children})
             return
         if request_path == "/api/admin/setup-status":
             initialize_database()
@@ -1486,6 +1738,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     ORDER BY teacher_assignments.teacher_id, classes.grade DESC, classes.section, teacher_assignments.subject
                     """
                 ).fetchall()
+                parents = self.admin_parent_payloads(connection)
             by_teacher = {}
             for assignment in assignments:
                 by_teacher.setdefault(assignment["teacher_id"], []).append(public_teacher_assignment(assignment))
@@ -1501,6 +1754,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     {**public_teacher(teacher), "assignments": by_teacher.get(teacher["teacher_id"], [])}
                     for teacher in teachers
                 ],
+                "parents": parents,
             })
             return
         if request_path == "/api/admin/students":
@@ -1520,6 +1774,13 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     "SELECT admin_id, full_name, created_at FROM administrators ORDER BY CAST(SUBSTR(admin_id, 5) AS INTEGER)"
                 ).fetchall()
             self.send_json(200, {"administrators": [public_admin(account) for account in administrators]})
+            return
+        if request_path == "/api/admin/parents":
+            if not self.require_admin():
+                return
+            with db_connection() as connection:
+                parents = self.admin_parent_payloads(connection)
+            self.send_json(200, {"parents": parents})
             return
         if request_path == "/api/admin/teachers":
             if not self.require_admin():
@@ -1744,6 +2005,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         if request_path in {
             "/api/auth/register",
             "/api/auth/login",
+            "/api/parent/register",
+            "/api/parent/login",
             "/api/admin/setup",
             "/api/admin/login",
             "/api/teacher/login",
@@ -1765,6 +2028,14 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_mfa_verify(body, "student")
         elif request_path == "/api/auth/logout":
             self.handle_logout()
+        elif request_path == "/api/parent/register":
+            self.handle_parent_register(body)
+        elif request_path == "/api/parent/login":
+            self.handle_parent_login(body)
+        elif request_path == "/api/parent/logout":
+            self.handle_parent_logout()
+        elif request_path == "/api/parent/children":
+            self.handle_parent_child_request(body)
         elif request_path == "/api/portal/profile":
             self.handle_profile(body)
         elif request_path == "/api/portal/dismiss":
@@ -1777,6 +2048,14 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             self.handle_admin_logout()
         elif request_path == "/api/admin/accounts":
             self.handle_admin_account_create(body)
+        elif request_path == "/api/admin/parents/approve":
+            self.handle_admin_parent_status(body, "active")
+        elif request_path == "/api/admin/parents/decline":
+            self.handle_admin_parent_status(body, "declined")
+        elif request_path == "/api/admin/parents/children/approve":
+            self.handle_admin_parent_child_status(body, "approved")
+        elif request_path == "/api/admin/parents/children/decline":
+            self.handle_admin_parent_child_status(body, "declined")
         elif request_path == "/api/admin/change-password":
             self.handle_admin_password_change(body)
         elif request_path == "/api/admin/teachers":
@@ -1970,11 +2249,19 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 {"admin": {"adminId": account["admin_id"], "name": account["full_name"]}},
                 self.session_cookie("sss_admin_session", token, SESSION_TTL_SECONDS),
             )
-        connection.execute(
-            "INSERT INTO teacher_sessions (token_hash, teacher_id, expires_at) VALUES (?, ?, ?)",
-            (token_hash, account["teacher_id"], expires_at),
-        )
-        return {"teacher": public_teacher(account)}, self.session_cookie("sss_teacher_session", token, SESSION_TTL_SECONDS)
+        if account_type == "teacher":
+            connection.execute(
+                "INSERT INTO teacher_sessions (token_hash, teacher_id, expires_at) VALUES (?, ?, ?)",
+                (token_hash, account["teacher_id"], expires_at),
+            )
+            return {"teacher": public_teacher(account)}, self.session_cookie("sss_teacher_session", token, SESSION_TTL_SECONDS)
+        if account_type == "parent":
+            connection.execute(
+                "INSERT INTO parent_sessions (token_hash, parent_id, expires_at) VALUES (?, ?, ?)",
+                (token_hash, account["parent_id"], expires_at),
+            )
+            return {"parent": public_parent(account)}, self.session_cookie("sss_parent_session", token, SESSION_TTL_SECONDS)
+        raise ValueError(f"Unsupported account type: {account_type}")
 
     def account_email(self, account_id):
         with db_connection() as connection:
@@ -2160,6 +2447,221 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             {"ok": True},
             {"Set-Cookie": self.session_cookie("sss_session", "", 0)},
         )
+
+    def handle_parent_register(self, body):
+        name = clean_text(body.get("name"), 100)
+        email = normalize_email(body.get("email"))
+        username = normalize_username(body.get("username"))
+        password = str(body.get("password", ""))
+        student_id = clean_text(body.get("studentId") or body.get("childId"), 20).upper()
+        relationship = clean_text(body.get("relationship") or "Parent", 40)
+        registration_source = clean_text(body.get("registrationSource") or "web_portal", 40)
+        if registration_source not in {"web_portal", "ios_app"}:
+            registration_source = "web_portal"
+        registration_device = clean_text(body.get("registrationDevice") or "Unknown device", 160)
+        registration_user_agent = clean_text(self.headers.get("User-Agent", ""), 240)
+        registration_ip = clean_text(self.request_ip(), 64)
+        if len(name) < 2:
+            self.send_json(400, {"code": "name_required", "error": "Enter the parent's full name."})
+            return
+        if not email:
+            self.send_json(400, {"code": "email_rule", "error": "Enter a valid email address."})
+            return
+        if body.get("username") and not username:
+            self.send_json(400, {"code": "username_rule", "error": "Username must be 3-40 letters, numbers, dots, dashes, or underscores."})
+            return
+        if not valid_password(password):
+            self.send_json(
+                400,
+                {"code": "password_rule", "error": "Password must be 8-128 characters and include a letter and a number."},
+            )
+            return
+        if student_id and not re.fullmatch(r"SSS-\d{3}", student_id):
+            self.send_json(400, {"code": "student_id_rule", "error": "Enter a valid child student ID such as SSS-001."})
+            return
+        if not self.registration_allowed():
+            self.send_json(
+                429,
+                {"code": "register_limited", "error": "Too many account requests. Please try again later."},
+            )
+            return
+        salt = secrets.token_bytes(16)
+        hashed = password_hash(password, salt)
+        with db_connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            if connection.execute("SELECT 1 FROM parents WHERE LOWER(email) = ?", (email,)).fetchone():
+                connection.rollback()
+                self.send_json(409, {"code": "parent_exists", "error": "A parent account already exists for this email."})
+                return
+            if username and connection.execute("SELECT 1 FROM parents WHERE LOWER(username) = ?", (username,)).fetchone():
+                connection.rollback()
+                self.send_json(409, {"code": "username_exists", "error": "That username is already taken."})
+                return
+            if student_id and not connection.execute("SELECT 1 FROM students WHERE student_id = ?", (student_id,)).fetchone():
+                connection.rollback()
+                self.send_json(404, {"code": "student_not_found", "error": "Child student ID was not found."})
+                return
+            next_number = claim_sequence_number(connection, "parent_id")
+            if next_number > 999:
+                connection.rollback()
+                self.send_json(503, {"code": "id_capacity", "error": "Parent account capacity reached."})
+                return
+            parent_id = f"PAR-{next_number:03d}"
+            connection.execute(
+                """
+                INSERT INTO parents (
+                    parent_id, full_name, email, username, password_salt, password_hash,
+                    status, registration_source, registration_device, registration_user_agent, registration_ip
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)
+                """,
+                (
+                    parent_id, name, email, username, salt, hashed,
+                    registration_source, registration_device, registration_user_agent, registration_ip,
+                ),
+            )
+            if student_id:
+                connection.execute(
+                    """
+                    INSERT INTO parent_students (parent_id, student_id, relationship, status)
+                    VALUES (?, ?, ?, 'pending')
+                    """,
+                    (parent_id, student_id, relationship or "Parent"),
+                )
+            parent = connection.execute("SELECT * FROM parents WHERE parent_id = ?", (parent_id,)).fetchone()
+            connection.commit()
+        self.send_json(201, {"parent": public_parent(parent), "childLinkSubmitted": bool(student_id)})
+
+    def handle_parent_login(self, body):
+        identity = clean_text(body.get("identity") or body.get("email") or body.get("username"), 254).lower()
+        password = str(body.get("password", ""))
+        attempt_key = f"parent|{self.request_ip()}|{identity}"
+        retry_after = self.login_rate_status(attempt_key)
+        if retry_after:
+            self.send_json(
+                429,
+                {"code": "login_locked", "error": "Too many failed attempts.", "retryAfterSeconds": retry_after},
+                {"Retry-After": str(retry_after)},
+            )
+            return
+        with db_connection() as connection:
+            parent = connection.execute(
+                """
+                SELECT * FROM parents
+                WHERE LOWER(email) = ? OR LOWER(COALESCE(username, '')) = ?
+                """,
+                (identity, identity),
+            ).fetchone()
+        salt = parent["password_salt"] if parent else DUMMY_SALT
+        expected_hash = parent["password_hash"] if parent else DUMMY_PASSWORD_HASH
+        password_matches = bool(parent) and hmac.compare_digest(password_hash(password, salt), expected_hash)
+        if not identity or not password_matches:
+            blocked_until = self.record_failed_login(attempt_key)
+            code = "login_locked" if blocked_until else "invalid_login"
+            status = 429 if blocked_until else 401
+            self.send_json(status, {"code": code, "error": "Invalid email, username, or password."})
+            return
+        if parent["status"] == "pending":
+            self.send_json(403, {"code": "pending_approval", "error": "Waiting for admin approval."})
+            return
+        if parent["status"] == "declined":
+            self.send_json(403, {"code": "account_declined", "error": "This parent account was declined."})
+            return
+        with db_connection() as connection:
+            connection.execute("DELETE FROM login_attempts WHERE attempt_key = ?", (attempt_key,))
+            payload, cookie = self.create_login_session(connection, "parent", parent)
+        self.send_json(200, payload, {"Set-Cookie": cookie})
+
+    def handle_parent_logout(self):
+        token = self.cookie_token("sss_parent_session")
+        if token:
+            with db_connection() as connection:
+                connection.execute(
+                    "DELETE FROM parent_sessions WHERE token_hash = ?",
+                    (hashlib.sha256(token.encode("ascii")).hexdigest(),),
+                )
+        self.send_json(
+            200,
+            {"ok": True},
+            {"Set-Cookie": self.session_cookie("sss_parent_session", "", 0)},
+        )
+
+    def handle_parent_child_request(self, body):
+        parent = self.require_parent()
+        if not parent:
+            return
+        student_id = clean_text(body.get("studentId") or body.get("childId"), 20).upper()
+        relationship = clean_text(body.get("relationship") or "Parent", 40)
+        if not re.fullmatch(r"SSS-\d{3}", student_id):
+            self.send_json(400, {"code": "student_id_rule", "error": "Enter a valid child student ID such as SSS-001."})
+            return
+        with db_connection() as connection:
+            if not connection.execute("SELECT 1 FROM students WHERE student_id = ?", (student_id,)).fetchone():
+                self.send_json(404, {"code": "student_not_found", "error": "Child student ID was not found."})
+                return
+            existing = connection.execute(
+                "SELECT status FROM parent_students WHERE parent_id = ? AND student_id = ?",
+                (parent["parent_id"], student_id),
+            ).fetchone()
+            if existing and existing["status"] == "approved":
+                self.send_json(409, {"code": "child_already_linked", "error": "This child is already linked to your account."})
+                return
+            connection.execute(
+                """
+                INSERT INTO parent_students (parent_id, student_id, relationship, status, approved_at)
+                VALUES (?, ?, ?, 'pending', NULL)
+                ON CONFLICT(parent_id, student_id) DO UPDATE SET
+                  relationship = excluded.relationship,
+                  status = 'pending',
+                  approved_at = NULL
+                """,
+                (parent["parent_id"], student_id, relationship or "Parent"),
+            )
+        self.send_json(201, {"ok": True})
+
+    def handle_admin_parent_status(self, body, status):
+        if not self.require_admin():
+            return
+        parent_id = clean_text(body.get("parentId"), 20).upper()
+        if not re.fullmatch(r"PAR-\d{3}", parent_id):
+            self.send_json(400, {"code": "parent_id_rule", "error": "Choose a valid parent account."})
+            return
+        with db_connection() as connection:
+            parent = connection.execute("SELECT * FROM parents WHERE parent_id = ?", (parent_id,)).fetchone()
+            if not parent:
+                self.send_json(404, {"code": "parent_not_found", "error": "Parent account not found."})
+                return
+            approved_at = "CURRENT_TIMESTAMP" if status == "active" else "NULL"
+            connection.execute(
+                f"UPDATE parents SET status = ?, approved_at = {approved_at} WHERE parent_id = ?",
+                (status, parent_id),
+            )
+            if status != "active":
+                connection.execute("DELETE FROM parent_sessions WHERE parent_id = ?", (parent_id,))
+            updated = connection.execute("SELECT * FROM parents WHERE parent_id = ?", (parent_id,)).fetchone()
+        self.send_json(200, {"parent": public_parent(updated, include_private=True)})
+
+    def handle_admin_parent_child_status(self, body, status):
+        if not self.require_admin():
+            return
+        try:
+            link_id = int(body.get("linkId"))
+        except (TypeError, ValueError):
+            link_id = 0
+        if link_id < 1:
+            self.send_json(400, {"code": "link_required", "error": "Choose a parent-child link."})
+            return
+        with db_connection() as connection:
+            link = connection.execute("SELECT * FROM parent_students WHERE id = ?", (link_id,)).fetchone()
+            if not link:
+                self.send_json(404, {"code": "link_not_found", "error": "Parent-child link not found."})
+                return
+            approved_at = "CURRENT_TIMESTAMP" if status == "approved" else "NULL"
+            connection.execute(
+                f"UPDATE parent_students SET status = ?, approved_at = {approved_at} WHERE id = ?",
+                (status, link_id),
+            )
+        self.send_json(200, {"ok": True})
 
     def handle_admin_setup(self, body):
         admin_id = clean_text(body.get("adminId"), 20).upper()
