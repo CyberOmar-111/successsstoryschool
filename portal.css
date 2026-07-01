@@ -2968,3 +2968,305 @@ canvas {
     grid-template-columns: 1fr;
   }
 }
+
+/* === JIS-style portal dashboard system === */
+:root {
+  --jis-navy: #022f53;
+  --jis-navy-2: #06466f;
+  --jis-page: #f3f6f9;
+  --jis-card: #ffffff;
+  --jis-line: #dbe4ec;
+  --jis-muted: #74879b;
+  --jis-gold: #c79300;
+  --jis-blue: #1f77b4;
+}
+
+.portal-header {
+  background: var(--jis-navy);
+  border-bottom: 0;
+  color: #fff;
+  box-shadow: none;
+}
+
+.portal-header .portal-nav {
+  width: min(100% - 48px, 1480px);
+  min-height: 76px;
+  padding: 0;
+}
+
+.portal-header .portal-brand {
+  color: #d7e1ea;
+}
+
+.portal-header .portal-brand img {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  object-fit: contain;
+}
+
+.portal-header .portal-brand strong {
+  color: #d7e1ea;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+}
+
+.portal-header .portal-brand small {
+  color: #7f95aa;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.portal-header .back-link,
+.portal-header .lang-button {
+  color: #c8d4df;
+  background: transparent;
+  border-color: transparent;
+}
+
+.portal-header .lang-button {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.student-dashboard-shell {
+  background: var(--jis-page);
+  color: var(--jis-navy);
+}
+
+.student-dashboard-shell > .secure-banner {
+  display: none;
+}
+
+.student-dashboard-shell .dashboard-grid {
+  width: min(100% - 48px, 1480px);
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 34px;
+  padding: 38px 0 56px;
+}
+
+.student-dashboard-shell .portal-sidebar {
+  position: sticky;
+  top: 104px;
+  min-height: calc(100vh - 128px);
+  align-self: start;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: var(--jis-navy);
+  color: #fff;
+  box-shadow: none;
+}
+
+.student-dashboard-shell .profile {
+  padding: 18px;
+  margin: 0 0 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: transparent;
+}
+
+.student-dashboard-shell .profile-avatar {
+  background: var(--jis-gold);
+  color: var(--jis-navy);
+}
+
+.student-dashboard-shell .profile strong,
+.student-dashboard-shell .portal-sidebar h2 {
+  color: #e5edf5;
+}
+
+.student-dashboard-shell .role-chip {
+  width: fit-content;
+  color: #d9e4ef;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.student-dashboard-shell .module-tabs {
+  gap: 8px;
+  padding: 0;
+}
+
+.student-dashboard-shell .module-tabs button {
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  color: #b8c8d6;
+  background: transparent;
+}
+
+.student-dashboard-shell .module-tabs button.active {
+  color: var(--jis-navy);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.student-dashboard-shell .logout {
+  color: #d8e4ef;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: transparent;
+}
+
+.student-dashboard-shell .dashboard-content {
+  gap: 26px;
+}
+
+.student-dashboard-shell .dashboard-header,
+.student-dashboard-shell .overview-snapshot {
+  position: relative;
+  overflow: hidden;
+  min-height: 178px;
+  padding: 38px 40px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--jis-navy-2);
+  color: #dbe5ee;
+  box-shadow: none;
+}
+
+.student-dashboard-shell .dashboard-header::after,
+.student-dashboard-shell .overview-snapshot::after {
+  content: "";
+  position: absolute;
+  right: 52px;
+  top: -74px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.student-dashboard-shell .dashboard-header h2,
+.student-dashboard-shell .overview-snapshot h3 {
+  color: #d3d6d8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.05rem, 4vw, 3.25rem);
+  line-height: 1.02;
+}
+
+.student-dashboard-shell .dashboard-header p,
+.student-dashboard-shell .overview-snapshot p {
+  max-width: 620px;
+  color: #aab9c7;
+}
+
+.student-dashboard-shell .eyebrow,
+.student-dashboard-shell .command-center span,
+.student-dashboard-shell .metrics span,
+.student-dashboard-shell .content-card span,
+.student-dashboard-shell .student-card-copy span {
+  color: var(--jis-muted);
+  letter-spacing: 0.2em;
+}
+
+.student-dashboard-shell .command-center {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.student-dashboard-shell .command-center article,
+.student-dashboard-shell .metrics article,
+.student-dashboard-shell .student-dashboard-card,
+.student-dashboard-shell .content-card,
+.student-dashboard-shell .portal-panel {
+  border: 1px solid var(--jis-line);
+  border-radius: 18px;
+  background: var(--jis-card);
+  box-shadow: none;
+}
+
+.student-dashboard-shell .command-center article {
+  min-height: 116px;
+  padding: 24px 26px;
+}
+
+.student-dashboard-shell .command-center strong,
+.student-dashboard-shell .metrics strong,
+.student-dashboard-shell .student-card-copy strong,
+.student-dashboard-shell .content-card h3 {
+  color: var(--jis-navy);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.student-dashboard-shell .overview-snapshot {
+  min-height: 150px;
+}
+
+.student-dashboard-shell .metrics,
+.student-dashboard-shell .student-card-grid,
+.student-dashboard-shell .overview-cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.student-dashboard-shell .student-dashboard-card,
+.student-dashboard-shell .content-card {
+  min-height: 190px;
+  padding: 24px;
+}
+
+.student-dashboard-shell .student-card-icon,
+.student-dashboard-shell .content-card svg {
+  background: #d9e9f3;
+  color: var(--jis-navy-2);
+  box-shadow: none;
+}
+
+.student-dashboard-shell .student-card-badge {
+  background: #eef7ff;
+  color: var(--jis-blue);
+}
+
+.student-dashboard-shell .link-button {
+  color: var(--jis-blue);
+}
+
+@media (max-width: 1120px) {
+  .student-dashboard-shell .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-dashboard-shell .portal-sidebar {
+    position: static;
+    min-height: auto;
+  }
+
+  .student-dashboard-shell .module-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-dashboard-shell .command-center {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .portal-header .portal-nav,
+  .student-dashboard-shell .dashboard-grid {
+    width: min(100% - 20px, 1480px);
+  }
+
+  .portal-header .portal-nav {
+    min-height: 68px;
+  }
+
+  .portal-header .portal-brand img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .student-dashboard-shell .dashboard-grid {
+    padding: 18px 0 36px;
+  }
+
+  .student-dashboard-shell .dashboard-header,
+  .student-dashboard-shell .overview-snapshot {
+    padding: 26px 22px;
+  }
+
+  .student-dashboard-shell .command-center,
+  .student-dashboard-shell .metrics,
+  .student-dashboard-shell .student-card-grid,
+  .student-dashboard-shell .overview-cards {
+    grid-template-columns: 1fr;
+  }
+}

@@ -477,3 +477,195 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* === JIS-style teacher portal dashboard === */
+.teacher-dashboard {
+  background: var(--jis-page, #f3f6f9);
+  color: var(--jis-navy, #022f53);
+}
+
+.teacher-dashboard > .secure-banner {
+  display: none;
+}
+
+.teacher-dashboard .teacher-grid {
+  width: min(100% - 48px, 1480px);
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 34px;
+  padding: 38px 0 56px;
+}
+
+.teacher-dashboard .teacher-sidebar {
+  position: sticky;
+  top: 104px;
+  min-height: calc(100vh - 128px);
+  align-self: start;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: var(--jis-navy, #022f53);
+  color: #fff;
+  box-shadow: none;
+}
+
+.teacher-dashboard .teacher-sidebar .profile {
+  padding: 18px;
+  margin: 0 0 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: transparent;
+}
+
+.teacher-dashboard .teacher-sidebar .profile span:first-child {
+  background: var(--jis-gold, #c79300);
+  color: var(--jis-navy, #022f53);
+}
+
+.teacher-dashboard .teacher-sidebar .profile strong,
+.teacher-dashboard .teacher-sidebar h2 {
+  color: #e5edf5;
+}
+
+.teacher-dashboard .teacher-sidebar .profile span:last-child,
+.teacher-dashboard .teacher-sidebar small {
+  color: #b8c8d6;
+}
+
+.teacher-dashboard .assignment-list button,
+.teacher-dashboard .teacher-sidebar button,
+.teacher-dashboard .teacher-sidebar a {
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  color: #b8c8d6;
+  background: transparent;
+}
+
+.teacher-dashboard .assignment-list button.active,
+.teacher-dashboard .teacher-sidebar button.active,
+.teacher-dashboard .teacher-sidebar a.active {
+  color: var(--jis-navy, #022f53);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.teacher-dashboard .teacher-workspace {
+  gap: 26px;
+}
+
+.teacher-dashboard .workspace-header,
+.teacher-dashboard .class-header {
+  position: relative;
+  overflow: hidden;
+  min-height: 178px;
+  padding: 38px 40px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--jis-navy-2, #06466f);
+  color: #dbe5ee;
+  box-shadow: none;
+}
+
+.teacher-dashboard .workspace-header::after,
+.teacher-dashboard .class-header::after {
+  content: "";
+  position: absolute;
+  right: 52px;
+  top: -74px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.teacher-dashboard .workspace-header h1,
+.teacher-dashboard .class-header h2,
+.teacher-dashboard .teacher-card h3,
+.teacher-dashboard .portal-panel h2,
+.teacher-dashboard .recent-posts h2 {
+  color: var(--jis-navy, #022f53);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.teacher-dashboard .workspace-header h1,
+.teacher-dashboard .class-header h2 {
+  color: #d3d6d8;
+  font-size: clamp(2.05rem, 4vw, 3.25rem);
+  line-height: 1.02;
+}
+
+.teacher-dashboard .workspace-header p,
+.teacher-dashboard .class-header p {
+  max-width: 620px;
+  color: #aab9c7;
+}
+
+.teacher-dashboard .workspace-header .eyebrow,
+.teacher-dashboard .class-header .eyebrow {
+  color: #7f95aa;
+  letter-spacing: 0.2em;
+}
+
+.teacher-dashboard .teacher-command-center {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.teacher-dashboard .teacher-command-center article,
+.teacher-dashboard .teacher-card,
+.teacher-dashboard .recent-posts,
+.teacher-dashboard .portal-panel,
+.teacher-dashboard .class-layout > article {
+  border: 1px solid var(--jis-line, #dbe4ec);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.teacher-dashboard .teacher-command-center article {
+  min-height: 116px;
+  padding: 24px 26px;
+}
+
+.teacher-dashboard .teacher-command-center strong,
+.teacher-dashboard .teacher-card strong {
+  color: var(--jis-navy, #022f53);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.teacher-dashboard .teacher-command-center span,
+.teacher-dashboard .teacher-card span {
+  color: var(--jis-muted, #74879b);
+  letter-spacing: 0.18em;
+}
+
+@media (max-width: 1120px) {
+  .teacher-dashboard .teacher-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-dashboard .teacher-sidebar {
+    position: static;
+    min-height: auto;
+  }
+
+  .teacher-dashboard .teacher-command-center {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .teacher-dashboard .teacher-grid {
+    width: min(100% - 20px, 1480px);
+    padding: 18px 0 36px;
+  }
+
+  .teacher-dashboard .workspace-header,
+  .teacher-dashboard .class-header {
+    padding: 26px 22px;
+  }
+
+  .teacher-dashboard .teacher-command-center,
+  .teacher-dashboard .teacher-cards {
+    grid-template-columns: 1fr;
+  }
+}

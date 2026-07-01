@@ -86,11 +86,13 @@ function classLabel(student) {
 }
 
 function showAuth() {
+  document.body.classList.remove("parent-dashboard-active");
   setHidden($("[data-auth-view]"), false);
   setHidden($("[data-dashboard]"), true);
 }
 
 function showDashboard() {
+  document.body.classList.add("parent-dashboard-active");
   setHidden($("[data-auth-view]"), true);
   setHidden($("[data-dashboard]"), false);
 }
