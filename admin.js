@@ -603,7 +603,7 @@ function renderLists() {
   }
   parents.forEach((parent) => {
     const linked = (parent.children || []).length;
-    const status = parent.status === "active" ? text("active") : parent.status === "declined" ? "Declined" : text("pending");
+    const status = parent.status === "active" ? text("active") : parent.status === "declined" ? text("declined") : text("pending");
     parentList.appendChild(createListButton(
       parent.name,
       `${parent.parentId} - ${status} - ${linked} ${text("students")}`,
@@ -858,7 +858,7 @@ function renderParent(parent) {
   document.querySelector("[data-selected-parent-name]").textContent = parent.name;
   document.querySelector("[data-selected-parent-id]").textContent = parent.parentId;
   document.querySelector("[data-selected-parent-status]").textContent =
-    parent.status === "active" ? text("active") : parent.status === "pending" ? text("pending") : "Declined";
+    parent.status === "active" ? text("active") : parent.status === "pending" ? text("pending") : text("declined");
   document.querySelector("[data-selected-parent-email]").textContent = parent.email || parent.emailHint || text("unknown");
   document.querySelector("[data-selected-parent-username]").textContent = parent.username || "-";
   document.querySelector("[data-selected-parent-source]").textContent = registrationSourceLabel(parent.registrationSource);
@@ -881,7 +881,7 @@ function renderParent(parent) {
     title.textContent = link.student.name;
     meta.textContent = `${link.student.studentId} - ${link.student.className || link.student.requestedClassName || text("noClass")} - ${link.relationship || "Parent"}`;
     badge.className = `status-pill ${link.status}`;
-    badge.textContent = link.status === "approved" ? text("approved") : link.status === "pending" ? text("pending") : "Declined";
+    badge.textContent = link.status === "approved" ? text("approved") : link.status === "pending" ? text("pending") : text("declined");
     details.append(title, meta, badge);
     if (link.status !== "approved") {
       const approve = document.createElement("button");
