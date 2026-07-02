@@ -941,3 +941,59 @@ body.parent-page.parent-dashboard-active {
     grid-column: 2;
   }
 }
+
+/* === Reference card finish: flat parent dashboard cards === */
+.parent-dashboard-active .parent-metrics article,
+.parent-dashboard-active .parent-record-card,
+.parent-dashboard-active .parent-panel:not(.parent-children-panel),
+.parent-dashboard-active .billing-row {
+  background: #fff;
+  border: 1px solid #dbe4ec;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.parent-dashboard-active .parent-metrics article::before,
+.parent-dashboard-active .parent-metrics article::after,
+.parent-dashboard-active .parent-record-card::before,
+.parent-dashboard-active .parent-record-card::after,
+.parent-dashboard-active .parent-panel::before,
+.parent-dashboard-active .parent-panel::after,
+.parent-dashboard-active .billing-row::before,
+.parent-dashboard-active .billing-row::after {
+  content: none;
+  display: none;
+}
+
+.parent-dashboard-active .parent-metrics article,
+.parent-dashboard-active .parent-record-card,
+.parent-dashboard-active .parent-panel:not(.parent-children-panel) {
+  min-height: 150px;
+  padding: 28px;
+}
+
+.parent-dashboard-active .parent-metrics span,
+.parent-dashboard-active .parent-record-card span,
+.parent-dashboard-active .parent-panel h2 {
+  color: #74879b;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.parent-dashboard-active .parent-metrics strong,
+.parent-dashboard-active .parent-record-card h3,
+.parent-dashboard-active .parent-panel strong {
+  color: #022f53;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+}
+
+.parent-dashboard-active .parent-record-card p,
+.parent-dashboard-active .parent-panel p,
+.parent-dashboard-active .billing-row p {
+  color: #7d8fa2;
+  font-weight: 600;
+  line-height: 1.45;
+}

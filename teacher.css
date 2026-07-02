@@ -793,3 +793,62 @@
     grid-column: 2;
   }
 }
+
+/* === Reference card finish: flat teacher dashboard cards === */
+.teacher-dashboard .teacher-command-center article,
+.teacher-dashboard .teacher-card,
+.teacher-dashboard .recent-posts,
+.teacher-dashboard .portal-panel,
+.teacher-dashboard .class-layout > article {
+  background: #fff;
+  border: 1px solid #dbe4ec;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.teacher-dashboard .teacher-command-center article::before,
+.teacher-dashboard .teacher-command-center article::after,
+.teacher-dashboard .teacher-card::before,
+.teacher-dashboard .teacher-card::after,
+.teacher-dashboard .recent-posts::before,
+.teacher-dashboard .recent-posts::after,
+.teacher-dashboard .portal-panel::before,
+.teacher-dashboard .portal-panel::after {
+  content: none;
+  display: none;
+}
+
+.teacher-dashboard .teacher-card,
+.teacher-dashboard .teacher-command-center article,
+.teacher-dashboard .recent-posts,
+.teacher-dashboard .portal-panel {
+  min-height: 150px;
+  padding: 28px;
+}
+
+.teacher-dashboard .teacher-card h3,
+.teacher-dashboard .teacher-command-center strong,
+.teacher-dashboard .portal-panel h2,
+.teacher-dashboard .recent-posts h2 {
+  color: #022f53;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+}
+
+.teacher-dashboard .teacher-card span,
+.teacher-dashboard .teacher-command-center span,
+.teacher-dashboard .portal-panel .eyebrow {
+  color: #74879b;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.teacher-dashboard .teacher-card p,
+.teacher-dashboard .recent-posts p,
+.teacher-dashboard .portal-panel p {
+  color: #7d8fa2;
+  font-weight: 600;
+  line-height: 1.45;
+}

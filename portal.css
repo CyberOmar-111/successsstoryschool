@@ -3473,3 +3473,127 @@ canvas {
     grid-column: 2;
   }
 }
+
+/* === Reference card finish: flat lower dashboard cards === */
+.student-dashboard-shell .command-center article,
+.student-dashboard-shell .metrics article,
+.student-dashboard-shell .student-dashboard-card,
+.student-dashboard-shell .content-card,
+.student-dashboard-shell .portal-panel.active {
+  background: #fff;
+  border: 1px solid #dbe4ec;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.student-dashboard-shell .command-center article::before,
+.student-dashboard-shell .command-center article::after,
+.student-dashboard-shell .metrics article::before,
+.student-dashboard-shell .metrics article::after,
+.student-dashboard-shell .student-dashboard-card::before,
+.student-dashboard-shell .student-dashboard-card::after,
+.student-dashboard-shell .content-card::before,
+.student-dashboard-shell .content-card::after {
+  content: none;
+  display: none;
+}
+
+.student-dashboard-shell .student-dashboard-card {
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  min-height: 190px;
+  padding: 28px;
+  overflow: visible;
+}
+
+.student-dashboard-shell .student-dashboard-card:hover,
+.student-dashboard-shell .student-dashboard-card:focus-visible {
+  border-color: #cfdbe6;
+  box-shadow: none;
+  transform: none;
+}
+
+.student-dashboard-shell .student-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 15px;
+  color: #006699;
+  background: #d8e7ef;
+}
+
+.student-dashboard-shell .student-card-copy {
+  gap: 7px;
+}
+
+.student-dashboard-shell .student-card-copy span,
+.student-dashboard-shell .metrics span,
+.student-dashboard-shell .card-kicker span,
+.student-dashboard-shell .command-center span {
+  color: #74879b;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.student-dashboard-shell .student-card-copy strong,
+.student-dashboard-shell .metrics strong,
+.student-dashboard-shell .content-card h3,
+.student-dashboard-shell .command-center strong {
+  color: #022f53;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+}
+
+.student-dashboard-shell .student-card-copy strong,
+.student-dashboard-shell .metrics strong {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1;
+}
+
+.student-dashboard-shell .student-card-copy small,
+.student-dashboard-shell .metrics small,
+.student-dashboard-shell .content-card p {
+  color: #7d8fa2;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.student-dashboard-shell .student-card-badge,
+.student-dashboard-shell .card-kicker strong {
+  min-width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #0873aa;
+  background: #edf7ff;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.student-dashboard-shell .metrics article {
+  min-height: 148px;
+  padding: 28px;
+}
+
+.student-dashboard-shell .content-card {
+  min-height: 230px;
+  padding: 28px;
+  grid-template-rows: auto auto 1fr auto;
+}
+
+.student-dashboard-shell .text-action {
+  width: fit-content;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  color: #022f53;
+  background: #f5f1eb;
+  font-weight: 800;
+}
+
+.student-dashboard-shell .overview-cards {
+  margin-top: 0;
+}
