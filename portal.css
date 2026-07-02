@@ -3270,3 +3270,206 @@ canvas {
     grid-template-columns: 1fr;
   }
 }
+
+/* === Portal shell alignment: match the reference dashboard frame === */
+.portal-header {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+}
+
+.portal-header .portal-nav {
+  width: 100%;
+  max-width: none;
+  min-height: 76px;
+  padding: 0 70px;
+}
+
+.portal-header .portal-actions {
+  gap: 24px;
+}
+
+.student-dashboard-shell .dashboard-grid {
+  width: 100%;
+  max-width: none;
+  min-height: calc(100vh - 76px);
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  align-items: stretch;
+}
+
+.student-dashboard-shell .portal-sidebar {
+  top: 76px;
+  min-height: calc(100vh - 76px);
+  height: calc(100vh - 76px);
+  overflow: auto;
+  padding: 20px 42px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, #022f53 0%, #023b67 72%, #0577b7 100%);
+}
+
+.student-dashboard-shell .profile {
+  min-height: 138px;
+  margin: 0 0 24px;
+  padding: 20px;
+  border-color: rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+}
+
+.student-dashboard-shell .module-tabs {
+  gap: 10px;
+}
+
+.student-dashboard-shell .module-tabs button {
+  justify-content: flex-start;
+  padding: 0 18px;
+}
+
+.student-dashboard-shell .logout {
+  margin-top: 26px;
+}
+
+.student-dashboard-shell .dashboard-content {
+  min-height: calc(100vh - 76px);
+  padding: 38px 62px 56px 38px;
+  background: var(--jis-page);
+}
+
+.student-dashboard-shell .dashboard-header {
+  min-height: 210px;
+  padding: 40px;
+}
+
+.student-dashboard-shell .dashboard-header .status-pill,
+.student-dashboard-shell .dashboard-header .term-pill {
+  margin-left: auto;
+  align-self: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--jis-gold);
+  color: var(--jis-navy);
+  font-weight: 800;
+}
+
+.student-dashboard-shell .command-center {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.student-dashboard-shell .command-center article {
+  min-height: 116px;
+  padding: 26px 26px 24px;
+}
+
+.student-dashboard-shell .overview-snapshot {
+  min-height: 176px;
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.student-dashboard-shell .overview-snapshot .snapshot-stats {
+  display: flex;
+  gap: 54px;
+  align-items: center;
+}
+
+.student-dashboard-shell .metrics,
+.student-dashboard-shell .student-card-grid,
+.student-dashboard-shell .overview-cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.student-dashboard-shell .metrics article,
+.student-dashboard-shell .student-dashboard-card,
+.student-dashboard-shell .content-card {
+  min-height: 160px;
+  padding: 26px;
+}
+
+.student-dashboard-shell .overview-cards .content-card {
+  min-height: 230px;
+}
+
+.student-dashboard-shell .portal-footer,
+.student-dashboard-shell footer {
+  color: #8da0b5;
+  text-align: center;
+}
+
+@media (max-width: 1120px) {
+  .portal-header .portal-nav {
+    padding: 0 24px;
+  }
+
+  .student-dashboard-shell .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-dashboard-shell .portal-sidebar {
+    position: static;
+    height: auto;
+    min-height: auto;
+    border-radius: 0 0 22px 22px;
+  }
+
+  .student-dashboard-shell .dashboard-content {
+    min-height: auto;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .student-dashboard-shell .command-center,
+  .student-dashboard-shell .metrics,
+  .student-dashboard-shell .student-card-grid,
+  .student-dashboard-shell .overview-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .portal-header .portal-nav {
+    padding: 0 14px;
+  }
+
+  .student-dashboard-shell .portal-sidebar {
+    padding: 16px;
+  }
+
+  .student-dashboard-shell .dashboard-content {
+    padding: 16px 12px 32px;
+  }
+
+  .student-dashboard-shell .dashboard-header,
+  .student-dashboard-shell .overview-snapshot {
+    padding: 24px 18px;
+  }
+
+  .student-dashboard-shell .command-center,
+  .student-dashboard-shell .metrics,
+  .student-dashboard-shell .student-card-grid,
+  .student-dashboard-shell .overview-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1121px) {
+  .student-dashboard-shell .portal-sidebar {
+    position: fixed;
+    left: 0;
+    top: 76px;
+    width: 340px;
+    z-index: 60;
+  }
+
+  .student-dashboard-shell .dashboard-grid {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
+  .student-dashboard-shell .dashboard-content {
+    grid-column: 2;
+  }
+}

@@ -800,3 +800,144 @@ body.parent-page.parent-dashboard-active {
     grid-template-columns: 1fr;
   }
 }
+
+/* === Parent shell alignment: same frame as the dashboard reference === */
+.parent-dashboard-active .parent-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  min-height: 76px;
+  padding: 0 70px;
+}
+
+.parent-dashboard-active .parent-dashboard-shell {
+  width: 100%;
+  max-width: none;
+  min-height: calc(100vh - 76px);
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  align-items: stretch;
+}
+
+.parent-dashboard-active .parent-dashboard-hero {
+  min-height: 210px;
+  margin: 38px 62px 26px 38px;
+  padding: 40px;
+}
+
+.parent-dashboard-active .parent-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0 62px 26px 38px;
+}
+
+.parent-dashboard-active .parent-metrics article {
+  min-height: 116px;
+  padding: 26px;
+}
+
+.parent-dashboard-active .parent-children-panel {
+  top: 76px;
+  min-height: calc(100vh - 76px);
+  height: calc(100vh - 76px);
+  overflow: auto;
+  padding: 20px 42px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, #022f53 0%, #023b67 72%, #0577b7 100%);
+}
+
+.parent-dashboard-active .parent-records {
+  margin: 0 62px 56px 38px;
+}
+
+.parent-dashboard-active .parent-record-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.parent-dashboard-active .parent-record-card,
+.parent-dashboard-active .parent-panel:not(.parent-children-panel) {
+  min-height: 180px;
+  padding: 26px;
+}
+
+@media (max-width: 1120px) {
+  .parent-dashboard-active .parent-topbar {
+    padding: 0 24px;
+  }
+
+  .parent-dashboard-active .parent-dashboard-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .parent-dashboard-active .parent-dashboard-hero,
+  .parent-dashboard-active .parent-metrics,
+  .parent-dashboard-active .parent-records {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+
+  .parent-dashboard-active .parent-dashboard-hero {
+    margin-top: 24px;
+  }
+
+  .parent-dashboard-active .parent-children-panel {
+    position: static;
+    height: auto;
+    min-height: auto;
+    border-radius: 0 0 22px 22px;
+  }
+
+  .parent-dashboard-active .parent-metrics,
+  .parent-dashboard-active .parent-record-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .parent-dashboard-active .parent-topbar {
+    padding: 0 14px;
+  }
+
+  .parent-dashboard-active .parent-dashboard-hero,
+  .parent-dashboard-active .parent-metrics,
+  .parent-dashboard-active .parent-records {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .parent-dashboard-active .parent-dashboard-hero {
+    padding: 24px 18px;
+  }
+
+  .parent-dashboard-active .parent-children-panel {
+    padding: 16px;
+  }
+
+  .parent-dashboard-active .parent-metrics,
+  .parent-dashboard-active .parent-record-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1121px) {
+  .parent-dashboard-active .parent-children-panel {
+    position: fixed;
+    left: 0;
+    top: 76px;
+    width: 340px;
+    z-index: 60;
+  }
+
+  .parent-dashboard-active .parent-dashboard-shell {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
+  .parent-dashboard-active .parent-dashboard-hero,
+  .parent-dashboard-active .parent-metrics,
+  .parent-dashboard-active .parent-records {
+    grid-column: 2;
+  }
+}
