@@ -4040,6 +4040,171 @@ canvas {
   transform: translateY(-2px);
 }
 
+/* === Educational programs section === */
+.program-section {
+  position: relative;
+  min-height: 650px;
+  padding: 132px 0 92px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 34%, rgba(255, 255, 255, 0.52) 64%, rgba(255, 255, 255, 0.14) 100%),
+    url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=2200&q=82") center right / cover no-repeat;
+}
+
+.program-section::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 120px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff);
+  pointer-events: none;
+}
+
+.program-section-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.program-section-copy {
+  max-width: 720px;
+}
+
+.program-section-copy h2 {
+  margin: 0;
+  color: #20242a;
+  font-family: inherit;
+  font-size: clamp(2.2rem, 4.4vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.program-section-copy h2 span {
+  color: #1f77b4;
+}
+
+.program-section-copy p:not(.eyebrow) {
+  max-width: 700px;
+  margin-top: 28px;
+  color: #20242a;
+  font-size: 1.22rem;
+  font-weight: 750;
+  line-height: 1.62;
+}
+
+.program-section .eyebrow {
+  color: #1f77b4;
+  font-size: 0.95rem;
+}
+
+.program-section .eyebrow::after {
+  content: "";
+  display: block;
+  width: 58px;
+  height: 4px;
+  margin-top: 10px;
+  background: #870914;
+}
+
+.program-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 42px;
+}
+
+.program-card {
+  position: relative;
+  min-height: 200px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 34px 24px 30px;
+  border: 1px solid rgba(14, 49, 77, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16px 34px rgba(12, 24, 35, 0.16);
+  text-align: center;
+}
+
+.program-card img {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  opacity: 0.18;
+  filter: grayscale(1);
+}
+
+.program-card h3 {
+  margin: 0;
+  color: #101820;
+  font-family: inherit;
+  font-size: clamp(1.25rem, 2vw, 1.72rem);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.program-card p {
+  margin: 0;
+  color: #20242a;
+  font-size: 1.02rem;
+  font-weight: 720;
+  line-height: 1.55;
+}
+
+.program-section .action-link.primary {
+  width: fit-content;
+  min-height: 58px;
+  margin-top: 48px;
+  padding: 0 38px;
+  border: 0;
+  border-radius: 12px;
+  background: #870914;
+  color: #ffffff;
+  box-shadow: 0 16px 28px rgba(135, 9, 20, 0.18);
+}
+
+[dir="rtl"] .program-section {
+  background:
+    linear-gradient(270deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 34%, rgba(255, 255, 255, 0.52) 64%, rgba(255, 255, 255, 0.14) 100%),
+    url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=2200&q=82") center right / cover no-repeat;
+}
+
+[dir="rtl"] .program-card img {
+  left: auto;
+  right: 18px;
+}
+
+@media (max-width: 1100px) {
+  .program-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .program-section {
+    min-height: auto;
+    padding: 84px 0 74px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.9) 56%, rgba(255, 255, 255, 0.7) 100%),
+      url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1400&q=80") center / cover no-repeat;
+  }
+
+  .program-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .program-card {
+    min-height: 178px;
+  }
+}
+
 .school-showcase {
   background:
     linear-gradient(180deg, #ffffff 0%, #f7f4ed 100%);

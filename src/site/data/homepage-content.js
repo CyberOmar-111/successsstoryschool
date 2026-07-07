@@ -37,6 +37,21 @@ export const copy = {
     quickPortalTitle: "School accounts",
     quickPortalText:
       "Students and authorized staff sign in through protected school account paths.",
+    programsEyebrow: "Educational programs",
+    programsTitle: "Educational Programs",
+    programsTitleAccent: "Educational",
+    programsTitleRest: "Programs",
+    programsText:
+      "Our learning stages are designed to nurture curiosity, build strong foundations, and prepare students for a confident academic journey.",
+    needConsultation: "Need Consultation?",
+    nurseryProgram: "Nursery",
+    nurseryProgramText: "A caring first step with play, language, routines, and early social growth.",
+    kindergartenProgram: "Kindergarten",
+    kindergartenProgramText: "Learning through joy, discovery, confidence, and school readiness.",
+    nationalProgram: "National Program",
+    nationalProgramText: "Arabic-first learning with strong English development and steady academic habits.",
+    gradesProgram: "Grades 1-10",
+    gradesProgramText: "Structured daily learning with Collins Curriculum support and clear class progress.",
     studentPortal: "Student Account",
     studentPortalText:
       "Create a student account, view class details, grades, attendance, homework, announcements, fees, and bus requests.",
@@ -268,6 +283,21 @@ export const copy = {
     quickPortalTitle: "حسابات المدرسة",
     quickPortalText:
       "يسجل الطلاب والمعلمون والإدارة الدخول من مركز حسابات واحد وواضح.",
+    programsEyebrow: "البرامج التعليمية",
+    programsTitle: "البرامج التعليمية",
+    programsTitleAccent: "البرامج",
+    programsTitleRest: "التعليمية",
+    programsText:
+      "مراحل تعليمية تساعد الطالب على حب التعلم، وبناء أساس قوي، والاستعداد بثقة للخطوات الدراسية التالية.",
+    needConsultation: "هل تحتاج استشارة؟",
+    nurseryProgram: "الحضانة",
+    nurseryProgramText: "بداية آمنة ومليئة باللعب واللغة والروتين والنمو الاجتماعي.",
+    kindergartenProgram: "الروضة",
+    kindergartenProgramText: "تعلم ممتع بالاكتشاف والثقة والاستعداد للمدرسة.",
+    nationalProgram: "البرنامج الوطني",
+    nationalProgramText: "تعلم عربي أولاً مع تطوير قوي للغة الإنجليزية وعادات دراسية ثابتة.",
+    gradesProgram: "الصفوف 1-10",
+    gradesProgramText: "تعلم يومي منظم مع دعم منهاج Collins ومتابعة واضحة للتقدم.",
     studentPortal: "حساب الطالب",
     studentPortalText:
       "إنشاء حساب طالب، ومتابعة الصف، العلامات، الحضور، الواجبات، الإعلانات، الرسوم، وطلب المواصلات.",
@@ -700,6 +730,29 @@ export const portals = [
     text: "teacherPortalText",
     href: "/teacher",
     icon: ClipboardList
+  }
+];
+
+export const programs = [
+  {
+    title: "nurseryProgram",
+    text: "nurseryProgramText",
+    icon: UsersRound
+  },
+  {
+    title: "kindergartenProgram",
+    text: "kindergartenProgramText",
+    icon: GraduationCap
+  },
+  {
+    title: "nationalProgram",
+    text: "nationalProgramText",
+    icon: BookOpen
+  },
+  {
+    title: "gradesProgram",
+    text: "gradesProgramText",
+    icon: School
   }
 ];
 
