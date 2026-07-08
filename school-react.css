@@ -4043,11 +4043,11 @@ canvas {
 /* === Educational programs section === */
 .program-section {
   position: relative;
-  min-height: 650px;
-  padding: 132px 0 92px;
+  min-height: 560px;
+  padding: 92px 0 78px;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 34%, rgba(255, 255, 255, 0.52) 64%, rgba(255, 255, 255, 0.14) 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.91) 42%, rgba(255, 255, 255, 0.58) 70%, rgba(255, 255, 255, 0.18) 100%),
     url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=2200&q=82") center right / cover no-repeat;
 }
 
@@ -4063,21 +4063,23 @@ canvas {
 .program-section-inner {
   position: relative;
   z-index: 1;
+  max-width: min(1580px, calc(100% - 92px));
 }
 
 .program-section-copy {
-  max-width: 720px;
+  max-width: 760px;
 }
 
 .program-section-copy h2 {
   margin: 0;
   color: #20242a;
   font-family: inherit;
-  font-size: clamp(2.2rem, 4.4vw, 3.5rem);
+  font-size: clamp(2.15rem, 3.05vw, 3.05rem);
   font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.02em;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .program-section-copy h2 span {
@@ -4085,10 +4087,10 @@ canvas {
 }
 
 .program-section-copy p:not(.eyebrow) {
-  max-width: 700px;
-  margin-top: 28px;
+  max-width: 640px;
+  margin-top: 24px;
   color: #20242a;
-  font-size: 1.22rem;
+  font-size: 1.05rem;
   font-weight: 750;
   line-height: 1.62;
 }
@@ -4110,18 +4112,18 @@ canvas {
 .program-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 28px;
-  margin-top: 42px;
+  gap: 36px;
+  margin-top: 36px;
 }
 
 .program-card {
   position: relative;
-  min-height: 200px;
+  min-height: 172px;
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 18px;
-  padding: 34px 24px 30px;
+  gap: 16px;
+  padding: 30px 24px 26px;
   border: 1px solid rgba(14, 49, 77, 0.12);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.95);
@@ -4144,7 +4146,7 @@ canvas {
   margin: 0;
   color: #101820;
   font-family: inherit;
-  font-size: clamp(1.25rem, 2vw, 1.72rem);
+  font-size: clamp(1.2rem, 1.45vw, 1.5rem);
   font-weight: 900;
   line-height: 1.15;
 }
@@ -4152,16 +4154,16 @@ canvas {
 .program-card p {
   margin: 0;
   color: #20242a;
-  font-size: 1.02rem;
+  font-size: 0.96rem;
   font-weight: 720;
   line-height: 1.55;
 }
 
 .program-section .action-link.primary {
   width: fit-content;
-  min-height: 58px;
-  margin-top: 48px;
-  padding: 0 38px;
+  min-height: 56px;
+  margin-top: 44px;
+  padding: 0 34px;
   border: 0;
   border-radius: 12px;
   background: #870914;
@@ -4169,9 +4171,13 @@ canvas {
   box-shadow: 0 16px 28px rgba(135, 9, 20, 0.18);
 }
 
+.program-section .action-link.primary svg {
+  display: none;
+}
+
 [dir="rtl"] .program-section {
   background:
-    linear-gradient(270deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 34%, rgba(255, 255, 255, 0.52) 64%, rgba(255, 255, 255, 0.14) 100%),
+    linear-gradient(270deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.91) 42%, rgba(255, 255, 255, 0.58) 70%, rgba(255, 255, 255, 0.18) 100%),
     url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=2200&q=82") center right / cover no-repeat;
 }
 
@@ -4193,6 +4199,14 @@ canvas {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.9) 56%, rgba(255, 255, 255, 0.7) 100%),
       url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1400&q=80") center / cover no-repeat;
+  }
+
+  .program-section-inner {
+    max-width: min(100% - 28px, 640px);
+  }
+
+  .program-section-copy h2 {
+    white-space: normal;
   }
 
   .program-grid {

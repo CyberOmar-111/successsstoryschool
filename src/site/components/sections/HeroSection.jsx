@@ -32,9 +32,6 @@ export function HeroSection({ t, isArabic }) {
         </div>
 
         <div className="hero-side-ui" aria-label={t.heroActionsLabel}>
-          <a className="hero-next-diamond" href="#admissions" aria-label={t.beginEnrollment}>
-            <span aria-hidden="true">→</span>
-          </a>
           <div className="hero-diamond-cluster">
             {heroQuickLinks.map(({ href, label, icon: Icon, tone }) => (
               <a className={`hero-diamond-link ${tone}`} href={href} key={href}>
