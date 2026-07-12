@@ -852,3 +852,76 @@
   font-weight: 600;
   line-height: 1.45;
 }
+
+.attachment-field {
+  display: grid;
+  gap: 10px;
+}
+
+.attachment-field > span {
+  color: #7b6f6f;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.attachment-picker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 42px;
+  border: 1px dashed #d9cfcf;
+  border-radius: 999px;
+  padding: 0 16px;
+  color: #8e1726;
+  background: #fffaf7;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.attachment-picker input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.attachment-list,
+.post-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attachment-list span,
+.post-attachments a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0 12px;
+  color: #8e1726;
+  background: #f7eeee;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.attachment-list button {
+  border: 0;
+  color: #8e1726;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.attachment-list button:hover,
+.post-attachments a:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}

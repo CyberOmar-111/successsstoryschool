@@ -139,6 +139,19 @@
                   <p class="locked-subject"><span data-i18n="subject">Subject</span>: <strong data-homework-subject></strong></p>
                   <label><span data-i18n="details">Details</span><textarea name="details" required></textarea></label>
                   <label><span data-i18n="dueDate">Due date</span><input name="dueDate" type="date"></label>
+                  <div class="attachment-field">
+                    <span data-i18n="attachments">Attachments</span>
+                    <label class="attachment-picker">
+                      <input
+                        type="file"
+                        multiple
+                        data-homework-attachments
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png"
+                      >
+                      <span data-i18n="attachFiles">Attach PDF, Word, Excel, or image</span>
+                    </label>
+                    <div class="attachment-list" data-homework-attachment-list></div>
+                  </div>
                   <button class="portal-button primary" type="submit" data-i18n="publish">Publish to class</button>
                   <p class="form-status" data-homework-status></p>
                 </form>
@@ -166,6 +179,19 @@
                   <h3 data-i18n="postAnnouncement">Post announcement</h3>
                   <label><span data-i18n="announcementTitle">Title</span><input name="title" required></label>
                   <label><span data-i18n="details">Details</span><textarea name="details" required></textarea></label>
+                  <div class="attachment-field">
+                    <span data-i18n="attachments">Attachments</span>
+                    <label class="attachment-picker">
+                      <input
+                        type="file"
+                        multiple
+                        data-announcement-attachments
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png"
+                      >
+                      <span data-i18n="attachFiles">Attach PDF, Word, Excel, or image</span>
+                    </label>
+                    <div class="attachment-list" data-announcement-attachment-list></div>
+                  </div>
                   <button class="portal-button primary" type="submit" data-i18n="publish">Publish to class</button>
                   <p class="form-status" data-announcement-status></p>
                 </form>

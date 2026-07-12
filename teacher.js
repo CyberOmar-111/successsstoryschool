@@ -60,6 +60,11 @@ const translations = {
     noGradeChanges: "No grade changes to save.",
     postAnnouncement: "Post announcement",
     announcementTitle: "Title",
+    attachments: "Attachments",
+    attachFiles: "Attach PDF, Word, Excel, or image",
+    removeAttachment: "Remove",
+    attachmentTooLarge: "Each attachment must be 5 MB or smaller.",
+    attachmentInvalid: "Use PDF, Word, Excel, JPG, or PNG files only.",
     recentPosts: "Recent posts for this assignment",
     noAssignments: "No teaching assignments have been assigned to this account.",
     noPosts: "No posts have been published yet.",
@@ -133,6 +138,11 @@ const translations = {
     noGradeChanges: "لا توجد تغييرات في العلامات للحفظ.",
     postAnnouncement: "نشر إعلان",
     announcementTitle: "العنوان",
+    attachments: "المرفقات",
+    attachFiles: "أرفق PDF أو Word أو Excel أو صورة",
+    removeAttachment: "حذف",
+    attachmentTooLarge: "يجب ألا يتجاوز حجم كل مرفق 5 ميجابايت.",
+    attachmentInvalid: "استخدم ملفات PDF أو Word أو Excel أو JPG أو PNG فقط.",
     recentPosts: "المنشورات الأخيرة لهذا التعيين",
     noAssignments: "لم يتم تعيين شعب ومواد لهذا الحساب بعد.",
     noPosts: "لم يتم نشر أي محتوى بعد.",
@@ -164,6 +174,11 @@ let teacher = null;
 let assignments = [];
 let selectedAssignmentId = null;
 let classroom = null;
+let homeworkAttachments = [];
+let announcementAttachments = [];
+
+const allowedAttachmentExtensions = new Set(["pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png"]);
+const maxAttachmentBytes = 5 * 1024 * 1024;
 
 const text = (key) => translations[language][key] || translations.en[key] || key;
 
@@ -187,6 +202,7 @@ function errorText(error) {
     login_locked: "loginLocked",
     invalid_record: "invalidRecord",
     invalid_date: "invalidRecord",
+    invalid_attachment: "attachmentInvalid",
     assignment_required: "assignmentRequired"
   };
   return text(messages[error.code] || "genericError");
@@ -207,6 +223,108 @@ function clearStatuses() {
   document.querySelectorAll(".form-status").forEach((status) => {
     status.textContent = "";
   });
+}
+
+function attachmentState(kind) {
+  return kind === "announcement" ? announcementAttachments : homeworkAttachments;
+}
+
+function setAttachmentState(kind, files) {
+  if (kind === "announcement") {
+    announcementAttachments = files;
+  } else {
+    homeworkAttachments = files;
+  }
+}
+
+function attachmentListElement(kind) {
+  return document.querySelector(kind === "announcement" ? "[data-announcement-attachment-list]" : "[data-homework-attachment-list]");
+}
+
+function attachmentInputElement(kind) {
+  return document.querySelector(kind === "announcement" ? "[data-announcement-attachments]" : "[data-homework-attachments]");
+}
+
+function validateAttachment(file) {
+  const extension = file.name.split(".").pop().toLowerCase();
+  if (!allowedAttachmentExtensions.has(extension)) {
+    return "attachmentInvalid";
+  }
+  if (file.size > maxAttachmentBytes) {
+    return "attachmentTooLarge";
+  }
+  return "";
+}
+
+function readAttachmentFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve({
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+        size: file.size,
+        data: String(reader.result || "")
+      });
+    };
+    reader.onerror = () => reject(reader.error || new Error("File read failed."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderAttachmentPicker(kind) {
+  const list = attachmentListElement(kind);
+  if (!list) {
+    return;
+  }
+  list.replaceChildren();
+  attachmentState(kind).forEach((file, index) => {
+    const row = document.createElement("span");
+    const name = document.createElement("strong");
+    const remove = document.createElement("button");
+    name.textContent = file.name;
+    remove.type = "button";
+    remove.textContent = text("removeAttachment");
+    remove.addEventListener("click", () => {
+      const next = attachmentState(kind).filter((_, itemIndex) => itemIndex !== index);
+      setAttachmentState(kind, next);
+      renderAttachmentPicker(kind);
+    });
+    row.append(name, remove);
+    list.appendChild(row);
+  });
+}
+
+function resetAttachmentPicker(kind) {
+  setAttachmentState(kind, []);
+  const input = attachmentInputElement(kind);
+  if (input) {
+    input.value = "";
+  }
+  renderAttachmentPicker(kind);
+}
+
+async function handleAttachmentInput(kind, statusSelector) {
+  const input = attachmentInputElement(kind);
+  const status = document.querySelector(statusSelector);
+  if (!input) {
+    return;
+  }
+  const selected = Array.from(input.files || []).slice(0, 5);
+  const invalidKey = selected.map(validateAttachment).find(Boolean);
+  if (invalidKey) {
+    input.value = "";
+    status.textContent = text(invalidKey);
+    return;
+  }
+  try {
+    const files = await Promise.all(selected.map(readAttachmentFile));
+    setAttachmentState(kind, files);
+    status.textContent = "";
+    renderAttachmentPicker(kind);
+  } catch {
+    status.textContent = text("genericError");
+  }
 }
 
 function setButtonBusy(button, isBusy) {
@@ -252,6 +370,8 @@ function applyLanguage(nextLanguage) {
   if (classroom) {
     renderClassroom();
   }
+  renderAttachmentPicker("homework");
+  renderAttachmentPicker("announcement");
   try {
     localStorage.setItem("sss-language", language);
   } catch {
@@ -370,13 +490,31 @@ function renderGradebook() {
   document.querySelector("[data-grade-form] button[type=submit]").disabled = !classroom.students.length;
 }
 
-function addPost(container, heading, details) {
+function appendPostAttachments(article, attachments = []) {
+  if (!Array.isArray(attachments) || !attachments.length) {
+    return;
+  }
+  const list = document.createElement("div");
+  list.className = "post-attachments";
+  attachments.forEach((file) => {
+    const link = document.createElement("a");
+    link.href = file.data || "#";
+    link.download = file.name || "attachment";
+    link.textContent = file.name || "Attachment";
+    link.rel = "noopener";
+    list.appendChild(link);
+  });
+  article.appendChild(list);
+}
+
+function addPost(container, heading, details, attachments = []) {
   const article = document.createElement("article");
   const title = document.createElement("strong");
   const content = document.createElement("p");
   title.textContent = heading;
   content.textContent = details;
   article.append(title, content);
+  appendPostAttachments(article, attachments);
   container.appendChild(article);
 }
 
@@ -415,10 +553,10 @@ function renderClassroom() {
   posts.replaceChildren();
   classroom.homework.forEach((entry) => {
     const date = entry.due_date ? ` - ${entry.due_date}` : "";
-    addPost(posts, `${text("homeworkPost")}: ${entry.subject}`, `${entry.details}${date}`);
+    addPost(posts, `${text("homeworkPost")}: ${entry.subject}`, `${entry.details}${date}`, entry.attachments);
   });
   classroom.announcements.forEach((entry) => {
-    addPost(posts, `${text("announcementPost")}: ${entry.title}`, entry.details);
+    addPost(posts, `${text("announcementPost")}: ${entry.title}`, entry.details, entry.attachments);
   });
   if (!posts.childNodes.length) {
     posts.textContent = text("noPosts");
@@ -511,10 +649,12 @@ document.querySelector("[data-homework-form]").addEventListener("submit", async 
       body: JSON.stringify({
         assignmentId: selectedAssignmentId,
         details: values.get("details"),
-        dueDate: values.get("dueDate")
+        dueDate: values.get("dueDate"),
+        attachments: homeworkAttachments
       })
     }));
     form.reset();
+    resetAttachmentPicker("homework");
     await loadClassroom(selectedAssignmentId);
     document.querySelector("[data-homework-status]").textContent = text("saved");
   } catch (error) {
@@ -567,15 +707,25 @@ document.querySelector("[data-announcement-form]").addEventListener("submit", as
       body: JSON.stringify({
         assignmentId: selectedAssignmentId,
         title: values.get("title"),
-        details: values.get("details")
+        details: values.get("details"),
+        attachments: announcementAttachments
       })
     }));
     form.reset();
+    resetAttachmentPicker("announcement");
     await loadClassroom(selectedAssignmentId);
     document.querySelector("[data-announcement-status]").textContent = text("saved");
   } catch (error) {
     status.textContent = errorText(error);
   }
+});
+
+document.querySelector("[data-homework-attachments]").addEventListener("change", () => {
+  handleAttachmentInput("homework", "[data-homework-status]");
+});
+
+document.querySelector("[data-announcement-attachments]").addEventListener("change", () => {
+  handleAttachmentInput("announcement", "[data-announcement-status]");
 });
 
 document.querySelector("[data-logout]").addEventListener("click", async () => {

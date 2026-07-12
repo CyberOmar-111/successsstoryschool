@@ -655,6 +655,23 @@ function addDismissButton(item, type, post) {
   item.appendChild(button);
 }
 
+function appendAttachments(item, attachments = []) {
+  if (!Array.isArray(attachments) || !attachments.length) {
+    return;
+  }
+  const list = document.createElement("div");
+  list.className = "post-attachments";
+  attachments.forEach((file) => {
+    const link = document.createElement("a");
+    link.href = file.data || "#";
+    link.download = file.name || "attachment";
+    link.textContent = file.name || "Attachment";
+    link.rel = "noopener";
+    list.appendChild(link);
+  });
+  item.appendChild(list);
+}
+
 function renderOverviewCards({ grades, attendance, homework, announcements, fees }) {
   const hasRecords = grades.length + attendance.length + homework.length + announcements.length + fees.length > 0;
   const title = document.querySelector("[data-overview-title]");
@@ -773,6 +790,7 @@ function renderRecords(records) {
     if (meta.textContent) {
       item.appendChild(meta);
     }
+    appendAttachments(item, assignment.attachments);
     addDismissButton(item, "homework", assignment);
     homeworkList.appendChild(item);
   });
@@ -791,6 +809,7 @@ function renderRecords(records) {
     title.textContent = notice.title;
     details.textContent = notice.details;
     item.append(date, title, details);
+    appendAttachments(item, notice.attachments);
     addDismissButton(item, "announcement", notice);
     announcementList.appendChild(item);
   });

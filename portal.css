@@ -1620,6 +1620,26 @@ html[dir="rtl"] .post-item::before {
   color: var(--post-accent);
 }
 
+.post-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.post-attachments a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--post-accent);
+  background: var(--post-soft);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 .dismiss-action {
   justify-self: start;
   min-height: 34px;

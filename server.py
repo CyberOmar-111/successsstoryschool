@@ -460,7 +460,8 @@ def initialize_sqlite_database():
                 student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
                 subject TEXT NOT NULL,
                 details TEXT NOT NULL,
-                due_date TEXT
+                due_date TEXT,
+                attachments TEXT
             );
 
             CREATE TABLE IF NOT EXISTS announcements (
@@ -468,6 +469,7 @@ def initialize_sqlite_database():
                 student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
                 title TEXT NOT NULL,
                 details TEXT NOT NULL,
+                attachments TEXT,
                 posted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -485,6 +487,7 @@ def initialize_sqlite_database():
                 subject TEXT NOT NULL,
                 details TEXT NOT NULL,
                 due_date TEXT,
+                attachments TEXT,
                 posted_by_teacher_id TEXT REFERENCES teachers(teacher_id) ON DELETE SET NULL,
                 posted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
@@ -494,6 +497,7 @@ def initialize_sqlite_database():
                 class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
                 title TEXT NOT NULL,
                 details TEXT NOT NULL,
+                attachments TEXT,
                 posted_by_teacher_id TEXT REFERENCES teachers(teacher_id) ON DELETE SET NULL,
                 posted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
@@ -538,6 +542,8 @@ def initialize_sqlite_database():
         homework_columns = {
             row["name"] for row in connection.execute("PRAGMA table_info(class_homework)").fetchall()
         }
+        if "attachments" not in homework_columns:
+            connection.execute("ALTER TABLE class_homework ADD COLUMN attachments TEXT")
         if "posted_by_teacher_id" not in homework_columns:
             connection.execute(
                 "ALTER TABLE class_homework ADD COLUMN posted_by_teacher_id TEXT REFERENCES teachers(teacher_id) ON DELETE SET NULL"
@@ -545,10 +551,22 @@ def initialize_sqlite_database():
         announcement_columns = {
             row["name"] for row in connection.execute("PRAGMA table_info(class_announcements)").fetchall()
         }
+        if "attachments" not in announcement_columns:
+            connection.execute("ALTER TABLE class_announcements ADD COLUMN attachments TEXT")
         if "posted_by_teacher_id" not in announcement_columns:
             connection.execute(
                 "ALTER TABLE class_announcements ADD COLUMN posted_by_teacher_id TEXT REFERENCES teachers(teacher_id) ON DELETE SET NULL"
             )
+        student_homework_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(homework)").fetchall()
+        }
+        if "attachments" not in student_homework_columns:
+            connection.execute("ALTER TABLE homework ADD COLUMN attachments TEXT")
+        student_announcement_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(announcements)").fetchall()
+        }
+        if "attachments" not in student_announcement_columns:
+            connection.execute("ALTER TABLE announcements ADD COLUMN attachments TEXT")
         mfa_columns = {
             row["name"] for row in connection.execute("PRAGMA table_info(mfa_challenges)").fetchall()
         }
@@ -782,7 +800,8 @@ def initialize_postgres_database():
             student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
             subject TEXT NOT NULL,
             details TEXT NOT NULL,
-            due_date TEXT
+            due_date TEXT,
+            attachments TEXT
         )
         """,
         """
@@ -791,6 +810,7 @@ def initialize_postgres_database():
             student_id TEXT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
             title TEXT NOT NULL,
             details TEXT NOT NULL,
+            attachments TEXT,
             posted_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT)
         )
         """,
@@ -810,6 +830,7 @@ def initialize_postgres_database():
             subject TEXT NOT NULL,
             details TEXT NOT NULL,
             due_date TEXT,
+            attachments TEXT,
             posted_by_teacher_id TEXT REFERENCES teachers(teacher_id) ON DELETE SET NULL,
             posted_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT)
         )
@@ -820,6 +841,7 @@ def initialize_postgres_database():
             class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
             title TEXT NOT NULL,
             details TEXT NOT NULL,
+            attachments TEXT,
             posted_by_teacher_id TEXT REFERENCES teachers(teacher_id) ON DELETE SET NULL,
             posted_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::TEXT)
         )
@@ -856,6 +878,10 @@ def initialize_postgres_database():
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS is_approved BOOLEAN NOT NULL DEFAULT TRUE")
         connection.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS approved_at TEXT")
         connection.execute("ALTER TABLE mfa_challenges ADD COLUMN IF NOT EXISTS code_hash TEXT")
+        connection.execute("ALTER TABLE homework ADD COLUMN IF NOT EXISTS attachments TEXT")
+        connection.execute("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS attachments TEXT")
+        connection.execute("ALTER TABLE class_homework ADD COLUMN IF NOT EXISTS attachments TEXT")
+        connection.execute("ALTER TABLE class_announcements ADD COLUMN IF NOT EXISTS attachments TEXT")
         connection.execute(
             "UPDATE students SET requested_class_id = class_id WHERE requested_class_id IS NULL AND class_id IS NOT NULL"
         )
@@ -942,6 +968,70 @@ DUMMY_PASSWORD_HASH = password_hash("unused-password-000", DUMMY_SALT)
 
 def clean_text(value, maximum=80):
     return " ".join(str(value or "").strip().split())[:maximum]
+
+
+def clean_multiline_text(value, maximum=500):
+    return str(value or "").strip()[:maximum]
+
+
+def parse_attachments(value):
+    if not value:
+        return []
+    if isinstance(value, list):
+        return value
+    try:
+        parsed = json.loads(value)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return []
+    return parsed if isinstance(parsed, list) else []
+
+
+def public_attachments(value):
+    attachments = []
+    for item in parse_attachments(value):
+        if not isinstance(item, dict):
+            continue
+        name = clean_text(item.get("name"), 120)
+        if not name:
+            continue
+        attachments.append({
+            "name": name,
+            "mimeType": clean_text(item.get("mimeType"), 100),
+            "size": int(item.get("size") or 0),
+            "data": str(item.get("data") or ""),
+        })
+    return attachments
+
+
+def clean_post_attachments(value):
+    if value in (None, "", []):
+        return []
+    if not isinstance(value, list) or len(value) > 5:
+        raise RequestValidationError("invalid_attachment", "Attach up to five PDF, Word, Excel, or image files.")
+    allowed_extensions = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png"}
+    cleaned = []
+    for item in value:
+        if not isinstance(item, dict):
+            raise RequestValidationError("invalid_attachment", "Attachment data is invalid.")
+        name = clean_text(item.get("name"), 120)
+        mime_type = clean_text(item.get("mimeType"), 100)
+        data = str(item.get("data") or "")
+        try:
+            size = int(item.get("size") or 0)
+        except (TypeError, ValueError):
+            size = 0
+        extension = Path(name).suffix.lower()
+        if extension not in allowed_extensions or size < 1 or size > 5 * 1024 * 1024 or len(data) > 7 * 1024 * 1024:
+            raise RequestValidationError("invalid_attachment", "Only PDF, Word, Excel, JPG, and PNG files up to 5 MB are allowed.")
+        cleaned.append({"name": name, "mimeType": mime_type, "size": size, "data": data})
+    return cleaned
+
+
+def public_record(row):
+    record = dict(row)
+    if "attachments" in record:
+        record["attachments"] = public_attachments(record.get("attachments"))
+    return record
 
 
 def valid_password(password, minimum=8):
@@ -1529,12 +1619,12 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 "SELECT school_date, status FROM attendance WHERE student_id = ? ORDER BY school_date DESC",
                 (student["student_id"],),
             )],
-            "homework": [dict(row) for row in connection.execute(
-                "SELECT id, subject, details, due_date, 'student' AS audience FROM homework WHERE student_id = ? ORDER BY id DESC",
+            "homework": [public_record(row) for row in connection.execute(
+                "SELECT id, subject, details, due_date, attachments, 'student' AS audience FROM homework WHERE student_id = ? ORDER BY id DESC",
                 (student["student_id"],),
             )],
-            "announcements": [dict(row) for row in connection.execute(
-                "SELECT id, title, details, posted_at, 'student' AS audience FROM announcements WHERE student_id = ? ORDER BY id DESC",
+            "announcements": [public_record(row) for row in connection.execute(
+                "SELECT id, title, details, posted_at, attachments, 'student' AS audience FROM announcements WHERE student_id = ? ORDER BY id DESC",
                 (student["student_id"],),
             )],
             "fees": [dict(row) for row in connection.execute(
@@ -1551,18 +1641,18 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
             ).fetchone()
             if class_row:
                 records["homework"] = [
-                    dict(row) for row in connection.execute(
+                    public_record(row) for row in connection.execute(
                         """
-                        SELECT id, subject, details, due_date, 'class' AS audience
+                        SELECT id, subject, details, due_date, attachments, 'class' AS audience
                         FROM class_homework WHERE class_id = ? ORDER BY id DESC
                         """,
                         (student["class_id"],),
                     )
                 ] + records["homework"]
                 records["announcements"] = [
-                    dict(row) for row in connection.execute(
+                    public_record(row) for row in connection.execute(
                         """
-                        SELECT id, title, details, posted_at, 'class' AS audience
+                        SELECT id, title, details, posted_at, attachments, 'class' AS audience
                         FROM class_announcements WHERE class_id = ? ORDER BY id DESC
                         """,
                         (student["class_id"],),
@@ -1863,17 +1953,17 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     (class_id,),
                 ).fetchall()
                 homework = connection.execute(
-                    "SELECT id, subject, details, due_date, posted_at FROM class_homework WHERE class_id = ? ORDER BY id DESC",
+                    "SELECT id, subject, details, due_date, posted_at, attachments FROM class_homework WHERE class_id = ? ORDER BY id DESC",
                     (class_id,),
                 ).fetchall()
                 announcements = connection.execute(
-                    "SELECT id, title, details, posted_at FROM class_announcements WHERE class_id = ? ORDER BY id DESC",
+                    "SELECT id, title, details, posted_at, attachments FROM class_announcements WHERE class_id = ? ORDER BY id DESC",
                     (class_id,),
                 ).fetchall()
             self.send_json(200, {
                 "class": {**public_class(class_row), "members": [public_student(member) for member in members]},
-                "homework": [dict(row) for row in homework],
-                "announcements": [dict(row) for row in announcements],
+                "homework": [public_record(row) for row in homework],
+                "announcements": [public_record(row) for row in announcements],
             })
             return
         if request_path == "/api/teacher/session":
@@ -1951,7 +2041,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 ).fetchall()
                 homework = connection.execute(
                     """
-                    SELECT id, subject, details, due_date, posted_by_teacher_id, posted_at
+                    SELECT id, subject, details, due_date, posted_by_teacher_id, posted_at, attachments
                     FROM class_homework
                     WHERE class_id = ? AND subject = ?
                     ORDER BY id DESC
@@ -1960,7 +2050,7 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 ).fetchall()
                 announcements = connection.execute(
                     """
-                    SELECT id, title, details, posted_at
+                    SELECT id, title, details, posted_at, attachments
                     FROM class_announcements
                     WHERE class_id = ? AND posted_by_teacher_id = ?
                     ORDER BY id DESC
@@ -1981,8 +2071,8 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                     }
                     for member in members
                 ],
-                "homework": [{**dict(row), "canDelete": True} for row in homework],
-                "announcements": [{**dict(row), "canDelete": True} for row in announcements],
+                "homework": [{**public_record(row), "canDelete": True} for row in homework],
+                "announcements": [{**public_record(row), "canDelete": True} for row in announcements],
                 "schoolDate": school_date,
             })
             return
@@ -2974,18 +3064,30 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         teacher, assignment = self.required_teacher_assignment(body, "teacher:post_homework")
         if not assignment:
             return
-        details = clean_text(body.get("details"), 500)
+        details = clean_multiline_text(body.get("details"), 1000)
         due_date = clean_text(body.get("dueDate"), 10) or None
+        try:
+            attachments = clean_post_attachments(body.get("attachments"))
+        except RequestValidationError as error:
+            self.send_json(400, {"code": error.code, "error": error.message})
+            return
         if not details or (due_date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", due_date)):
             self.send_json(400, {"code": "invalid_record", "error": "Enter valid homework details."})
             return
         with db_connection() as connection:
             connection.execute(
                 """
-                INSERT INTO class_homework (class_id, subject, details, due_date, posted_by_teacher_id)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO class_homework (class_id, subject, details, due_date, posted_by_teacher_id, attachments)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (assignment["class_id"], assignment["subject"], details, due_date, teacher["teacher_id"]),
+                (
+                    assignment["class_id"],
+                    assignment["subject"],
+                    details,
+                    due_date,
+                    teacher["teacher_id"],
+                    json.dumps(attachments) if attachments else None,
+                ),
             )
         self.send_json(201, {"ok": True})
 
@@ -2994,17 +3096,28 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
         if not assignment:
             return
         title = clean_text(body.get("title"), 100)
-        details = clean_text(body.get("details"), 500)
+        details = clean_multiline_text(body.get("details"), 1000)
+        try:
+            attachments = clean_post_attachments(body.get("attachments"))
+        except RequestValidationError as error:
+            self.send_json(400, {"code": error.code, "error": error.message})
+            return
         if not title or not details:
             self.send_json(400, {"code": "invalid_record", "error": "Enter announcement details."})
             return
         with db_connection() as connection:
             connection.execute(
                 """
-                INSERT INTO class_announcements (class_id, title, details, posted_by_teacher_id)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO class_announcements (class_id, title, details, posted_by_teacher_id, attachments)
+                VALUES (?, ?, ?, ?, ?)
                 """,
-                (assignment["class_id"], title, details, teacher["teacher_id"]),
+                (
+                    assignment["class_id"],
+                    title,
+                    details,
+                    teacher["teacher_id"],
+                    json.dumps(attachments) if attachments else None,
+                ),
             )
         self.send_json(201, {"ok": True})
 
@@ -3343,24 +3456,34 @@ class SchoolPortalHandler(BaseHTTPRequestHandler):
                 return
             if record_type == "homework":
                 subject = clean_text(body.get("subject"), 80)
-                details = clean_text(body.get("details"), 500)
+                details = clean_multiline_text(body.get("details"), 1000)
                 due_date = clean_text(body.get("dueDate"), 10) or None
+                try:
+                    attachments = clean_post_attachments(body.get("attachments"))
+                except RequestValidationError as error:
+                    self.send_json(400, {"code": error.code, "error": error.message})
+                    return
                 if not subject or not details or (due_date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", due_date)):
                     self.send_json(400, {"code": "invalid_record", "error": "Enter valid homework details."})
                     return
                 connection.execute(
-                    "INSERT INTO class_homework (class_id, subject, details, due_date) VALUES (?, ?, ?, ?)",
-                    (class_id, subject, details, due_date),
+                    "INSERT INTO class_homework (class_id, subject, details, due_date, attachments) VALUES (?, ?, ?, ?, ?)",
+                    (class_id, subject, details, due_date, json.dumps(attachments) if attachments else None),
                 )
             elif record_type == "announcement":
                 title = clean_text(body.get("title"), 100)
-                details = clean_text(body.get("details"), 500)
+                details = clean_multiline_text(body.get("details"), 1000)
+                try:
+                    attachments = clean_post_attachments(body.get("attachments"))
+                except RequestValidationError as error:
+                    self.send_json(400, {"code": error.code, "error": error.message})
+                    return
                 if not title or not details:
                     self.send_json(400, {"code": "invalid_record", "error": "Enter announcement details."})
                     return
                 connection.execute(
-                    "INSERT INTO class_announcements (class_id, title, details) VALUES (?, ?, ?)",
-                    (class_id, title, details),
+                    "INSERT INTO class_announcements (class_id, title, details, attachments) VALUES (?, ?, ?, ?)",
+                    (class_id, title, details, json.dumps(attachments) if attachments else None),
                 )
             else:
                 self.send_json(400, {"code": "invalid_record", "error": "Only class homework and announcements are supported."})
