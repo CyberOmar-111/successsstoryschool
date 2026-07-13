@@ -9,9 +9,9 @@
     <link rel="icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="shortcut icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="stylesheet" href="portal.css">
-    <link rel="stylesheet" href="teacher.css">
+    <link rel="stylesheet" href="teacher.css?v=20260713-teacher-dashboard">
     <link rel="stylesheet" href="design-system.css?v=20260620-ui-system">
-    <script src="teacher.js" defer></script>
+    <script src="teacher.js?v=20260713-teacher-dashboard" defer></script>
   </head>
   <body>
     <header class="portal-header">
@@ -81,14 +81,14 @@
             <nav class="assignment-list" data-assignment-list aria-label="Teaching assignments"></nav>
           </aside>
           <div class="teacher-workspace">
-            <header class="workspace-header">
+            <header class="workspace-header" hidden>
               <div>
                 <p class="eyebrow" data-i18n="workspace">Class workspace</p>
                 <h1><span data-i18n="welcome">Welcome,</span> <span data-welcome-name></span></h1>
               </div>
               <button class="logout" type="button" data-logout data-i18n="logout">Log out</button>
             </header>
-            <section class="command-center teacher-command-center" aria-label="Teacher workspace summary">
+            <section class="command-center teacher-command-center" aria-label="Teacher workspace summary" hidden>
               <article>
                 <span data-i18n="teachingLoad">Teaching load</span>
                 <strong data-teacher-assignment-count>0</strong>
@@ -120,8 +120,32 @@
                   <input type="date" data-attendance-date>
                 </label>
               </header>
+              <nav class="teacher-tabs" aria-label="Teacher workspace sections">
+                <button type="button" class="active" data-tab-button="overview" data-i18n="overview">Overview</button>
+                <button type="button" data-tab-button="gradebook" data-i18n="gradebook">Grade Book</button>
+                <button type="button" data-tab-button="homework" data-i18n="homework">Homework</button>
+                <button type="button" data-tab-button="announcements" data-i18n="announcements">Announcements</button>
+              </nav>
+              <section class="teacher-overview-stats" data-tab-panel="overview">
+                <article>
+                  <span data-i18n="totalStudents">Total students</span>
+                  <strong data-overview-total>0</strong>
+                </article>
+                <article>
+                  <span data-i18n="presentToday">Present today</span>
+                  <strong data-overview-present>0</strong>
+                </article>
+                <article>
+                  <span data-i18n="absentToday">Absent</span>
+                  <strong data-overview-absent>0</strong>
+                </article>
+                <article>
+                  <span data-i18n="subject">Subject</span>
+                  <strong data-overview-subject></strong>
+                </article>
+              </section>
               <div class="teacher-cards">
-                <form class="portal-panel teacher-card attendance-card" data-attendance-form>
+                <form class="portal-panel teacher-card attendance-card" data-attendance-form data-tab-panel="overview">
                   <h3 data-i18n="attendanceSheet">Class attendance sheet</h3>
                   <p data-i18n="attendanceNote">Mark every student before saving the day's attendance.</p>
                   <div class="attendance-table">
@@ -134,7 +158,7 @@
                   <button class="portal-button primary" type="submit" data-i18n="saveAttendance">Save attendance</button>
                   <p class="form-status" data-attendance-status></p>
                 </form>
-                <form class="portal-panel teacher-card" data-homework-form>
+                <form class="portal-panel teacher-card teacher-post-form" data-homework-form data-tab-panel="homework" hidden>
                   <h3 data-i18n="postHomework">Post homework</h3>
                   <p class="locked-subject"><span data-i18n="subject">Subject</span>: <strong data-homework-subject></strong></p>
                   <label><span data-i18n="details">Details</span><textarea name="details" required></textarea></label>
@@ -155,7 +179,7 @@
                   <button class="portal-button primary" type="submit" data-i18n="publish">Publish to class</button>
                   <p class="form-status" data-homework-status></p>
                 </form>
-                <form class="portal-panel teacher-card gradebook-card" data-grade-form>
+                <form class="portal-panel teacher-card gradebook-card" data-grade-form data-tab-panel="gradebook" hidden>
                   <h3 data-i18n="teacherGradebook">Teacher Gradebook</h3>
                   <p class="locked-subject"><span data-i18n="subject">Subject</span>: <strong data-grade-subject></strong></p>
                   <p data-i18n="gradebookNote">Edit student grades in the table, then save all changes together.</p>
@@ -175,7 +199,7 @@
                   <button class="portal-button primary" type="submit" data-i18n="saveGradeChanges">Save changes</button>
                   <p class="form-status" data-grade-status></p>
                 </form>
-                <form class="portal-panel teacher-card" data-announcement-form>
+                <form class="portal-panel teacher-card teacher-post-form" data-announcement-form data-tab-panel="announcements" hidden>
                   <h3 data-i18n="postAnnouncement">Post announcement</h3>
                   <label><span data-i18n="announcementTitle">Title</span><input name="title" required></label>
                   <label><span data-i18n="details">Details</span><textarea name="details" required></textarea></label>
@@ -196,7 +220,7 @@
                   <p class="form-status" data-announcement-status></p>
                 </form>
               </div>
-              <section class="portal-panel recent-posts">
+              <section class="portal-panel recent-posts" data-tab-panel="overview">
                 <h3 data-i18n="recentPosts">Recent posts for this assignment</h3>
                 <div data-recent-posts></div>
               </section>

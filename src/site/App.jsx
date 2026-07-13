@@ -13,7 +13,7 @@ import { HighlightsSection } from "./components/sections/HighlightsSection.jsx";
 import { HowItWorksSection } from "./components/sections/HowItWorksSection.jsx";
 import { OverviewSection } from "./components/sections/OverviewSection.jsx";
 import { PortalHubSection } from "./components/sections/PortalHubSection.jsx";
-import { PortalPreviewSection } from "./components/sections/PortalPreviewSection.jsx";
+import { LatestNewsSection } from "./components/sections/LatestNewsSection.jsx";
 import { ProofSection } from "./components/sections/ProofSection.jsx";
 import { SchoolShowcaseSection } from "./components/sections/SchoolShowcaseSection.jsx";
 import { StudentLifeSection } from "./components/sections/StudentLifeSection.jsx";
@@ -52,7 +52,7 @@ export function App() {
         <HighlightsSection t={t} />
         <ProofSection t={t} />
         <PortalHubSection t={t} />
-        <PortalPreviewSection t={t} />
+        <LatestNewsSection t={t} />
         <HowItWorksSection t={t} />
         <FeedbackSection t={t} />
         <TrustSection t={t} />
