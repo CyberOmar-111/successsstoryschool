@@ -44,6 +44,10 @@ const translations = {
     classes: "Classes",
     administrators: "Administrators",
     parents: "Parents",
+    parentRole: "Parent",
+    studentRole: "Student",
+    teacherRole: "Teacher",
+    adminRole: "Administrator",
     addAdministrator: "Manage administrators",
     teachers: "Teachers",
     userManagementEyebrow: "Accounts overview",
@@ -195,6 +199,10 @@ const translations = {
   ar: {
     teacherPortal: "حساب المعلم",
     teachers: "المعلمون",
+    parentRole: "ولي أمر",
+    studentRole: "طالب",
+    teacherRole: "معلم",
+    adminRole: "مسؤول",
     userManagementEyebrow: "Accounts overview",
     userManagementTitle: "Admin User Management",
     userManagementText: "Search every school account, check status, and approve new student registrations from one table.",
@@ -525,8 +533,25 @@ function setAuthMode(mode) {
 function displayDashboard() {
   authView.hidden = true;
   dashboard.hidden = false;
+  document.body.classList.add("admin-dashboard-active");
+  setManagementOverviewVisible(true);
+  setWorkspacePlaceholderVisible(false);
   document.querySelector("[data-admin-name]").textContent = admin.name;
   updateAdminSummary();
+}
+
+function setManagementOverviewVisible(visible) {
+  const management = document.querySelector("[data-user-management]");
+  if (management) {
+    management.hidden = !visible;
+  }
+}
+
+function setWorkspacePlaceholderVisible(visible) {
+  const placeholder = document.querySelector("[data-placeholder]");
+  if (placeholder) {
+    placeholder.hidden = !visible;
+  }
 }
 
 function setAdminSummary(selector, value) {
@@ -640,10 +665,10 @@ function renderLists() {
 
 function userRoleLabel(role) {
   const labels = {
-    student: text("students"),
-    teacher: text("teachers"),
-    admin: text("administrators"),
-    parent: text("parents")
+    student: text("studentRole"),
+    teacher: text("teacherRole"),
+    admin: text("adminRole"),
+    parent: text("parentRole")
   };
   return labels[role] || role;
 }
@@ -849,6 +874,7 @@ function renderParent(parent) {
   parentDetails = parent;
   studentDetails = null;
   classDetails = null;
+  setManagementOverviewVisible(false);
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-admin-editor]").hidden = true;
   document.querySelector("[data-teacher-editor]").hidden = true;
@@ -912,6 +938,7 @@ function renderStudent(result) {
   studentDetails = result;
   classDetails = null;
   parentDetails = null;
+  setManagementOverviewVisible(false);
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-admin-editor]").hidden = true;
   document.querySelector("[data-teacher-editor]").hidden = true;
@@ -962,6 +989,7 @@ function renderClass(result) {
   classDetails = result;
   studentDetails = null;
   parentDetails = null;
+  setManagementOverviewVisible(false);
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-admin-editor]").hidden = true;
   document.querySelector("[data-teacher-editor]").hidden = true;
@@ -1114,6 +1142,7 @@ function openAdminEditor() {
   studentDetails = null;
   classDetails = null;
   parentDetails = null;
+  setManagementOverviewVisible(false);
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-student-editor]").hidden = true;
   document.querySelector("[data-class-editor]").hidden = true;
@@ -1174,6 +1203,7 @@ function openTeacherEditor() {
   studentDetails = null;
   classDetails = null;
   parentDetails = null;
+  setManagementOverviewVisible(false);
   document.querySelector("[data-placeholder]").hidden = true;
   document.querySelector("[data-student-editor]").hidden = true;
   document.querySelector("[data-class-editor]").hidden = true;
@@ -1341,6 +1371,7 @@ document.querySelector("[data-admin-password-form]").addEventListener("submit", 
     admin = null;
     dashboard.hidden = true;
     authView.hidden = false;
+    document.body.classList.remove("admin-dashboard-active");
     setAuthMode("login");
     loginStatus.textContent = text("passwordChanged");
     form.reset();
@@ -1483,6 +1514,7 @@ document.querySelector("[data-logout]").addEventListener("click", async () => {
   classDetails = null;
   dashboard.hidden = true;
   authView.hidden = false;
+  document.body.classList.remove("admin-dashboard-active");
   setAuthMode("login");
 });
 

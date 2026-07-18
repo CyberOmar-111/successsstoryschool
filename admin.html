@@ -9,8 +9,8 @@
     <link rel="icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="shortcut icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="stylesheet" href="portal.css">
-    <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="design-system.css?v=20260620-ui-system">
+    <link rel="stylesheet" href="admin.css">
     <script src="admin.js" defer></script>
   </head>
   <body>
@@ -86,34 +86,39 @@
       <section class="admin-dashboard" data-dashboard hidden>
         <div class="secure-banner" data-i18n="dashboardBanner">Administration area. Changes here appear in student accounts.</div>
         <div class="portal-container admin-dashboard-header">
-          <div>
-            <p class="eyebrow" data-i18n="eyebrow">School Administration</p>
-            <h1><span data-i18n="welcome">Welcome,</span> <span data-admin-name></span></h1>
+          <div class="admin-hero-top">
+            <div>
+              <p class="eyebrow" data-i18n="eyebrow">School Administration</p>
+              <h1><span data-i18n="welcome">Welcome,</span> <span data-admin-name></span></h1>
+            </div>
+            <div class="admin-header-actions">
+              <a class="dashboard-back-link" href="/" data-i18n="backWebsite">Back to website</a>
+              <button class="logout" type="button" data-logout data-i18n="logout">Log out</button>
+            </div>
           </div>
-          <button class="logout" type="button" data-logout data-i18n="logout">Log out</button>
+          <section class="command-center admin-command-center" aria-label="Administration summary">
+            <article>
+              <span data-i18n="students">Students</span>
+              <strong data-admin-total-students>0</strong>
+            </article>
+            <article>
+              <span data-i18n="classes">Classes</span>
+              <strong data-admin-total-classes>0</strong>
+            </article>
+            <article>
+              <span data-i18n="teachers">Teachers</span>
+              <strong data-admin-total-teachers>0</strong>
+            </article>
+            <article>
+              <span data-i18n="parents">Parents</span>
+              <strong data-admin-total-parents>0</strong>
+            </article>
+            <article>
+              <span data-i18n="administrators">Administrators</span>
+              <strong data-admin-total-admins>0</strong>
+            </article>
+          </section>
         </div>
-        <section class="portal-container command-center admin-command-center" aria-label="Administration summary">
-          <article>
-            <span data-i18n="students">Students</span>
-            <strong data-admin-total-students>0</strong>
-          </article>
-          <article>
-            <span data-i18n="classes">Classes</span>
-            <strong data-admin-total-classes>0</strong>
-          </article>
-          <article>
-            <span data-i18n="teachers">Teachers</span>
-            <strong data-admin-total-teachers>0</strong>
-          </article>
-          <article>
-            <span data-i18n="parents">Parents</span>
-            <strong data-admin-total-parents>0</strong>
-          </article>
-          <article>
-            <span data-i18n="administrators">Administrators</span>
-            <strong data-admin-total-admins>0</strong>
-          </article>
-        </section>
         <section class="portal-container portal-panel user-management-panel" data-user-management>
           <div class="user-management-header">
             <div>
@@ -154,6 +159,17 @@
         </section>
         <div class="portal-container admin-grid">
           <aside class="admin-sidebar">
+            <a class="admin-sidebar-brand" href="/" aria-label="Success Story School home">
+              <span class="admin-brand-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <use href="/assets/portal-icons.svg#icon-class"></use>
+                </svg>
+              </span>
+              <span>
+                <strong>Success Story</strong>
+                <small data-i18n="brandAdmin">Staff Portal</small>
+              </span>
+            </a>
             <section class="admin-list-card">
               <h2 data-i18n="students">Students</h2>
               <div class="admin-list" data-student-list></div>
@@ -317,33 +333,38 @@
             </section>
 
             <section class="portal-panel student-editor" data-student-editor hidden>
-              <div class="editor-header">
-                <div>
-                  <p class="eyebrow" data-i18n="studentRecord">Student record</p>
-                  <h2 data-selected-student-name></h2>
-                  <span class="record-id" data-selected-student-id></span>
-                  <span class="record-id" data-selected-student-status></span>
-                </div>
+              <div class="record-overline">
+                <span><span aria-hidden="true">&larr;</span> <span data-i18n="studentRecord">Student record</span></span>
                 <strong class="class-chip" data-selected-student-class></strong>
               </div>
 
-              <div class="student-meta-grid" aria-label="Student account details">
-                <span>
-                  <small data-i18n="emailAddress">Email address</small>
-                  <strong data-selected-student-email></strong>
-                </span>
-                <span>
-                  <small data-i18n="registrationSource">Created from</small>
-                  <strong data-selected-student-source></strong>
-                </span>
-                <span>
-                  <small data-i18n="registrationDevice">Device</small>
-                  <strong data-selected-student-device></strong>
-                </span>
-                <span>
-                  <small data-i18n="registrationIp">IP address</small>
-                  <strong data-selected-student-ip></strong>
-                </span>
+              <div class="record-identity-card">
+                <div class="editor-header">
+                  <div>
+                    <h2 data-selected-student-name></h2>
+                    <span class="record-id" data-selected-student-id></span>
+                    <span class="record-id" data-selected-student-status></span>
+                  </div>
+                </div>
+
+                <div class="student-meta-grid" aria-label="Student account details">
+                  <span>
+                    <small data-i18n="emailAddress">Email address</small>
+                    <strong data-selected-student-email></strong>
+                  </span>
+                  <span>
+                    <small data-i18n="registrationSource">Created from</small>
+                    <strong data-selected-student-source></strong>
+                  </span>
+                  <span>
+                    <small data-i18n="registrationDevice">Device</small>
+                    <strong data-selected-student-device></strong>
+                  </span>
+                  <span>
+                    <small data-i18n="registrationIp">IP address</small>
+                    <strong data-selected-student-ip></strong>
+                  </span>
+                </div>
               </div>
 
               <form class="record-form assignment-form verification-form" data-class-assignment-form>
