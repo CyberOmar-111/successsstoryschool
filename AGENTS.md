@@ -8,4 +8,4 @@
 - Do not repeat plans, summaries, or phrases.
 - After editing, run the smallest relevant test.
 - If blocked, state the exact blocker instead of continuing to search.
-- When Working, Keep writing code do not automaticly compact context Focus on writing code.
+- When Working, Keep writing code do not automaticly compact context Focus on writing code.[text]

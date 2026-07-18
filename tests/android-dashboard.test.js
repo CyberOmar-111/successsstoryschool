@@ -24,8 +24,8 @@ function functionBlock(name, nextName) {
   return mainActivity.slice(start, end);
 }
 
-test("Android student mobile route uses a separate screenshot-style dashboard", () => {
-  assert.match(mainActivity, /if \(session\.role == PortalRole\.Student\) \{\s*StudentScreenshotDashboard\(session, payload, onLogout\)/);
+test("Android student route uses a separate screenshot-style dashboard on phone and tablet", () => {
+  assert.match(mainActivity, /if \(session\.role == PortalRole\.Student\) \{\s*StudentScreenshotDashboard\(session, payload, onLogout = logoutAction\)/);
   [
     "StudentScreenshotDashboard",
     "StudentDashboardTopBar",
@@ -49,6 +49,10 @@ test("Android student mobile route uses a separate screenshot-style dashboard", 
   assert.match(mainActivity, /StudentMetric\("Class"/);
   assert.match(mainActivity, /StudentMetric\("Updates"/);
   assert.match(mainActivity, /StudentMetric\("Bus"/);
+  assert.match(mainActivity, /val tabletMode = maxWidth >= 700\.dp/);
+  assert.match(mainActivity, /StudentScreenshotContent\(payload\.data, tabletMode\)/);
+  assert.match(mainActivity, /StudentMetricGrid\(metrics, columns = if \(tabletMode\) 4 else 2\)/);
+  assert.match(mainActivity, /Row\(Modifier\.fillMaxWidth\(\), horizontalArrangement = Arrangement\.spacedBy\(24\.dp\)\)/);
 });
 
 test("Android student dashboard keeps the existing portal backend contract", () => {

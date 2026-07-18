@@ -108,7 +108,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.successstoryschool.app.ui.theme.SSSColors
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -354,14 +353,6 @@ private fun DashboardScreen(session: Session, onLogout: () -> Unit) {
     }
 
     LaunchedEffect(session) { load() }
-    LaunchedEffect(session) {
-        if (session.role == PortalRole.Student || session.role == PortalRole.Parent) {
-            while (true) {
-                delay(5_000)
-                load()
-            }
-        }
-    }
 
     val logoutAction = {
         scope.launch {
@@ -372,7 +363,9 @@ private fun DashboardScreen(session: Session, onLogout: () -> Unit) {
     }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(SSSColors.Paper)) {
-        if (maxWidth < 700.dp) {
+        if (session.role == PortalRole.Student) {
+            StudentScreenshotDashboard(session, payload, onLogout = logoutAction)
+        } else if (maxWidth < 700.dp) {
             MobileDashboard(session, payload, onLogout = logoutAction)
         } else {
             Row(Modifier.fillMaxSize()) {
@@ -697,33 +690,36 @@ private data class AttendanceBreakdown(
 
 @Composable
 private fun StudentScreenshotDashboard(session: Session, payload: DashboardPayload, onLogout: () -> Unit) {
-    Column(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(SSSStudentColors.Background)
     ) {
-        StudentDashboardTopBar(session, onLogout)
-        when (payload) {
-            DashboardPayload.Loading -> LoadingPanel()
-            is DashboardPayload.Error -> Box(Modifier.fillMaxWidth().padding(22.dp)) {
-                Text(payload.message, color = SSSStudentColors.Maroon, fontWeight = FontWeight.Bold)
-            }
-            is DashboardPayload.Student -> StudentScreenshotContent(payload.data)
-            else -> Box(Modifier.fillMaxWidth().padding(22.dp)) {
-                Text("Student dashboard unavailable.", color = SSSStudentColors.Maroon, fontWeight = FontWeight.Bold)
+        val tabletMode = maxWidth >= 700.dp
+        Column(Modifier.fillMaxSize()) {
+            StudentDashboardTopBar(session, onLogout, tabletMode)
+            when (payload) {
+                DashboardPayload.Loading -> LoadingPanel()
+                is DashboardPayload.Error -> Box(Modifier.fillMaxWidth().padding(22.dp)) {
+                    Text(payload.message, color = SSSStudentColors.Maroon, fontWeight = FontWeight.Bold)
+                }
+                is DashboardPayload.Student -> StudentScreenshotContent(payload.data, tabletMode)
+                else -> Box(Modifier.fillMaxWidth().padding(22.dp)) {
+                    Text("Student dashboard unavailable.", color = SSSStudentColors.Maroon, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StudentDashboardTopBar(session: Session, onLogout: () -> Unit) {
+private fun StudentDashboardTopBar(session: Session, onLogout: () -> Unit, tabletMode: Boolean = false) {
     Row(
         Modifier
             .fillMaxWidth()
-            .height(92.dp)
+            .height(if (tabletMode) 104.dp else 92.dp)
             .background(SSSStudentColors.Navy)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = if (tabletMode) 42.dp else 24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -760,7 +756,7 @@ private fun StudentDashboardTopBar(session: Session, onLogout: () -> Unit) {
 }
 
 @Composable
-private fun StudentScreenshotContent(payload: JSONObject) {
+private fun StudentScreenshotContent(payload: JSONObject, tabletMode: Boolean = false) {
     val user = payload.optJSONObject("user") ?: JSONObject()
     val records = payload.optJSONObject("records") ?: JSONObject()
     val grades = records.optJSONArray("grades") ?: JSONArray()
@@ -770,34 +766,49 @@ private fun StudentScreenshotContent(payload: JSONObject) {
     val fees = records.optJSONArray("fees") ?: JSONArray()
     val updateCount = homework.length() + announcements.length()
 
+    val metrics = listOf(
+        StudentMetric("Status", studentStatusLabel(user), "Account access", Icons.Outlined.School, SSSStudentColors.Green, SSSStudentColors.MintSoft),
+        StudentMetric("Class", user.optString("className", user.optString("requestedClassName", "Pending")).ifBlank { "Pending" }, "Homeroom", Icons.Outlined.GridView, SSSStudentColors.Navy, SSSStudentColors.BlueSoft),
+        StudentMetric("Updates", updateCount.toString(), "Latest posts", Icons.Outlined.Notifications, SSSStudentColors.Navy, SSSStudentColors.BlueSoft),
+        StudentMetric("Bus", cleanBusLabel(user.optString("transport")), "Transportation", Icons.Outlined.DirectionsBus, SSSStudentColors.Muted, SSSStudentColors.NeutralSoft)
+    )
+
     LazyColumn(
         Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        contentPadding = PaddingValues(horizontal = if (tabletMode) 42.dp else 20.dp, vertical = if (tabletMode) 34.dp else 28.dp),
+        verticalArrangement = Arrangement.spacedBy(if (tabletMode) 24.dp else 18.dp)
     ) {
-        item {
-            StudentMetricGrid(
-                listOf(
-                    StudentMetric("Status", studentStatusLabel(user), "Account access", Icons.Outlined.School, SSSStudentColors.Green, SSSStudentColors.MintSoft),
-                    StudentMetric("Class", user.optString("className", user.optString("requestedClassName", "Pending")).ifBlank { "Pending" }, "Homeroom", Icons.Outlined.GridView, SSSStudentColors.Navy, SSSStudentColors.BlueSoft),
-                    StudentMetric("Updates", updateCount.toString(), "Latest posts", Icons.Outlined.Notifications, SSSStudentColors.Navy, SSSStudentColors.BlueSoft),
-                    StudentMetric("Bus", cleanBusLabel(user.optString("transport")), "Transportation", Icons.Outlined.DirectionsBus, SSSStudentColors.Muted, SSSStudentColors.NeutralSoft)
-                )
-            )
+        item { StudentMetricGrid(metrics, columns = if (tabletMode) 4 else 2) }
+        if (tabletMode) {
+            item {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    Column(Modifier.weight(1.08f), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                        StudentGradesPreview(grades)
+                        StudentRecentAttendanceCard(attendance)
+                        StudentHomeworkPreview(homework)
+                    }
+                    Column(Modifier.weight(0.92f), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                        StudentAttendanceSummaryCard(attendance)
+                        StudentNoticesPreview(announcements)
+                        StudentFeesPreview(fees)
+                    }
+                }
+            }
+        } else {
+            item { StudentGradesPreview(grades) }
+            item { StudentAttendanceSummaryCard(attendance) }
+            item { StudentRecentAttendanceCard(attendance) }
+            item { StudentHomeworkPreview(homework) }
+            item { StudentNoticesPreview(announcements) }
+            item { StudentFeesPreview(fees) }
         }
-        item { StudentGradesPreview(grades) }
-        item { StudentAttendanceSummaryCard(attendance) }
-        item { StudentRecentAttendanceCard(attendance) }
-        item { StudentHomeworkPreview(homework) }
-        item { StudentNoticesPreview(announcements) }
-        item { StudentFeesPreview(fees) }
     }
 }
 
 @Composable
-private fun StudentMetricGrid(metrics: List<StudentMetric>) {
+private fun StudentMetricGrid(metrics: List<StudentMetric>, columns: Int = 2) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        metrics.chunked(2).forEach { row ->
+        metrics.chunked(columns).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                 row.forEach { metric ->
                     StudentMetricTile(metric, Modifier.weight(1f))
