@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node --test .\\\\tests\\\\portal-overview.test.js",
+    "test": "node --test tests/portal-overview.test.js tests/android-dashboard.test.js",
     "build:tailwind": "npx @tailwindcss/cli -i ./src/site/styles/tailwind.css -o ./school-tailwind.css --minify",
     "build:carousel": "node scripts/build-carousel.mjs",
     "build:site": "node scripts/build-site.mjs",

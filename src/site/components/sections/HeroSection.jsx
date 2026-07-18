@@ -1,5 +1,6 @@
 ﻿import { BookOpen, ClipboardList, LayoutDashboard, MapPin } from "../../icons/index.jsx";
 import { ActionLink } from "../primitives.jsx";
+import { heroStats } from "../../data/homepage-content.js";
 
 const heroQuickLinks = [
   { href: "#admissions", label: "navAdmissions", icon: ClipboardList, tone: "gold" },
@@ -29,6 +30,14 @@ export function HeroSection({ t, isArabic }) {
             <p>{t.heroText}</p>
             <ActionLink href="#contact" variant="primary" className="hero-caption-cta">{t.beginEnrollment}</ActionLink>
           </div>
+          <dl className="hero-stats" aria-label={t.heroValue}>
+            {heroStats.map(([value, label]) => (
+              <div key={label}>
+                <dt>{value}</dt>
+                <dd>{t[label]}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
         <div className="hero-side-ui" aria-label={t.heroActionsLabel}>

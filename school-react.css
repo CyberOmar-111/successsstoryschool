@@ -471,23 +471,13 @@ h3 {
   border: 2px solid currentColor;
   border-top-color: transparent;
   border-radius: 999px;
-  animation: feedback-spin 700ms linear infinite;
-}
-
-@keyframes feedback-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .action-link.primary,
 .form-submit {
   color: var(--paper);
   background: var(--primary);
-  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 150ms ease,
-              background 180ms ease,
-              box-shadow 180ms ease;
+  transition: background 180ms ease, box-shadow 180ms ease;
 }
 
 .action-link.primary:hover,
@@ -4642,29 +4632,6 @@ canvas {
   transform: translateY(1px);
 }
 
-/* Original international-school component polish. */
-@keyframes sss-card-rise {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes sss-soft-sheen {
-  from {
-    transform: translateX(-130%) rotate(12deg);
-  }
-
-  to {
-    transform: translateX(130%) rotate(12deg);
-  }
-}
-
 [data-reveal-card] {
   transform: translateY(20px);
   transition: opacity 360ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -4743,7 +4710,6 @@ canvas {
 .explore-tile:hover::after,
 .explore-tile:focus-visible::after {
   opacity: 1;
-  animation: sss-soft-sheen 780ms ease;
 }
 
 .school-entry-strip {
@@ -4984,13 +4950,12 @@ canvas {
   .entry-action-card:hover::after,
   .entry-action-card:focus-visible::after,
   .showcase-update-card:hover::after,
-  .showcase-update-card:focus-visible::after,
-  .explore-tile:hover::after,
-  .explore-tile:focus-visible::after,
-  .showcase-explore::before {
-    animation: none;
-    transform: none;
-  }
+.showcase-update-card:focus-visible::after,
+.explore-tile:hover::after,
+.explore-tile:focus-visible::after,
+.showcase-explore::before {
+  transform: none;
+}
 }
 
 /* Photo-first hero and clear top navigation. */
@@ -5890,7 +5855,6 @@ h3,
 .entry-action-card:hover::after,
 .entry-action-card:focus-visible::after {
   opacity: 1;
-  animation: none;
   transform: none;
 }
 

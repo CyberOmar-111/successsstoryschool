@@ -487,7 +487,7 @@ function applyLanguage(nextLanguage) {
 
 function setButtonBusy(button, isBusy) {
   if (!button) {
-    return;
+    return; 
   }
   if (isBusy) {
     button.dataset.originalHtml = button.innerHTML;

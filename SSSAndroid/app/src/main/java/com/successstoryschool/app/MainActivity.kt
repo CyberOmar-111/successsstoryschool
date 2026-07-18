@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,6 +50,8 @@ import androidx.compose.material.icons.outlined.Announcement
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.DirectionsBus
 import androidx.compose.material.icons.outlined.FamilyRestroom
@@ -55,7 +59,10 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.HomeWork
 import androidx.compose.material.icons.outlined.Logout
+import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -67,6 +74,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -86,6 +94,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -103,6 +113,8 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
@@ -387,6 +399,11 @@ private fun DashboardScreen(session: Session, onLogout: () -> Unit) {
 
 @Composable
 private fun MobileDashboard(session: Session, payload: DashboardPayload, onLogout: () -> Unit) {
+    if (session.role == PortalRole.Student) {
+        StudentScreenshotDashboard(session, payload, onLogout)
+        return
+    }
+
     LazyColumn(
         Modifier
             .fillMaxSize()
@@ -398,9 +415,9 @@ private fun MobileDashboard(session: Session, payload: DashboardPayload, onLogou
         when (payload) {
             DashboardPayload.Loading -> item { LoadingPanel() }
             is DashboardPayload.Error -> item { Text(payload.message, color = Color(0xFF9B1C1C), fontWeight = FontWeight.Bold) }
-            is DashboardPayload.Student -> mobileStudentItems(payload.data)
             is DashboardPayload.Teacher -> mobileTeacherItems(payload.assignments, payload.classroom)
             is DashboardPayload.Parent -> mobileParentItems(payload.data)
+            is DashboardPayload.Student -> item { LoadingPanel() }
         }
     }
 }
@@ -635,12 +652,115 @@ private fun readAttachment(context: Context, uri: Uri): AttachmentDraft? {
     )
 }
 
-private fun androidx.compose.foundation.lazy.LazyListScope.mobileStudentItems(payload: JSONObject) {
-    item { StudentMobileWorkspace(payload) }
+private object SSSStudentColors {
+    val Background = Color(0xFFF4F2EE)
+    val Card = Color.White
+    val Navy = Color(0xFF1A2B4D)
+    val NavySoft = Color(0xFF253556)
+    val Muted = Color(0xFF727B8C)
+    val Line = Color(0xFFEAE7E2)
+    val Maroon = Color(0xFF7D2A40)
+    val MaroonSoft = Color(0xFFF7ECEF)
+    val MaroonChip = Color(0xFFF8EEF2)
+    val Green = Color(0xFF08A879)
+    val GreenSoft = Color(0xFFE9FFF6)
+    val Amber = Color(0xFFEB8200)
+    val AmberSoft = Color(0xFFFFF6E6)
+    val BlueSoft = Color(0xFFEDF5FF)
+    val MintSoft = Color(0xFFE9FFF5)
+    val NeutralSoft = Color(0xFFF8F7F5)
+}
+
+private data class StudentMetric(
+    val label: String,
+    val value: String,
+    val detail: String,
+    val icon: ImageVector,
+    val tint: Color,
+    val background: Color
+)
+
+private data class AttendanceBreakdown(
+    val total: Int,
+    val present: Int,
+    val absent: Int,
+    val late: Int,
+    val other: Int
+) {
+    val presentPercent: Int = percent(present)
+    val absentPercent: Int = percent(absent)
+    val latePercent: Int = percent(late)
+
+    private fun percent(value: Int): Int =
+        if (total == 0) 0 else (value.toDouble() / total.toDouble() * 100.0).roundToInt()
 }
 
 @Composable
-private fun StudentMobileWorkspace(payload: JSONObject) {
+private fun StudentScreenshotDashboard(session: Session, payload: DashboardPayload, onLogout: () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(SSSStudentColors.Background)
+    ) {
+        StudentDashboardTopBar(session, onLogout)
+        when (payload) {
+            DashboardPayload.Loading -> LoadingPanel()
+            is DashboardPayload.Error -> Box(Modifier.fillMaxWidth().padding(22.dp)) {
+                Text(payload.message, color = SSSStudentColors.Maroon, fontWeight = FontWeight.Bold)
+            }
+            is DashboardPayload.Student -> StudentScreenshotContent(payload.data)
+            else -> Box(Modifier.fillMaxWidth().padding(22.dp)) {
+                Text("Student dashboard unavailable.", color = SSSStudentColors.Maroon, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudentDashboardTopBar(session: Session, onLogout: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(92.dp)
+            .background(SSSStudentColors.Navy)
+            .padding(horizontal = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier
+                .size(58.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Outlined.School, contentDescription = null, tint = SSSStudentColors.Navy, modifier = Modifier.size(31.dp))
+        }
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(session.name, color = Color.White, fontSize = 20.sp, lineHeight = 23.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("${session.id} · ${session.role.title}", color = Color(0xFFCCDBF3), fontSize = 16.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Box(contentAlignment = Alignment.TopEnd) {
+            IconButton(onClick = {}, modifier = Modifier.size(44.dp)) {
+                Icon(Icons.Outlined.Notifications, contentDescription = "Notifications", tint = Color(0xFFD7E4F8), modifier = Modifier.size(27.dp))
+            }
+            Box(
+                Modifier
+                    .padding(top = 10.dp, end = 9.dp)
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(SSSStudentColors.Maroon)
+            )
+        }
+        Spacer(Modifier.width(4.dp))
+        IconButton(onClick = onLogout, modifier = Modifier.size(44.dp)) {
+            Icon(Icons.Outlined.Menu, contentDescription = "Sign out", tint = Color(0xFFD7E4F8), modifier = Modifier.size(30.dp))
+        }
+    }
+}
+
+@Composable
+private fun StudentScreenshotContent(payload: JSONObject) {
     val user = payload.optJSONObject("user") ?: JSONObject()
     val records = payload.optJSONObject("records") ?: JSONObject()
     val grades = records.optJSONArray("grades") ?: JSONArray()
@@ -650,144 +770,540 @@ private fun StudentMobileWorkspace(payload: JSONObject) {
     val fees = records.optJSONArray("fees") ?: JSONArray()
     val updateCount = homework.length() + announcements.length()
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        IosMetricGrid(
-            listOf(
-                MobileMetric("Status", if (user.optBoolean("approved")) "Active" else user.optString("approvalStatus", "Pending"), "Account access", Icons.Outlined.School),
-                MobileMetric("Class", user.optString("className", user.optString("requestedClassName", "Pending")), "Homeroom", Icons.Outlined.Groups),
-                MobileMetric("Updates", updateCount.toString(), "Latest posts", Icons.Outlined.Announcement),
-                MobileMetric("Bus", cleanBusLabel(user.optString("transport")), "Transportation", Icons.Outlined.DirectionsBus)
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        item {
+            StudentMetricGrid(
+                listOf(
+                    StudentMetric("Status", studentStatusLabel(user), "Account access", Icons.Outlined.School, SSSStudentColors.Green, SSSStudentColors.MintSoft),
+                    StudentMetric("Class", user.optString("className", user.optString("requestedClassName", "Pending")).ifBlank { "Pending" }, "Homeroom", Icons.Outlined.GridView, SSSStudentColors.Navy, SSSStudentColors.BlueSoft),
+                    StudentMetric("Updates", updateCount.toString(), "Latest posts", Icons.Outlined.Notifications, SSSStudentColors.Navy, SSSStudentColors.BlueSoft),
+                    StudentMetric("Bus", cleanBusLabel(user.optString("transport")), "Transportation", Icons.Outlined.DirectionsBus, SSSStudentColors.Muted, SSSStudentColors.NeutralSoft)
+                )
             )
-        )
+        }
+        item { StudentGradesPreview(grades) }
+        item { StudentAttendanceSummaryCard(attendance) }
+        item { StudentRecentAttendanceCard(attendance) }
+        item { StudentHomeworkPreview(homework) }
+        item { StudentNoticesPreview(announcements) }
+        item { StudentFeesPreview(fees) }
+    }
+}
 
-        IosQuickActions(
-            listOf(
-                MobileAction("Grades", "${grades.length()} grades recorded", Icons.Outlined.TrendingUp, "${averageGrades(grades).roundToInt()}%"),
-                MobileAction("Attendance", "${attendance.length()} records this term", Icons.Outlined.CalendarMonth, "${attendancePercent(attendance).roundToInt()}%"),
-                MobileAction("Homework", if (homework.length() == 0) "No homework posted yet" else "Latest assignment ready", Icons.Outlined.Assignment, homework.length().toString()),
-                MobileAction("Fees", if (fees.length() == 0) "No balance posted" else "Open billing items", Icons.Outlined.CreditCard, if (fees.length() == 0) "--" else fees.length().toString(), SSSColors.Amber, true)
-            )
-        )
-
-        StudentGradesCard(grades)
-        StudentAttendanceCard(attendance)
-        StudentHomeworkCard(homework)
-        StudentAnnouncementsCard(announcements)
-
-        IosNativeCard("Fees", Icons.Outlined.CreditCard, if (fees.length() == 0) "--" else fees.length().toString()) {
-            if (fees.length() == 0) {
-                Text("No fee balance has been posted to this account.", color = SSSColors.Muted, lineHeight = 20.sp)
-            } else {
-                (0 until fees.length()).mapNotNull { fees.optJSONObject(it) }.forEach {
-                    StudentHistoryRow(
-                        title = it.optString("label", "Fee item"),
-                        detail = "${it.optString("amount", "--")} - ${it.optString("status", "Open")}",
-                        meta = "Billing"
-                    )
+@Composable
+private fun StudentMetricGrid(metrics: List<StudentMetric>) {
+    Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        metrics.chunked(2).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                row.forEach { metric ->
+                    StudentMetricTile(metric, Modifier.weight(1f))
                 }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-private fun StudentGradesCard(grades: JSONArray) {
+private fun StudentMetricTile(metric: StudentMetric, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.height(174.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = SSSStudentColors.Card),
+        elevation = CardDefaults.cardElevation(3.dp)
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(metric.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(metric.icon, contentDescription = null, tint = metric.tint, modifier = Modifier.size(25.dp))
+                }
+                Spacer(Modifier.width(13.dp))
+                Text(metric.label.uppercase(Locale.US), color = SSSStudentColors.Muted, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(metric.value.ifBlank { "--" }, color = SSSStudentColors.Navy, fontSize = 34.sp, lineHeight = 37.sp, fontWeight = FontWeight.ExtraBold, fontFamily = FontFamily.Serif, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(metric.detail, color = SSSStudentColors.Muted, fontSize = 18.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudentSectionCard(content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = SSSStudentColors.Card),
+        elevation = CardDefaults.cardElevation(3.dp)
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun StudentSectionHeader(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    iconTint: Color = SSSStudentColors.Navy,
+    iconBackground: Color = SSSStudentColors.BlueSoft,
+    trailing: @Composable (() -> Unit)? = null
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 26.dp, vertical = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(iconBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(25.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, color = SSSStudentColors.Navy, fontSize = 21.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold)
+            if (subtitle.isNotBlank()) {
+                Text(subtitle, color = SSSStudentColors.Muted, fontSize = 16.sp, lineHeight = 19.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        trailing?.invoke()
+    }
+}
+
+@Composable
+private fun StudentDivider() {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(SSSStudentColors.Line)
+    )
+}
+
+@Composable
+private fun StudentBadge(text: String, color: Color = SSSStudentColors.Maroon, background: Color = SSSStudentColors.MaroonChip) {
+    Text(
+        text = text.ifBlank { "--" },
+        color = color,
+        fontSize = 15.sp,
+        lineHeight = 17.sp,
+        fontWeight = FontWeight.ExtraBold,
+        fontFamily = FontFamily.Monospace,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(background)
+            .padding(horizontal = 17.dp, vertical = 8.dp)
+    )
+}
+
+@Composable
+private fun StudentPrimaryButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(58.dp)
+            .clip(RoundedCornerShape(22.dp))
+            .background(SSSStudentColors.Maroon)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(label, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+    }
+}
+
+@Composable
+private fun StudentSoftButton(label: String, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(58.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(SSSStudentColors.MaroonSoft)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(label, color = SSSStudentColors.Maroon, fontSize = 19.sp, fontWeight = FontWeight.ExtraBold)
+    }
+}
+
+@Composable
+private fun StudentGradesPreview(grades: JSONArray) {
     var expanded by remember(grades) { mutableStateOf(false) }
-    IosNativeCard("Grades", Icons.Outlined.TrendingUp, grades.length().toString()) {
-        val rows = grades.toJsonObjects()
+    val rows = grades.toJsonObjects().asReversed()
+    StudentSectionCard {
+        StudentSectionHeader(
+            title = "Grades",
+            subtitle = "${grades.length()} grades recorded",
+            icon = Icons.Outlined.TrendingUp,
+            trailing = { StudentBadge("${averageGrades(grades).roundToInt()}%", color = Color.White, background = SSSStudentColors.Navy) }
+        )
+        StudentDivider()
         if (rows.isEmpty()) {
-            Text("No grades posted yet.", color = SSSColors.Muted, lineHeight = 20.sp)
+            StudentEmptyState("No grades have been posted yet.")
         } else {
-            rows.take(if (expanded) rows.size else 3).forEach { grade ->
-                val one = grade.scoreText("termOne", "term_one")
-                val two = grade.scoreText("termTwo", "term_two")
-                val detail = listOfNotNull(
-                    one.takeIf { it.isNotBlank() }?.let { "Term 1: $it" },
-                    two.takeIf { it.isNotBlank() }?.let { "Term 2: $it" }
-                ).joinToString("  •  ").ifBlank { "Grade posted" }
-                StudentHistoryRow(grade.optString("subject", "Subject"), detail, "Latest grade")
+            rows.take(if (expanded) rows.size else 4).forEach { grade ->
+                StudentGradeRow(grade)
+                StudentDivider()
             }
-            HistoryToggle(expanded, rows.size) { expanded = !expanded }
+            Column(Modifier.padding(horizontal = 28.dp, vertical = 24.dp)) {
+                StudentSoftButton(if (expanded) "Show latest →" else "View full history →") { expanded = !expanded }
+            }
         }
     }
 }
 
 @Composable
-private fun StudentAttendanceCard(attendance: JSONArray) {
+private fun StudentGradeRow(grade: JSONObject) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 28.dp, vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(grade.optString("subject", "Subject"), color = SSSStudentColors.Navy, fontSize = 20.sp, lineHeight = 23.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(gradeDetail(grade), color = SSSStudentColors.Muted, fontSize = 16.sp, lineHeight = 19.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        StudentBadge("Latest grade", color = SSSStudentColors.Maroon, background = SSSStudentColors.MaroonChip)
+        Spacer(Modifier.width(12.dp))
+        Text(gradeDisplayScore(grade), color = SSSStudentColors.Maroon, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, fontFamily = FontFamily.Monospace)
+    }
+}
+
+@Composable
+private fun StudentAttendanceSummaryCard(attendance: JSONArray) {
+    val breakdown = attendanceBreakdown(attendance)
+    StudentSectionCard {
+        StudentSectionHeader(
+            title = "Attendance",
+            subtitle = "This term",
+            icon = Icons.Outlined.CalendarMonth,
+            trailing = { StudentBadge("${breakdown.presentPercent}%") }
+        )
+        StudentDivider()
+        Column(Modifier.padding(horizontal = 28.dp, vertical = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            StudentAttendanceDonut(breakdown)
+            Spacer(Modifier.height(18.dp))
+            StudentAttendanceLegend("Present", breakdown.presentPercent, SSSStudentColors.Navy)
+            StudentAttendanceLegend("Absent", breakdown.absentPercent, SSSStudentColors.Maroon)
+            StudentAttendanceLegend("Late", breakdown.latePercent, SSSStudentColors.Amber)
+            Spacer(Modifier.height(22.dp))
+            StudentPrimaryButton("View records")
+        }
+    }
+}
+
+@Composable
+private fun StudentAttendanceDonut(breakdown: AttendanceBreakdown) {
+    Canvas(
+        Modifier
+            .size(236.dp)
+            .padding(18.dp)
+    ) {
+        val strokeWidth = size.minDimension * 0.16f
+        if (breakdown.total == 0) {
+            drawArc(
+                color = SSSStudentColors.Line,
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
+            )
+            return@Canvas
+        }
+        var startAngle = -90f
+        listOf(
+            breakdown.present to SSSStudentColors.Navy,
+            breakdown.absent to SSSStudentColors.Maroon,
+            breakdown.late to SSSStudentColors.Amber,
+            breakdown.other to SSSStudentColors.Line
+        ).forEach { (count, color) ->
+            if (count > 0) {
+                val sweep = count.toFloat() / breakdown.total.toFloat() * 360f
+                drawArc(
+                    color = color,
+                    startAngle = startAngle,
+                    sweepAngle = (sweep - 2f).coerceAtLeast(1f),
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
+                )
+                startAngle += sweep
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudentAttendanceLegend(label: String, percent: Int, color: Color) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier
+                .size(15.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(Modifier.width(13.dp))
+        Text(label, color = SSSStudentColors.Muted, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Text("$percent%", color = SSSStudentColors.Navy, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = FontFamily.Monospace)
+    }
+}
+
+@Composable
+private fun StudentRecentAttendanceCard(attendance: JSONArray) {
     var expanded by remember(attendance) { mutableStateOf(false) }
-    IosNativeCard("Attendance", Icons.Outlined.CalendarMonth, "${attendancePercent(attendance).roundToInt()}%") {
-        val rows = attendance.toJsonObjects()
-        if (rows.isEmpty()) {
-            Text("No attendance posted yet.", color = SSSColors.Muted, lineHeight = 20.sp)
-        } else {
-            rows.take(if (expanded) rows.size else 3).forEach { record ->
-                StudentHistoryRow(
-                    title = record.optString("schoolDate", record.optString("school_date", "School day")),
-                    detail = record.optString("status", "posted").replaceFirstChar { it.uppercase() },
-                    meta = "Attendance"
+    val rows = attendance.toJsonObjects()
+    StudentSectionCard {
+        StudentSectionHeader(
+            title = "Recent Attendance",
+            subtitle = "",
+            icon = Icons.Outlined.CalendarMonth,
+            trailing = {
+                Text(
+                    if (expanded) "Latest" else "See all",
+                    color = SSSStudentColors.Maroon,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.clickable { expanded = !expanded }
                 )
             }
-            HistoryToggle(expanded, rows.size) { expanded = !expanded }
-        }
-    }
-}
-
-@Composable
-private fun StudentHomeworkCard(homework: JSONArray) {
-    var expanded by remember(homework) { mutableStateOf(false) }
-    IosNativeCard("Homework", Icons.Outlined.Assignment, homework.length().toString()) {
-        val rows = homework.toJsonObjects()
-        if (rows.isEmpty()) {
-            Text("No homework posted yet.", color = SSSColors.Muted, lineHeight = 20.sp)
-        } else {
-            rows.take(if (expanded) rows.size else 3).forEach { item ->
-                val dueDate = item.optString("dueDate", item.optString("due_date", "")).ifBlank { "Class post" }
-                StudentHistoryRow(item.optString("subject", "Homework"), item.optString("details", "Assignment posted"), dueDate)
-            }
-            HistoryToggle(expanded, rows.size) { expanded = !expanded }
-        }
-    }
-}
-
-@Composable
-private fun StudentAnnouncementsCard(announcements: JSONArray) {
-    var expanded by remember(announcements) { mutableStateOf(false) }
-    IosNativeCard("Announcements", Icons.Outlined.Announcement, announcements.length().toString()) {
-        val rows = announcements.toJsonObjects()
-        if (rows.isEmpty()) {
-            Text("No announcements posted yet.", color = SSSColors.Muted, lineHeight = 20.sp)
-        } else {
-            rows.take(if (expanded) rows.size else 3).forEach { item ->
-                StudentHistoryRow(item.optString("title", "Announcement"), item.optString("details", "Posted"), item.optString("postedAt", item.optString("posted_at", "School post")))
-            }
-            HistoryToggle(expanded, rows.size) { expanded = !expanded }
-        }
-    }
-}
-
-@Composable
-private fun StudentHistoryRow(title: String, detail: String, meta: String) {
-    Column(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(title.ifBlank { "Posted" }, color = SSSColors.Navy, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
-        Text(detail.ifBlank { "Details posted" }, color = SSSColors.Muted, fontSize = 15.sp, lineHeight = 20.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
-        Text(meta.ifBlank { "Latest" }, color = SSSColors.Amber, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-private fun HistoryToggle(expanded: Boolean, count: Int, onClick: () -> Unit) {
-    if (count > 3) {
-        Text(
-            if (expanded) "Show latest" else "View full history",
-            color = SSSColors.Blue,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(Color(0xFFE9F4FA))
-                .clickable(onClick = onClick)
-                .padding(horizontal = 13.dp, vertical = 8.dp)
         )
+        StudentDivider()
+        if (rows.isEmpty()) {
+            StudentEmptyState("No attendance records have been posted yet.")
+        } else {
+            rows.take(if (expanded) rows.size else 5).forEach { record ->
+                StudentAttendanceRow(record)
+                StudentDivider()
+            }
+        }
     }
+}
+
+@Composable
+private fun StudentAttendanceRow(record: JSONObject) {
+    val status = normalizedStatus(record.optString("status"))
+    val styleColor = attendanceStatusColor(status)
+    val rowBackground = if (status == "absent") SSSStudentColors.MaroonSoft else Color.White
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(rowBackground)
+            .padding(horizontal = 30.dp, vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(formatSchoolDate(record.optString("schoolDate", record.optString("school_date"))), color = SSSStudentColors.Navy, fontSize = 21.sp, lineHeight = 23.sp, fontWeight = FontWeight.ExtraBold, fontFamily = FontFamily.Monospace)
+            Text(if (status == "late") "2nd period" else "Full Day", color = SSSStudentColors.Muted, fontSize = 17.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(attendanceStatusIcon(status), contentDescription = null, tint = styleColor, modifier = Modifier.size(19.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(status.replaceFirstChar { it.uppercase() }, color = styleColor, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold)
+        }
+    }
+}
+
+@Composable
+private fun StudentHomeworkPreview(homework: JSONArray) {
+    var expanded by remember(homework) { mutableStateOf(false) }
+    val rows = homework.toJsonObjects()
+    StudentSectionCard {
+        StudentSectionHeader(
+            title = "Homework",
+            subtitle = "${homework.length()} assignments this week",
+            icon = Icons.Outlined.Assignment,
+            iconTint = SSSStudentColors.Amber,
+            iconBackground = SSSStudentColors.AmberSoft,
+            trailing = { StudentBadge("${homework.length()}\ntotal", color = SSSStudentColors.Amber, background = Color(0xFFFFF7E8)) }
+        )
+        StudentDivider()
+        if (rows.isEmpty()) {
+            StudentEmptyState("No homework has been posted yet.")
+        } else {
+            rows.take(if (expanded) rows.size else 4).forEach { item ->
+                StudentHomeworkRow(item)
+                StudentDivider()
+            }
+            Column(Modifier.padding(horizontal = 28.dp, vertical = 24.dp)) {
+                StudentPrimaryButton(if (expanded) "Show latest assignments" else "View all assignments") { expanded = !expanded }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudentHomeworkRow(item: JSONObject) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 28.dp, vertical = 21.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .border(BorderStroke(3.dp, Color(0xFFD8D3CC)), CircleShape)
+        )
+        Spacer(Modifier.width(18.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(item.optString("details", item.optString("subject", "Homework")), color = SSSStudentColors.Navy, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.ExtraBold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    item.optString("subject", "Homework"),
+                    color = Color(0xFF1765F0),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(Color(0xFFEAF2FF))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(homeworkDueLabel(item), color = SSSStudentColors.Muted, fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudentNoticesPreview(announcements: JSONArray) {
+    var expanded by remember(announcements) { mutableStateOf(false) }
+    val rows = announcements.toJsonObjects()
+    StudentSectionCard {
+        StudentSectionHeader(
+            title = "School Notices",
+            subtitle = "",
+            icon = Icons.Outlined.Announcement,
+            trailing = {
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(15.dp))
+                        .background(SSSStudentColors.Maroon)
+                        .clickable { expanded = !expanded }
+                        .padding(horizontal = 22.dp, vertical = 11.dp)
+                ) {
+                    Text(if (expanded) "Latest" else "View all", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold)
+                }
+            }
+        )
+        StudentDivider()
+        if (rows.isEmpty()) {
+            StudentEmptyState("No school notices have been posted yet.")
+        } else {
+            rows.take(if (expanded) rows.size else 3).forEach { notice ->
+                StudentNoticeRow(notice)
+                StudentDivider()
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudentNoticeRow(notice: JSONObject) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 28.dp, vertical = 22.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                noticeCategory(notice),
+                color = SSSStudentColors.Maroon,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(SSSStudentColors.MaroonChip)
+                    .padding(horizontal = 12.dp, vertical = 5.dp)
+            )
+            Spacer(Modifier.width(13.dp))
+            Text(formatCompactDate(notice.optString("postedAt", notice.optString("posted_at"))).ifBlank { "Posted" }, color = SSSStudentColors.Muted, fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        }
+        Text(notice.optString("title", "School notice"), color = SSSStudentColors.Navy, fontSize = 21.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold)
+        Text(notice.optString("details", "Posted by the school."), color = SSSStudentColors.Muted, fontSize = 18.sp, lineHeight = 25.sp, fontWeight = FontWeight.SemiBold, maxLines = 3, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun StudentFeesPreview(fees: JSONArray) {
+    val rows = fees.toJsonObjects()
+    val dueTotal = rows
+        .filter { it.optString("status").equals("due", ignoreCase = true) }
+        .sumOf { it.optDouble("amount", 0.0) }
+    StudentSectionCard {
+        StudentSectionHeader(
+            title = "Fees",
+            subtitle = if (rows.isEmpty()) "No balance posted" else "${rows.size} billing records",
+            icon = Icons.Outlined.CreditCard,
+            iconTint = SSSStudentColors.Maroon,
+            iconBackground = SSSStudentColors.MaroonSoft,
+            trailing = { StudentBadge(if (dueTotal > 0.0) formatFeeAmount(dueTotal) else "--") }
+        )
+        StudentDivider()
+        if (rows.isEmpty()) {
+            StudentEmptyState("No fee records have been posted yet.")
+        } else {
+            rows.take(4).forEach { fee ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 28.dp, vertical = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(fee.optString("label", "Fee item"), color = SSSStudentColors.Navy, fontSize = 19.sp, fontWeight = FontWeight.ExtraBold)
+                        Text(fee.optString("status", "Open").replaceFirstChar { it.uppercase() }, color = SSSStudentColors.Muted, fontWeight = FontWeight.SemiBold)
+                    }
+                    Text(formatFeeAmount(fee.optDouble("amount", 0.0)), color = SSSStudentColors.Maroon, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = FontFamily.Monospace)
+                }
+                StudentDivider()
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudentEmptyState(message: String) {
+    Text(
+        message,
+        color = SSSStudentColors.Muted,
+        fontSize = 17.sp,
+        lineHeight = 23.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp)
+    )
 }
 
 private fun androidx.compose.foundation.lazy.LazyListScope.mobileTeacherItems(assignments: JSONArray, classroom: JSONObject?) {
@@ -1752,3 +2268,105 @@ private fun cleanBusLabel(value: String): String {
     val cleaned = value.trim()
     return if (cleaned.isBlank() || cleaned.equals("null", ignoreCase = true)) "None" else cleaned
 }
+
+private fun studentStatusLabel(user: JSONObject): String {
+    if (user.optBoolean("approved")) return "Active"
+    return user.optString("approvalStatus", "Pending")
+        .replace("_", " ")
+        .replaceFirstChar { it.uppercase() }
+        .ifBlank { "Pending" }
+}
+
+private fun gradeScores(grade: JSONObject): List<Double> =
+    listOfNotNull(
+        grade.scoreNumber("termOne", "term_one"),
+        grade.scoreNumber("termTwo", "term_two")
+    )
+
+private fun gradeDisplayScore(grade: JSONObject): String {
+    val scores = gradeScores(grade)
+    if (scores.isEmpty()) return "--"
+    val average = scores.average()
+    return if (average % 1.0 == 0.0) average.roundToInt().toString() else String.format(Locale.US, "%.1f", average)
+}
+
+private fun gradeDetail(grade: JSONObject): String {
+    val termOne = grade.scoreText("termOne", "term_one")
+    val termTwo = grade.scoreText("termTwo", "term_two")
+    return listOfNotNull(
+        termOne.takeIf { it.isNotBlank() }?.let { "Term 1 $it" },
+        termTwo.takeIf { it.isNotBlank() }?.let { "Term 2 $it" }
+    ).joinToString(" · ").ifBlank { "Grade posted" }
+}
+
+private fun attendanceBreakdown(records: JSONArray): AttendanceBreakdown {
+    var present = 0
+    var absent = 0
+    var late = 0
+    var other = 0
+    for (index in 0 until records.length()) {
+        when (normalizedStatus(records.optJSONObject(index)?.optString("status").orEmpty())) {
+            "present" -> present += 1
+            "absent" -> absent += 1
+            "late" -> late += 1
+            else -> other += 1
+        }
+    }
+    return AttendanceBreakdown(records.length(), present, absent, late, other)
+}
+
+private fun normalizedStatus(value: String): String =
+    value.trim().lowercase(Locale.US).ifBlank { "present" }
+
+private fun attendanceStatusColor(status: String): Color =
+    when (status) {
+        "present" -> SSSStudentColors.Green
+        "absent" -> SSSStudentColors.Maroon
+        "late" -> SSSStudentColors.Amber
+        else -> SSSStudentColors.Muted
+    }
+
+private fun attendanceStatusIcon(status: String): ImageVector =
+    when (status) {
+        "present" -> Icons.Outlined.CheckCircle
+        "absent" -> Icons.Outlined.Cancel
+        "late" -> Icons.Outlined.Schedule
+        else -> Icons.Outlined.CalendarMonth
+    }
+
+private fun homeworkDueLabel(item: JSONObject): String {
+    val dueDate = item.optString("dueDate", item.optString("due_date"))
+    return formatCompactDate(dueDate).takeIf { it.isNotBlank() }?.let { "Due  $it" } ?: "Class post"
+}
+
+private fun noticeCategory(notice: JSONObject): String {
+    val text = "${notice.optString("title")} ${notice.optString("details")}".lowercase(Locale.US)
+    return when {
+        "exam" in text || "schedule" in text || "grade" in text -> "Academic"
+        "homework" in text || "assignment" in text -> "Homework"
+        "meeting" in text || "event" in text || "trip" in text -> "Event"
+        notice.optString("audience").equals("class", ignoreCase = true) -> "Class"
+        else -> "School"
+    }
+}
+
+private fun formatSchoolDate(value: String): String {
+    val trimmed = value.trim()
+    if (trimmed.isBlank()) return "School day"
+    val datePart = trimmed.take(10)
+    return runCatching {
+        LocalDate.parse(datePart).format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.US))
+    }.getOrDefault(trimmed)
+}
+
+private fun formatCompactDate(value: String): String {
+    val trimmed = value.trim()
+    if (trimmed.isBlank()) return ""
+    val datePart = trimmed.take(10)
+    return runCatching {
+        LocalDate.parse(datePart).format(DateTimeFormatter.ofPattern("MMM dd", Locale.US))
+    }.getOrDefault(trimmed)
+}
+
+private fun formatFeeAmount(value: Double): String =
+    if (value % 1.0 == 0.0) "${value.roundToInt()} JOD" else String.format(Locale.US, "%.2f JOD", value)

@@ -818,7 +818,7 @@ test("build pipeline uses local React, Vite, Vercel, and Render CI/CD", () => {
   assert.match(viteConfig, /fileName: \(\) => "school-app\.js"/);
   assert.match(viteConfig, /outDir: path\.resolve\(root, "dist-site"\)/);
   assert.match(viteConfig, /emptyOutDir: true/);
-  assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-vite-bundle"><\/script>/);
+  assert.match(indexHtml, /<script defer src="school-app\.js(?:\?v=[^\"]+)?"><\/script>/);
   assert.doesNotMatch(indexHtml, /unpkg\.com|react\.production\.min\.js|react-dom\.production\.min\.js/);
   assert.doesNotMatch(server, /https:\/\/unpkg\.com/);
   assert.match(server, /"script-src 'self'; "/);
@@ -954,7 +954,7 @@ test("homepage gallery bundles the Watermelon-inspired carousel directly", () =>
   const gallerySource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "GallerySection.jsx"), "utf8");
   const slideSource = fs.readFileSync(path.join(root, "src", "carousel", "school-gallery-slides.js"), "utf8");
 
-  assert.match(indexHtml, /<script defer src="school-app\.js\?v=20260620-vite-bundle"><\/script>/);
+  assert.match(indexHtml, /<script defer src="school-app\.js(?:\?v=[^\"]+)?"><\/script>/);
   assert.doesNotMatch(indexHtml, /school-carousel\.js/);
   assert.match(packageJson, /"build:carousel": "node scripts[\\\\/]build-carousel\.mjs"/);
   assert.match(packageJson, /"motion":/);

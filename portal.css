@@ -480,19 +480,6 @@ button[aria-busy="true"]::after {
   border-top-color: transparent;
   border-radius: 999px;
   vertical-align: -2px;
-  animation: feedback-spin 700ms linear infinite;
-}
-
-@keyframes feedback-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  button[aria-busy="true"]::after {
-    animation: none;
-  }
 }
 
 .portal-button.primary {
