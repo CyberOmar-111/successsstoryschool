@@ -603,11 +603,10 @@ function renderLists() {
   }
   students.forEach((student) => {
     const classroom = classes.find((group) => group.id === student.classId);
-    const approval = student.approvalStatus === "approved" ? text("approved") : text("pendingApproval");
     const homeroom = classroom ? className(classroom) : student.requestedClassName || text("noClass");
     studentList.appendChild(createListButton(
       student.name,
-      `${student.studentId} - ${approval} - ${homeroom}`,
+      `${student.studentId} · ${homeroom}`,
       () => loadStudent(student.studentId),
       studentDetails && studentDetails.student.studentId === student.studentId
     ));
@@ -624,7 +623,10 @@ function renderLists() {
     ));
   });
   if (!parents.length) {
-    parentList.textContent = text("noParents");
+    const note = document.createElement("p");
+    note.className = "sidebar-empty-note";
+    note.textContent = text("noParents");
+    parentList.appendChild(note);
   }
   parents.forEach((parent) => {
     const linked = (parent.children || []).length;

@@ -250,7 +250,7 @@ body.admin-dashboard-active main {
   z-index: 30;
   width: var(--admin-sidebar-width);
   overflow-y: auto;
-  padding: 40px 22px 28px;
+  padding: 52px 44px 34px;
   border-right: 1px solid var(--admin-line);
   background: #fff;
   color: var(--admin-text);
@@ -260,25 +260,25 @@ body.admin-dashboard-active main {
 .admin-sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin: 0 -22px 26px;
-  padding: 0 34px 34px;
+  gap: 20px;
+  margin: 0 -44px 38px;
+  padding: 0 44px 40px;
   border-bottom: 1px solid var(--admin-line);
 }
 
 .admin-brand-icon {
-  width: 58px;
-  height: 58px;
+  width: 72px;
+  height: 72px;
   display: grid;
-  flex: 0 0 58px;
+  flex: 0 0 72px;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--admin-maroon);
 }
 
 .admin-brand-icon svg {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   fill: none;
   stroke: #fff;
   stroke-linecap: round;
@@ -288,27 +288,27 @@ body.admin-dashboard-active main {
 
 .admin-sidebar-brand span {
   display: grid;
-  gap: 5px;
+  gap: 7px;
   min-width: 0;
 }
 
 .admin-sidebar-brand strong {
   color: var(--admin-text);
-  font-size: 1.1rem;
+  font-size: 1.55rem;
   font-weight: 850;
   line-height: 1.1;
 }
 
 .admin-sidebar-brand small {
-  color: var(--admin-muted);
-  font-size: 0.78rem;
+  color: #88888e;
+  font-size: 1.18rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .admin-list-card {
-  padding: 0 2px 28px;
+  padding: 0 0 38px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -316,22 +316,22 @@ body.admin-dashboard-active main {
 }
 
 .admin-list-card + .admin-list-card {
-  padding-top: 2px;
+  padding-top: 0;
 }
 
 .admin-list-card h2 {
-  margin: 0 0 16px;
-  color: #aaaab1;
+  margin: 0 0 30px;
+  color: #aaaab0;
   font-family: "Inter", "Segoe UI", "Aptos", Arial, sans-serif;
-  font-size: 0.78rem;
+  font-size: 1.12rem;
   font-weight: 850;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .admin-list {
   display: grid;
-  gap: 8px;
+  gap: 28px;
   color: var(--admin-muted);
 }
 
@@ -342,12 +342,14 @@ body.admin-dashboard-active main {
   min-height: 56px;
   display: grid;
   align-content: center;
-  gap: 4px;
+  gap: 7px;
+  appearance: none;
   border: 0;
-  border-radius: var(--admin-radius);
-  padding: 9px 16px;
-  color: #38383e;
+  border-radius: 0;
+  padding: 0 4px;
+  color: #333338;
   background: transparent;
+  box-shadow: none;
   text-align: start;
   cursor: pointer;
 }
@@ -360,8 +362,8 @@ body.admin-dashboard-active main {
 .admin-list button:focus-visible,
 .admin-list button.active,
 .account-list .admin-account.active {
-  color: var(--admin-maroon);
-  background: var(--admin-maroon-soft);
+  color: #333338;
+  background: transparent;
 }
 
 .admin-list strong,
@@ -369,7 +371,7 @@ body.admin-dashboard-active main {
   min-width: 0;
   overflow: hidden;
   color: inherit;
-  font-size: 0.98rem;
+  font-size: 1.48rem;
   font-weight: 850;
   line-height: 1.25;
   text-overflow: ellipsis;
@@ -381,16 +383,26 @@ body.admin-dashboard-active main {
 .list-note {
   min-width: 0;
   overflow: hidden;
-  color: #a2a2a8;
-  font-size: 0.9rem;
+  color: #a5a5aa;
+  font-size: 1.34rem;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.sidebar-empty-note {
+  margin: 0;
+  color: #9d9da2;
+  font-size: 1.34rem;
+  font-style: italic;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
 .list-note {
   margin-top: 12px;
+  font-size: 0.92rem;
   white-space: normal;
 }
 
