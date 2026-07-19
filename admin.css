@@ -105,16 +105,47 @@ body.admin-dashboard-active main {
 }
 
 .admin-dashboard-header {
-  min-height: 390px;
+  position: relative;
+  min-height: 452px;
   margin: 0 0 0 var(--admin-sidebar-width);
-  padding: 58px var(--admin-content-x) 48px;
+  overflow: hidden;
+  padding: 68px 76px 54px;
   border: 0;
   border-radius: 0;
   color: #fff;
   background:
-    linear-gradient(110deg, rgba(255, 255, 255, 0.08), transparent 36%),
-    linear-gradient(135deg, var(--admin-maroon) 0%, var(--admin-maroon-dark) 100%);
+    linear-gradient(110deg, rgba(255, 255, 255, 0.035), transparent 38%),
+    linear-gradient(135deg, #8f183f 0%, #6d0d30 100%);
   box-shadow: none;
+}
+
+.admin-dashboard-header::before,
+.admin-dashboard-header::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.admin-dashboard-header::before {
+  top: -132px;
+  right: -66px;
+  width: 350px;
+  height: 350px;
+}
+
+.admin-dashboard-header::after {
+  right: 116px;
+  bottom: -144px;
+  width: 306px;
+  height: 306px;
+  background: rgba(0, 0, 0, 0.09);
+}
+
+.admin-dashboard-header > * {
+  position: relative;
+  z-index: 1;
 }
 
 .admin-hero-top {
@@ -125,11 +156,11 @@ body.admin-dashboard-active main {
 }
 
 .admin-dashboard-header .eyebrow {
-  margin-bottom: 22px;
+  margin-bottom: 28px;
   color: rgba(255, 255, 255, 0.54);
-  font-size: 0.82rem;
+  font-size: 1rem;
   font-weight: 800;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
@@ -137,7 +168,7 @@ body.admin-dashboard-active main {
   max-width: 920px;
   color: #fff;
   font-family: "Inter", "Segoe UI", "Aptos", Arial, sans-serif;
-  font-size: clamp(2.25rem, 4.2vw, 3.35rem);
+  font-size: clamp(3rem, 4vw, 3.8rem);
   font-weight: 850;
   line-height: 1.05;
   letter-spacing: 0;
@@ -151,32 +182,23 @@ body.admin-dashboard-active main {
   min-width: fit-content;
 }
 
-.dashboard-back-link,
-.logout {
-  min-height: 58px;
+.dashboard-back-link {
+  min-height: 70px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.26);
   border-radius: var(--admin-radius);
-  padding: 0 28px;
+  padding: 0 36px;
   color: #fff;
   background: rgba(255, 255, 255, 0.12);
-  font-weight: 800;
+  font-size: 1.12rem;
+  font-weight: 850;
   cursor: pointer;
 }
 
-.logout {
-  min-height: 44px;
-  padding: 0 18px;
-  color: rgba(255, 255, 255, 0.82);
-  background: transparent;
-}
-
 .dashboard-back-link:hover,
-.dashboard-back-link:focus-visible,
-.logout:hover,
-.logout:focus-visible {
+.dashboard-back-link:focus-visible {
   border-color: rgba(255, 255, 255, 0.48);
   background: rgba(255, 255, 255, 0.18);
 }
@@ -184,16 +206,16 @@ body.admin-dashboard-active main {
 .admin-command-center {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 18px;
-  margin: 58px 0 0;
+  gap: 24px;
+  margin: 62px 0 0;
 }
 
 .admin-command-center article {
-  min-height: 112px;
+  min-height: 160px;
   display: grid;
-  align-content: center;
-  gap: 14px;
-  padding: 22px 26px;
+  align-content: start;
+  gap: 26px;
+  padding: 28px 32px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--admin-radius);
   background: rgba(255, 255, 255, 0.13);
@@ -202,16 +224,16 @@ body.admin-dashboard-active main {
 
 .admin-command-center span {
   color: rgba(255, 255, 255, 0.52);
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 850;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .admin-command-center strong {
   color: #fff;
   font-family: "Inter", "Segoe UI", "Aptos", Arial, sans-serif;
-  font-size: clamp(2rem, 3vw, 2.7rem);
+  font-size: clamp(2.5rem, 3.4vw, 3.3rem);
   font-weight: 850;
   line-height: 1;
 }
@@ -379,6 +401,24 @@ body.admin-dashboard-active main {
   background: #fff;
   font-weight: 850;
   text-align: center;
+}
+
+.admin-sidebar-logout {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 8px;
+  border: 1px solid var(--admin-line);
+  border-radius: var(--admin-radius);
+  color: var(--admin-muted-dark);
+  background: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.admin-sidebar-logout:hover,
+.admin-sidebar-logout:focus-visible {
+  color: var(--admin-maroon);
+  background: var(--admin-maroon-soft);
 }
 
 .user-management-panel {
@@ -1215,7 +1255,7 @@ body.admin-dashboard-active main {
 
   .table-action,
   .dashboard-back-link,
-  .logout,
+  .admin-sidebar-logout,
   .record-form .portal-button,
   .portal-button.primary,
   .portal-button.secondary,
