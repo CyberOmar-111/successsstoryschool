@@ -5,9 +5,7 @@ import { SiteHeader } from "./components/layout/SiteHeader.jsx";
 import { AcademicsSection } from "./components/sections/AcademicsSection.jsx";
 import { AdmissionsSection } from "./components/sections/AdmissionsSection.jsx";
 import { ContactSection } from "./components/sections/ContactSection.jsx";
-import { FaqSection } from "./components/sections/FaqSection.jsx";
 import { FeedbackSection } from "./components/sections/FeedbackSection.jsx";
-import { GallerySection } from "./components/sections/GallerySection.jsx";
 import { HeroSection } from "./components/sections/HeroSection.jsx";
 import { HighlightsSection } from "./components/sections/HighlightsSection.jsx";
 import { HowItWorksSection } from "./components/sections/HowItWorksSection.jsx";
@@ -25,7 +23,6 @@ export function App() {
     activeSection,
     closeMenu,
     formStatus,
-    galleryCopy,
     handleInquiry,
     isArabic,
     menuOpen,
@@ -56,11 +53,9 @@ export function App() {
         <HowItWorksSection t={t} />
         <FeedbackSection t={t} />
         <TrustSection t={t} />
-        <FaqSection t={t} />
         <OverviewSection t={t} mode={mode} setMode={setMode} activeMode={activeMode} isArabic={isArabic} />
         <AcademicsSection t={t} />
         <StudentLifeSection t={t} />
-        <GallerySection galleryCopy={galleryCopy} isArabic={isArabic} />
         <SchoolShowcaseSection t={t} />
         <AdmissionsSection t={t} />
         <ContactSection t={t} isArabic={isArabic} formStatus={formStatus} handleInquiry={handleInquiry} />

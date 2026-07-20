@@ -941,43 +941,24 @@ test("homepage uses production school content instead of demo or coding language
   assert.match(homepageDataSource, /trustBadgeStack: "Admissions inquiry"/);
   assert.match(homepageDataSource, /trustBadgeBackend: "Campus directions"/);
   assert.match(homepageDataSource, /trustBadgeHonest: "School-approved feedback"/);
-  assert.match(homepageDataSource, /faqThreeQ: "Does the portal invent academic results\?"/);
+  assert.doesNotMatch(homepageDataSource, /faqEyebrow|faqTitle|faqThreeQ/);
   assert.match(homepageCss, /\.feedback-slot/);
   assert.match(homepageCss, /\.skeleton-line/);
   assert.match(homepageCss, /\.trust-badge/);
-  assert.match(homepageCss, /\.faq-card/);
   assert.match(readme, /## Content Integrity/);
   assert.match(readme, /admissions inquiry, campus directions, grade information/);
 });
 
-test("homepage gallery bundles the Watermelon-inspired carousel directly", () => {
-  const carouselBundle = fs.readFileSync(path.join(root, "school-carousel.js"), "utf8");
-  const navigatorSource = fs.readFileSync(path.join(root, "src", "carousel", "CarouselNavigator.jsx"), "utf8");
-  const carouselSource = fs.readFileSync(path.join(root, "src", "carousel", "SchoolPhotoCarousel.jsx"), "utf8");
-  const gallerySource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "GallerySection.jsx"), "utf8");
-  const slideSource = fs.readFileSync(path.join(root, "src", "carousel", "school-gallery-slides.js"), "utf8");
-
+test("homepage omits retired photo gallery and FAQ sections", () => {
+  const gallerySectionPath = path.join(root, "src", "site", "components", "sections", "GallerySection.jsx");
+  const faqSectionPath = path.join(root, "src", "site", "components", "sections", "FaqSection.jsx");
   assert.match(indexHtml, /<script defer src="school-app\.js(?:\?v=[^\"]+)?"><\/script>/);
   assert.doesNotMatch(indexHtml, /school-carousel\.js/);
-  assert.match(packageJson, /"build:carousel": "node scripts[\\\\/]build-carousel\.mjs"/);
-  assert.match(packageJson, /"motion":/);
-  assert.match(packageJson, /"lucide-react":/);
-  assert.match(homepageJs, /gallery-section/);
-  assert.match(homepageJs, /school-photo-carousel/);
-  assert.match(homepageCss, /\.school-photo-carousel/);
-  assert.match(homepageCss, /\.wm-carousel-nav/);
-  assert.match(navigatorSource, /motion\/react/);
-  assert.match(navigatorSource, /lucide-react/);
-  assert.match(carouselSource, /AnimatePresence/);
-  assert.match(gallerySource, /import \{ SchoolPhotoCarousel \} from "\.\.\/\.\.\/\.\.\/carousel\/SchoolPhotoCarousel\.jsx"/);
-  assert.doesNotMatch(gallerySource, /window\.SuccessStoryCarousel|success-story-carousel-ready/);
-  assert.match(slideSource, /gallery-campus-4k\.jpg/);
-  assert.match(slideSource, /gallery-activity-4k\.jpg/);
-  assert.match(slideSource, /gallery-classroom-4k\.jpg/);
-  assert.match(server, /"\/assets\/gallery-campus-4k\.jpg"/);
-  assert.match(server, /"\/assets\/gallery-activity-4k\.jpg"/);
-  assert.match(server, /"\/assets\/gallery-classroom-4k\.jpg"/);
-  assert.match(carouselBundle, /SchoolPhotoCarousel/);
+  assert.equal(fs.existsSync(gallerySectionPath), false);
+  assert.equal(fs.existsSync(faqSectionPath), false);
+  assert.doesNotMatch(appSource, /GallerySection|FaqSection|galleryCopy/);
+  assert.doesNotMatch(homepageJs, /gallery-section|school-photo-carousel|faq-section|faq-stack/);
+  assert.doesNotMatch(homepageDataSource, /href: "#gallery"|href: "#faq"/);
 });
 
 
@@ -995,9 +976,9 @@ test("homepage source is componentized into modular React files", () => {
   assert.match(packageJson, /"build:site": "node scripts[\\/]build-site\.mjs"/);
   assert.match(packageJson, /"build": "npm run build:site && npm run build:tailwind && npm run build:carousel"/);
   assert.doesNotMatch(appSource, /AnnouncementBar/);
+  assert.doesNotMatch(appSource, /GallerySection|FaqSection/);
   assert.match(appSource, /SiteHeader/);
   assert.match(appSource, /PortalHubSection/);
-  assert.match(appSource, /GallerySection/);
   assert.match(headerSource, /export function SiteHeader/);
   assert.match(heroSource, /export function HeroSection/);
   assert.match(contactSource, /export function ContactSection/);

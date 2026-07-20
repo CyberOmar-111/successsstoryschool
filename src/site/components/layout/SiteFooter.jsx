@@ -3,7 +3,7 @@ import { mapsHref, phoneHref, schoolEmail } from "../../data/site-config.js";
 import { ActionLink, BrandLockup } from "../primitives.jsx";
 
 export function SiteFooter({ t, isArabic }) {
-  const feedbackLabel = isArabic ? "الأسئلة الشائعة" : "FAQ";
+  const aboutLabel = isArabic ? "عن المدرسة" : "About";
   const officeLabel = isArabic ? "اتصل بالإدارة" : "Call the office";
   const locationLabel = isArabic ? "إربد، الأردن" : "Irbid, Jordan";
   const copyrightLabel = isArabic
@@ -26,7 +26,7 @@ export function SiteFooter({ t, isArabic }) {
           <a href="#life">{t.navLife}</a>
           <a href="#portals">{t.navPortals}</a>
           <a href="#admissions">{t.navAdmissions}</a>
-          <a href="#faq">{feedbackLabel}</a>
+          <a href="#about">{aboutLabel}</a>
         </div>
 
         <div className="footer-column footer-links-column">

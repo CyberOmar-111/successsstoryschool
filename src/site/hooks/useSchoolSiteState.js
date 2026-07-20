@@ -3,19 +3,6 @@ import { copy, navItems, profileModes, truthCopy } from "../data/homepage-conten
 import { schoolEmail } from "../data/site-config.js";
 import { openInquiryComposer } from "../services/api.js";
 
-const galleryCopyByLanguage = {
-  en: {
-    eyebrow: "Photo gallery",
-    title: "A closer look at campus spaces and school life.",
-    text: "A refined dark gallery with real school photos, scaled carefully for larger screens and presented in a clear sequence."
-  },
-  ar: {
-    eyebrow: "جولة بالصور",
-    title: "نظرة أقرب إلى الحرم والحياة المدرسية.",
-    text: "معرض داكن يعرض الحرم والمساحات وبعض المشاهد اليومية بتنقل سلس وواضح."
-  }
-};
-
 function getInitialLanguage() {
   try {
     return localStorage.getItem("sss-language") === "ar" ? "ar" : "en";
@@ -37,7 +24,6 @@ export function useSchoolSiteState() {
     () => profileModes.find((item) => item.id === mode) ?? profileModes[0],
     [mode]
   );
-  const galleryCopy = galleryCopyByLanguage[language] ?? galleryCopyByLanguage.en;
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -170,7 +156,6 @@ export function useSchoolSiteState() {
     activeSection,
     closeMenu,
     formStatus,
-    galleryCopy,
     handleInquiry,
     isArabic,
     language,

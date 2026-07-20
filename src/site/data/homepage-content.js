@@ -234,16 +234,6 @@ export const copy = {
     trustBadgeSessions: "Homework and announcements",
     trustBadgePasswords: "Attendance, grades, fees, and bus requests",
     trustBadgeHonest: "School-approved feedback",
-    faqEyebrow: "FAQ",
-    faqTitle: "Straight answers before families sign in.",
-    faqOneQ: "Can families use the site before a student account is issued?",
-    faqOneA: "Yes. The public website explains academics, student life, admissions, location, and contact options without requiring an account.",
-    faqTwoQ: "Why do some student records start empty?",
-    faqTwoA: "Empty records are intentional. Attendance, grades, homework, fees, and announcements appear only after authorized school staff post real information.",
-    faqThreeQ: "Does the portal invent academic results?",
-    faqThreeA: "No. Account pages show only values posted by authorized school staff.",
-    faqFourQ: "Who updates student information?",
-    faqFourA: "Authorized school staff update class records, homework, announcements, attendance, and grades from protected accounts.",
     showcaseEyebrow: "School highlights",
     showcaseTitle: "A homepage that helps families move quickly.",
     showcaseText:
@@ -252,9 +242,9 @@ export const copy = {
     updateAdmissionsTitle: "Admissions inquiries",
     updateAdmissionsText:
       "Families can ask about Grades 1 to 10 and prepare a visit with the school office.",
-    updateGalleryTitle: "Campus gallery",
+    updateGalleryTitle: "Campus and facilities",
     updateGalleryText:
-      "Real school photos show the building, outdoor spaces, and classroom environment.",
+      "Ask the school office about visits, learning spaces, and the facilities students use every day.",
     updateAccountsTitle: "School accounts",
     updateAccountsText:
       "Students and staff use protected account areas once access is issued.",
@@ -262,7 +252,7 @@ export const copy = {
     exploreCampusTitle: "Campus visit",
     exploreAcademicsTitle: "Academics",
     exploreLifeTitle: "Student life",
-    exploreGalleryTitle: "Gallery",
+    exploreGalleryTitle: "Facilities",
     exploreAccountsTitle: "School accounts",
     exploreTransportTitle: "Transportation",
     footerText: "Success Story School. Building the new generation."
@@ -497,9 +487,9 @@ export const copy = {
     updateAdmissionsTitle: "استفسارات التسجيل",
     updateAdmissionsText:
       "يمكن للعائلات السؤال عن الصفوف من الأول حتى العاشر والتحضير لزيارة الإدارة.",
-    updateGalleryTitle: "معرض المدرسة",
+    updateGalleryTitle: "المرافق والحرم",
     updateGalleryText:
-      "تعرض الصور الحقيقية المبنى والمساحات الخارجية وبيئة الصفوف.",
+      "يمكن للعائلات التواصل مع الإدارة لمعرفة المزيد عن الزيارات والمساحات التعليمية والمرافق اليومية.",
     updateAccountsTitle: "حسابات المدرسة",
     updateAccountsText:
       "يستخدم الطلاب والكوادر حسابات محمية بعد إصدار الوصول من المدرسة.",
@@ -507,7 +497,7 @@ export const copy = {
     exploreCampusTitle: "زيارة المدرسة",
     exploreAcademicsTitle: "الأكاديميات",
     exploreLifeTitle: "حياة الطلاب",
-    exploreGalleryTitle: "المعرض",
+    exploreGalleryTitle: "المرافق",
     exploreAccountsTitle: "حسابات المدرسة",
     exploreTransportTitle: "المواصلات",
     footerText: "مدرسة قصة نجاح. نبني الجيل الجديد."
@@ -555,17 +545,7 @@ export const truthCopyKeys = [
   "trustBadgeDatabase",
   "trustBadgeSessions",
   "trustBadgePasswords",
-  "trustBadgeHonest",
-  "faqEyebrow",
-  "faqTitle",
-  "faqOneQ",
-  "faqOneA",
-  "faqTwoQ",
-  "faqTwoA",
-  "faqThreeQ",
-  "faqThreeA",
-  "faqFourQ",
-  "faqFourA"
+  "trustBadgeHonest"
 ];
 
 export const truthCopy = truthCopyKeys.reduce((values, key) => {
@@ -766,7 +746,7 @@ export const showcaseUpdates = [
   {
     title: "updateGalleryTitle",
     text: "updateGalleryText",
-    href: "#gallery",
+    href: "#contact",
     icon: School
   },
   {
@@ -795,7 +775,7 @@ export const exploreTiles = [
   },
   {
     title: "exploreGalleryTitle",
-    href: "#gallery",
+    href: "#contact",
     icon: School
   },
   {
@@ -808,13 +788,6 @@ export const exploreTiles = [
     href: "#contact",
     icon: Bus
   }
-];
-
-export const faqItems = [
-  ["faqOneQ", "faqOneA"],
-  ["faqTwoQ", "faqTwoA"],
-  ["faqThreeQ", "faqThreeA"],
-  ["faqFourQ", "faqFourA"]
 ];
 
 export const portals = [
