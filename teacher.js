@@ -11,6 +11,8 @@ const translations = {
     brandPortal: "Teacher Account",
     studentPortal: "Student Account",
     backWebsite: "Back to website",
+    overview: "Overview",
+    gradebook: "Grade Book",
     eyebrow: "Teacher Account",
     title: "Teach your assigned classes securely.",
     intro: "Use your school-issued teacher ID. Assignments and grades can be entered only for the classes and subjects assigned to you.",
@@ -28,9 +30,11 @@ const translations = {
     working: "Working...",
     secureBanner: "Teacher area. You can update only your assigned classes and subjects.",
     assignments: "Teaching assignments",
+    myClasses: "My classes",
+    teacherRole: "Teacher",
     workspace: "Class workspace",
     welcome: "Welcome,",
-    logout: "Log out",
+    logout: "Sign out",
     teachingLoad: "Teaching load",
     currentClass: "Current class",
     classSize: "Class size",
@@ -39,6 +43,21 @@ const translations = {
     chooseAssignment: "Choose an assigned class and subject.",
     assignedSubject: "Assigned subject:",
     attendanceDate: "Attendance date",
+    presentToday: "Present",
+    absentToday: "Absent",
+    activeStatus: "Active",
+    accountAccess: "Account access",
+    classLabel: "Class",
+    teachingGroup: "Teaching group",
+    today: "Today",
+    attendanceTitle: "Attendance",
+    gradesTitle: "Grades",
+    homeworkTitle: "Homework",
+    viewGradebook: "View gradebook",
+    viewAllStudents: "View all students",
+    viewFullHistory: "View full history",
+    noGradesOverview: "No grades recorded yet.",
+    noHomeworkOverview: "No homework has been posted yet.",
     attendanceSheet: "Class attendance sheet",
     attendanceNote: "Mark every student before saving the day's attendance.",
     student: "Student",
@@ -94,6 +113,8 @@ const translations = {
     brandPortal: "حساب المعلم",
     studentPortal: "حساب الطالب",
     backWebsite: "Back to website",
+    overview: "نظرة عامة",
+    gradebook: "دفتر العلامات",
     eyebrow: "حساب المعلم",
     title: "درّس الشعب المعيّنة لك بأمان.",
     intro: "استخدم رقم المعلم الصادر عن المدرسة. يمكنك إدخال الواجبات والعلامات فقط للشعب والمواد المعيّنة لك.",
@@ -111,12 +132,34 @@ const translations = {
     working: "جاري التنفيذ...",
     secureBanner: "منطقة المعلم. يمكنك تحديث الشعب والمواد المعيّنة لك فقط.",
     assignments: "تعيينات التدريس",
+    myClasses: "صفوفي",
+    teacherRole: "معلم",
     workspace: "مساحة الصف",
     welcome: "مرحباً،",
     logout: "تسجيل الخروج",
+    teachingLoad: "عدد التعيينات",
+    currentClass: "الصف الحالي",
+    classSize: "عدد الطلاب",
+    selectedSubject: "المادة المختارة",
+    noneSelected: "لا يوجد اختيار",
     chooseAssignment: "اختر الشعبة والمادة المعيّنة لك.",
     assignedSubject: "المادة المعيّنة:",
     attendanceDate: "تاريخ الحضور",
+    activeStatus: "نشط",
+    accountAccess: "إمكانية الدخول",
+    classLabel: "الصف",
+    teachingGroup: "مجموعة التدريس",
+    presentToday: "الحاضرون",
+    absentToday: "الغائبون",
+    today: "اليوم",
+    attendanceTitle: "الحضور",
+    gradesTitle: "العلامات",
+    homeworkTitle: "الواجبات",
+    viewGradebook: "عرض دفتر العلامات",
+    viewAllStudents: "عرض كل الطلاب",
+    viewFullHistory: "عرض السجل الكامل",
+    noGradesOverview: "لا توجد علامات مسجلة بعد.",
+    noHomeworkOverview: "لم يتم نشر واجبات بعد.",
     attendanceSheet: "كشف حضور الصف",
     attendanceNote: "حدد حالة كل طالب قبل حفظ حضور اليوم.",
     student: "الطالب",
@@ -174,6 +217,7 @@ let teacher = null;
 let assignments = [];
 let selectedAssignmentId = null;
 let classroom = null;
+let currentTeacherTab = "overview";
 let homeworkAttachments = [];
 let announcementAttachments = [];
 
@@ -211,6 +255,63 @@ function errorText(error) {
 function className(value) {
   const key = `class${value.grade}${value.section}${value.group === "girls" ? "Girls" : "Boys"}`;
   return text(key);
+}
+
+function shortClassName(value) {
+  if (!value) {
+    return "--";
+  }
+  return language === "ar" ? className(value) : `Grade ${value.grade} ${value.section}`;
+}
+
+function teacherInitials(name) {
+  return String(name || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "TC";
+}
+
+function displayDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ""))) {
+    return "";
+  }
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function gradeValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return "--";
+  }
+  return Number.isFinite(Number(value)) ? Number(value).toString() : String(value);
+}
+
+function gradeSummary(student) {
+  const grades = student.subjectGrade || {};
+  const termOne = grades.termOne ?? "";
+  const termTwo = grades.termTwo ?? "";
+  if (termOne === "" && termTwo === "") {
+    return text("noGradesOverview");
+  }
+  return `${text("termOne")}: ${gradeValue(termOne)} · ${text("termTwo")}: ${gradeValue(termTwo)}`;
+}
+
+function updateTeacherIdentity() {
+  if (!teacher) {
+    return;
+  }
+  const initials = teacherInitials(teacher.name);
+  document.querySelectorAll("[data-teacher-initials]").forEach((element) => {
+    element.textContent = initials;
+  });
+  document.querySelector("[data-teacher-name]").textContent = teacher.name;
+  document.querySelector("[data-teacher-id]").textContent = `${teacher.teacherId} · ${text("teacherRole")}`;
+  document.querySelector("[data-welcome-name]").textContent = teacher.name;
+  document.querySelector("[data-teacher-heading-name]").textContent = teacher.name;
+  document.querySelector("[data-teacher-heading-id]").textContent = teacher.teacherId;
 }
 
 function localDate() {
@@ -366,6 +467,7 @@ function applyLanguage(nextLanguage) {
     element.textContent = text(element.dataset.i18n);
   });
   languageToggle.textContent = language === "ar" ? "English" : "العربية";
+  updateTeacherIdentity();
   renderAssignments();
   if (classroom) {
     renderClassroom();
@@ -382,9 +484,8 @@ function applyLanguage(nextLanguage) {
 function displayDashboard() {
   authView.hidden = true;
   dashboard.hidden = false;
-  document.querySelector("[data-teacher-name]").textContent = teacher.name;
-  document.querySelector("[data-teacher-id]").textContent = teacher.teacherId;
-  document.querySelector("[data-welcome-name]").textContent = teacher.name;
+  document.body.classList.add("teacher-dashboard-active");
+  updateTeacherIdentity();
   updateTeacherSummary();
 }
 
@@ -426,9 +527,12 @@ function renderAssignments() {
     button.classList.toggle("active", assignment.id === selectedAssignmentId);
     const name = document.createElement("strong");
     const subject = document.createElement("small");
+    const arrow = document.createElement("span");
+    arrow.className = "assignment-arrow";
+    arrow.textContent = "›";
     name.textContent = className(assignment.class);
     subject.textContent = assignment.subject;
-    button.append(name, subject);
+    button.append(name, subject, arrow);
     button.addEventListener("click", () => withButtonFeedback(button, () => loadClassroom(assignment.id)));
     list.appendChild(button);
   });
@@ -490,6 +594,64 @@ function renderGradebook() {
   document.querySelector("[data-grade-form] button[type=submit]").disabled = !classroom.students.length;
 }
 
+function overviewRow(title, meta, actionText, tab) {
+  const row = document.createElement("article");
+  row.className = "overview-record-row";
+  const content = document.createElement("div");
+  const heading = document.createElement("strong");
+  const detail = document.createElement("p");
+  heading.textContent = title;
+  detail.textContent = meta;
+  content.append(heading, detail);
+  row.appendChild(content);
+  if (actionText && tab) {
+    const action = document.createElement("button");
+    action.type = "button";
+    action.textContent = actionText;
+    action.dataset.tabJump = tab;
+    action.addEventListener("click", () => setTeacherTab(tab));
+    row.appendChild(action);
+  }
+  return row;
+}
+
+function renderOverviewCards() {
+  const gradesList = document.querySelector("[data-overview-grades-list]");
+  const homeworkList = document.querySelector("[data-overview-homework-list]");
+  const gradesCount = document.querySelector("[data-overview-grades-count]");
+  const homeworkCount = document.querySelector("[data-overview-homework-count]");
+  if (!gradesList || !homeworkList || !classroom) {
+    return;
+  }
+
+  const gradeEntryCount = classroom.students.reduce((count, student) => {
+    const grades = student.subjectGrade || {};
+    return count + ["termOne", "termTwo"].filter((term) => grades[term] !== null && grades[term] !== undefined && grades[term] !== "").length;
+  }, 0);
+
+  gradesCount.textContent = gradeEntryCount;
+  homeworkCount.textContent = classroom.homework.length;
+  gradesList.replaceChildren();
+  homeworkList.replaceChildren();
+
+  if (!classroom.students.length) {
+    gradesList.appendChild(overviewRow(text("noStudents"), text("noGradesOverview")));
+  } else {
+    classroom.students.slice(0, 5).forEach((student) => {
+      gradesList.appendChild(overviewRow(student.name, gradeSummary(student), text("viewGradebook"), "gradebook"));
+    });
+  }
+
+  if (!classroom.homework.length) {
+    homeworkList.appendChild(overviewRow(text("noHomeworkOverview"), text("homeworkTitle")));
+  } else {
+    classroom.homework.slice(0, 2).forEach((entry) => {
+      const dueDate = entry.due_date ? `Due ${displayDate(entry.due_date) || entry.due_date}` : text("homeworkTitle");
+      homeworkList.appendChild(overviewRow(entry.details || entry.subject, dueDate, ""));
+    });
+  }
+}
+
 function appendPostAttachments(article, attachments = []) {
   if (!Array.isArray(attachments) || !attachments.length) {
     return;
@@ -528,26 +690,42 @@ function renderClassroom() {
   document.querySelector("[data-select-assignment]").hidden = true;
   document.querySelector("[data-classroom]").hidden = false;
   document.querySelector("[data-class-title]").textContent = className(assignment.class);
-  document.querySelector("[data-class-subject]").textContent = assignment.subject;
   document.querySelector("[data-homework-subject]").textContent = assignment.subject;
   document.querySelector("[data-grade-subject]").textContent = assignment.subject;
+  document.querySelector("[data-display-date]").textContent = displayDate(classroom.schoolDate || attendanceDate.value);
+  setTeacherSummary("[data-overview-current-class]", shortClassName(assignment.class));
+  setTeacherSummary("[data-attendance-count]", classroom.students.length);
 
   const body = document.querySelector("[data-attendance-body]");
   const empty = document.querySelector("[data-no-students]");
   body.replaceChildren();
+  let presentCount = 0;
+  let absentCount = 0;
   classroom.students.forEach((student) => {
     const row = document.createElement("tr");
     const name = document.createElement("td");
     const status = document.createElement("td");
-    name.textContent = `${student.name} (${student.studentId})`;
+    const studentName = document.createElement("strong");
+    const studentId = document.createElement("small");
+    studentName.textContent = student.name;
+    studentId.textContent = student.studentId;
+    name.append(studentName, studentId);
+    if (student.attendanceStatus === "absent") {
+      absentCount += 1;
+    } else if (student.attendanceStatus === "present") {
+      presentCount += 1;
+    }
     status.appendChild(statusSelect(student));
     row.append(name, status);
     body.appendChild(row);
   });
+  setTeacherSummary("[data-overview-present]", presentCount);
+  setTeacherSummary("[data-overview-absent]", absentCount);
   empty.hidden = Boolean(classroom.students.length);
   document.querySelector("[data-attendance-form] button[type=submit]").disabled = !classroom.students.length;
 
   renderGradebook();
+  renderOverviewCards();
 
   const posts = document.querySelector("[data-recent-posts]");
   posts.replaceChildren();
@@ -562,6 +740,7 @@ function renderClassroom() {
     posts.textContent = text("noPosts");
   }
   renderAssignments();
+  setTeacherTab(currentTeacherTab);
 }
 
 async function loadAssignments() {
@@ -587,6 +766,26 @@ async function openDashboard() {
   attendanceDate.value = localDate();
   await loadAssignments();
 }
+
+function setTeacherTab(tab) {
+  currentTeacherTab = ["overview", "gradebook", "homework", "announcements"].includes(tab) ? tab : "overview";
+  document.querySelectorAll("[data-tab-button]").forEach((button) => {
+    const active = button.dataset.tabButton === currentTeacherTab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  document.querySelectorAll("[data-tab-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.tabPanel !== currentTeacherTab;
+  });
+}
+
+document.querySelectorAll("[data-tab-button]").forEach((button) => {
+  button.addEventListener("click", () => setTeacherTab(button.dataset.tabButton));
+});
+
+document.querySelectorAll("[data-tab-jump]").forEach((button) => {
+  button.addEventListener("click", () => setTeacherTab(button.dataset.tabJump));
+});
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -728,16 +927,22 @@ document.querySelector("[data-announcement-attachments]").addEventListener("chan
   handleAttachmentInput("announcement", "[data-announcement-status]");
 });
 
-document.querySelector("[data-logout]").addEventListener("click", async () => {
-  const button = document.querySelector("[data-logout]");
+async function logoutTeacher(button) {
   await withButtonFeedback(button, () => api("/api/teacher/logout", { method: "POST", body: "{}" }));
   teacher = null;
   assignments = [];
   selectedAssignmentId = null;
   classroom = null;
+  currentTeacherTab = "overview";
   dashboard.hidden = true;
   authView.hidden = false;
+  document.body.classList.remove("teacher-dashboard-active");
+  setTeacherTab("overview");
   clearStatuses();
+}
+
+document.querySelectorAll("[data-logout]").forEach((button) => {
+  button.addEventListener("click", () => logoutTeacher(button));
 });
 
 languageToggle.addEventListener("click", () => applyLanguage(language === "en" ? "ar" : "en"));

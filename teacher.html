@@ -10,8 +10,8 @@
     <link rel="shortcut icon" href="/assets/success-story-mark.png?v=3" type="image/png">
     <link rel="stylesheet" href="portal.css">
     <link rel="stylesheet" href="design-system.css?v=20260620-ui-system">
-    <link rel="stylesheet" href="teacher.css?v=20260713-teacher-ui-fix">
-    <script src="teacher.js?v=20260713-teacher-ui-fix" defer></script>
+    <link rel="stylesheet" href="teacher.css?v=20260720-teacher-dashboard">
+    <script src="teacher.js?v=20260720-teacher-dashboard" defer></script>
   </head>
   <body>
     <header class="portal-header">
@@ -70,15 +70,32 @@
         <div class="secure-banner" data-i18n="secureBanner">Teacher area. You can update only your assigned classes and subjects.</div>
         <div class="portal-container teacher-grid">
           <aside class="teacher-sidebar">
+            <a class="teacher-sidebar-brand" href="/" aria-label="Success Story School home">
+              <span class="teacher-brand-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M3.5 8.5 12 4.5l8.5 4-8.5 4-8.5-4Z"></path>
+                  <path d="M7 11v4.25c0 1.1 2.25 2.25 5 2.25s5-1.15 5-2.25V11"></path>
+                  <path d="M20.5 8.5v5"></path>
+                </svg>
+              </span>
+              <span>
+                <strong>Success Story</strong>
+                <small>School</small>
+              </span>
+            </a>
             <div class="profile">
-              <div class="profile-avatar">TC</div>
+              <div class="profile-avatar" data-teacher-initials>TA</div>
               <div>
                 <strong data-teacher-name></strong>
                 <span data-teacher-id></span>
               </div>
             </div>
-            <h2 data-i18n="assignments">Teaching assignments</h2>
+            <h2 data-i18n="myClasses">My classes</h2>
             <nav class="assignment-list" data-assignment-list aria-label="Teaching assignments"></nav>
+            <button class="teacher-sidebar-logout" type="button" data-logout>
+              <svg class="portal-icon" aria-hidden="true"><use href="/assets/portal-icons.svg#icon-logout"></use></svg>
+              <span data-i18n="logout">Log out</span>
+            </button>
           </aside>
           <div class="teacher-workspace">
             <header class="workspace-header" hidden>
@@ -111,9 +128,16 @@
             </div>
             <div data-classroom hidden>
               <header class="class-header">
-                <div>
-                  <h2 data-class-title></h2>
-                  <p><span data-i18n="assignedSubject">Assigned subject:</span> <strong data-class-subject></strong></p>
+                <div class="teacher-main-identity">
+                  <div class="teacher-main-avatar" data-teacher-initials>TA</div>
+                  <div>
+                    <h2 data-teacher-heading-name></h2>
+                    <p><span data-teacher-heading-id></span> · <strong data-class-title></strong></p>
+                  </div>
+                </div>
+                <div class="teacher-main-actions">
+                  <time data-display-date></time>
+                  <button class="teacher-top-logout" type="button" data-logout data-i18n="logout">Log out</button>
                 </div>
                 <label class="date-choice">
                   <span data-i18n="attendanceDate">Attendance date</span>
@@ -128,25 +152,35 @@
               </nav>
               <section class="teacher-overview-stats" data-tab-panel="overview">
                 <article>
-                  <span data-i18n="totalStudents">Total students</span>
-                  <strong data-overview-total>0</strong>
+                  <span data-i18n="status">Status</span>
+                  <strong data-i18n="activeStatus">Active</strong>
+                  <small data-i18n="accountAccess">Account access</small>
                 </article>
                 <article>
-                  <span data-i18n="presentToday">Present today</span>
+                  <span data-i18n="classLabel">Class</span>
+                  <strong data-overview-current-class>--</strong>
+                  <small data-i18n="teachingGroup">Teaching group</small>
+                </article>
+                <article>
+                  <span data-i18n="presentToday">Present</span>
                   <strong data-overview-present>0</strong>
+                  <small data-i18n="today">Today</small>
                 </article>
                 <article>
                   <span data-i18n="absentToday">Absent</span>
                   <strong data-overview-absent>0</strong>
-                </article>
-                <article>
-                  <span data-i18n="subject">Subject</span>
-                  <strong data-overview-subject></strong>
+                  <small data-i18n="today">Today</small>
                 </article>
               </section>
               <div class="teacher-cards">
                 <form class="portal-panel teacher-card attendance-card" data-attendance-form data-tab-panel="overview">
-                  <h3 data-i18n="attendanceSheet">Class attendance sheet</h3>
+                  <div class="teacher-card-title">
+                    <span class="teacher-section-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><use href="/assets/portal-icons.svg#icon-attendance"></use></svg>
+                    </span>
+                    <h3 data-i18n="attendanceTitle">Attendance</h3>
+                    <span class="teacher-count-badge" data-attendance-count>0</span>
+                  </div>
                   <p data-i18n="attendanceNote">Mark every student before saving the day's attendance.</p>
                   <div class="attendance-table">
                     <table>
@@ -220,7 +254,29 @@
                   <p class="form-status" data-announcement-status></p>
                 </form>
               </div>
-              <section class="portal-panel recent-posts" data-tab-panel="overview">
+              <section class="portal-panel overview-records overview-grades-card" data-tab-panel="overview">
+                <div class="teacher-card-title">
+                  <span class="teacher-section-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><use href="/assets/portal-icons.svg#icon-grades"></use></svg>
+                  </span>
+                  <h3 data-i18n="gradesTitle">Grades</h3>
+                  <span class="teacher-count-badge" data-overview-grades-count>0</span>
+                </div>
+                <div class="overview-record-list" data-overview-grades-list></div>
+                <button class="teacher-outline-button" type="button" data-tab-jump="gradebook" data-i18n="viewAllStudents">View all students</button>
+              </section>
+              <section class="portal-panel overview-records overview-homework-card" data-tab-panel="overview">
+                <div class="teacher-card-title">
+                  <span class="teacher-section-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><use href="/assets/portal-icons.svg#icon-homework"></use></svg>
+                  </span>
+                  <h3 data-i18n="homeworkTitle">Homework</h3>
+                  <span class="teacher-count-badge" data-overview-homework-count>0</span>
+                </div>
+                <div class="overview-record-list" data-overview-homework-list></div>
+                <button class="teacher-outline-button" type="button" data-tab-jump="homework" data-i18n="viewFullHistory">View full history</button>
+              </section>
+              <section class="portal-panel recent-posts" data-tab-panel="announcements" hidden>
                 <h3 data-i18n="recentPosts">Recent posts for this assignment</h3>
                 <div data-recent-posts></div>
               </section>
