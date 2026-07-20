@@ -932,7 +932,10 @@ test("homepage uses production school content instead of demo or coding language
   assert.match(homepageDataSource, /feedbackEyebrow: "School feedback"/);
   assert.match(homepageDataSource, /feedbackTitle: "Feedback from the school community"/);
   assert.match(homepageDataSource, /Published feedback will appear here after Success Story School approves real comments/);
-  assert.match(homepageDataSource, /howWorksTitle: "A clear path from inquiry to school account\."/);
+  assert.match(homepageDataSource, /howWorksEyebrow: "About the school"/);
+  assert.match(homepageDataSource, /howWorksTitle: "A fast-growing school built for confident futures\."/);
+  assert.match(homepageDataSource, /Founded in 2017, Success Story School has rapidly expanded/);
+  assert.match(homepageDataSource, /international-grade facilities/);
   assert.match(homepageDataSource, /trustEyebrow: "Family support"/);
   assert.match(homepageDataSource, /trustTitle: "Helpful school information in one place\."/);
   assert.match(homepageDataSource, /trustBadgeStack: "Admissions inquiry"/);

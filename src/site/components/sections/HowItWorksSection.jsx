@@ -3,7 +3,7 @@ import { SplitHeading } from "../primitives.jsx";
 
 export function HowItWorksSection({ t }) {
   return (
-    <section className="section how-works" id="how-it-works">
+    <section className="section how-works about-section" id="about">
       <SplitHeading eyebrow={t.howWorksEyebrow} title={t.howWorksTitle} text={t.howWorksText} />
       <div className="shell how-works-grid">
         {howItWorksSteps.map(([number, title, text]) => (
