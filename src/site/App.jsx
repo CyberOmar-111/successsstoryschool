@@ -5,7 +5,7 @@ import { SiteHeader } from "./components/layout/SiteHeader.jsx";
 import { AcademicsSection } from "./components/sections/AcademicsSection.jsx";
 import { AdmissionsSection } from "./components/sections/AdmissionsSection.jsx";
 import { ContactSection } from "./components/sections/ContactSection.jsx";
-import { FeedbackSection } from "./components/sections/FeedbackSection.jsx";
+import { FacilitiesSection } from "./components/sections/FacilitiesSection.jsx";
 import { HeroSection } from "./components/sections/HeroSection.jsx";
 import { HighlightsSection } from "./components/sections/HighlightsSection.jsx";
 import { HowItWorksSection } from "./components/sections/HowItWorksSection.jsx";
@@ -51,7 +51,7 @@ export function App() {
         <PortalHubSection t={t} />
         <LatestNewsSection t={t} />
         <HowItWorksSection t={t} />
-        <FeedbackSection t={t} />
+        <FacilitiesSection t={t} />
         <TrustSection t={t} />
         <OverviewSection t={t} mode={mode} setMode={setMode} activeMode={activeMode} isArabic={isArabic} />
         <AcademicsSection t={t} />

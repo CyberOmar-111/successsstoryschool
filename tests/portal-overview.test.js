@@ -929,9 +929,23 @@ test("homepage uses production school content instead of demo or coding language
   assert.doesNotMatch(homepageDataSource, /\["previewAverage",\s*"88%"/);
   assert.doesNotMatch(homepageDataSource, /\["previewAttendance",\s*"96%"/);
   assert.doesNotMatch(homepageDataSource, /Beta feedback|What early users are saying|fake demo|Technical transparency|HTML, CSS|JavaScript|React UI|Python backend|SQLite local|Supabase Postgres|DATABASE_URL|HTTP-only|scrypt/);
-  assert.match(homepageDataSource, /feedbackEyebrow: "School feedback"/);
-  assert.match(homepageDataSource, /feedbackTitle: "Feedback from the school community"/);
-  assert.match(homepageDataSource, /Published feedback will appear here after Success Story School approves real comments/);
+  assert.match(homepageDataSource, /facilitiesTitle: "Facilities"/);
+  assert.match(homepageDataSource, /facilityFootballTitle: "Two Football Stadiums"/);
+  assert.match(homepageDataSource, /facilityBasketballTitle: "Basketball Court"/);
+  assert.match(homepageDataSource, /facilityScienceTitle: "Science Labs"/);
+  assert.match(homepageDataSource, /facilityClassroomTitle: "Technology-Ready Classes"/);
+  assert.match(homepageDataSource, /assets\/facilities-football\.jpg/);
+  assert.match(homepageDataSource, /assets\/facilities-basketball\.jpg/);
+  assert.match(homepageDataSource, /assets\/facilities-science\.jpg/);
+  assert.match(homepageDataSource, /assets\/facilities-classroom\.jpg/);
+  for (const assetName of [
+    "facilities-football.jpg",
+    "facilities-basketball.jpg",
+    "facilities-science.jpg",
+    "facilities-classroom.jpg"
+  ]) {
+    assert.equal(fs.existsSync(path.join(root, "assets", assetName)), true);
+  }
   assert.match(homepageDataSource, /howWorksEyebrow: "About the school"/);
   assert.match(homepageDataSource, /howWorksTitle: "A fast-growing school built for confident futures\."/);
   assert.match(homepageDataSource, /Founded in 2017, Success Story School has rapidly expanded/);
@@ -940,13 +954,16 @@ test("homepage uses production school content instead of demo or coding language
   assert.match(homepageDataSource, /trustTitle: "Helpful school information in one place\."/);
   assert.match(homepageDataSource, /trustBadgeStack: "Admissions inquiry"/);
   assert.match(homepageDataSource, /trustBadgeBackend: "Campus directions"/);
-  assert.match(homepageDataSource, /trustBadgeHonest: "School-approved feedback"/);
+  assert.match(homepageDataSource, /trustBadgeHonest: "International-grade facilities"/);
+  assert.doesNotMatch(homepageDataSource, /feedbackEyebrow|feedbackTitle|feedbackSlotParent|feedbackEmpty/);
   assert.doesNotMatch(homepageDataSource, /faqEyebrow|faqTitle|faqThreeQ/);
-  assert.match(homepageCss, /\.feedback-slot/);
-  assert.match(homepageCss, /\.skeleton-line/);
+  assert.match(homepageCss, /\.facilities-section/);
+  assert.match(homepageCss, /\.facility-card/);
+  assert.match(homepageCss, /\.facility-card\.basketball img/);
   assert.match(homepageCss, /\.trust-badge/);
   assert.match(readme, /## Content Integrity/);
-  assert.match(readme, /admissions inquiry, campus directions, grade information/);
+  assert.match(readme, /The `Facilities` section uses real school visuals/);
+  assert.match(readme, /admissions inquiry, campus\s+directions, grade information/);
 });
 
 test("homepage omits retired photo gallery and FAQ sections", () => {
@@ -966,6 +983,7 @@ test("homepage source is componentized into modular React files", () => {
   const appSource = fs.readFileSync(path.join(root, "src", "site", "App.jsx"), "utf8");
   const headerSource = fs.readFileSync(path.join(root, "src", "site", "components", "layout", "SiteHeader.jsx"), "utf8");
   const heroSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "HeroSection.jsx"), "utf8");
+  const facilitiesSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "FacilitiesSection.jsx"), "utf8");
   const contactSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "ContactSection.jsx"), "utf8");
   const hookSource = fs.readFileSync(path.join(root, "src", "site", "hooks", "useSchoolSiteState.js"), "utf8");
   const apiSource = fs.readFileSync(path.join(root, "src", "site", "services", "api.js"), "utf8");
@@ -976,14 +994,18 @@ test("homepage source is componentized into modular React files", () => {
   assert.match(packageJson, /"build:site": "node scripts[\\/]build-site\.mjs"/);
   assert.match(packageJson, /"build": "npm run build:site && npm run build:tailwind && npm run build:carousel"/);
   assert.doesNotMatch(appSource, /AnnouncementBar/);
-  assert.doesNotMatch(appSource, /GallerySection|FaqSection/);
+  assert.doesNotMatch(appSource, /GallerySection|FaqSection|FeedbackSection/);
+  assert.match(appSource, /FacilitiesSection/);
   assert.match(appSource, /SiteHeader/);
   assert.match(appSource, /PortalHubSection/);
   assert.match(headerSource, /export function SiteHeader/);
   assert.match(heroSource, /export function HeroSection/);
+  assert.match(facilitiesSource, /export function FacilitiesSection/);
+  assert.match(facilitiesSource, /facilities\.map/);
   assert.match(contactSource, /export function ContactSection/);
   assert.match(hookSource, /export function useSchoolSiteState/);
   assert.match(hookSource, /IntersectionObserver/);
+  assert.match(hookSource, /\{ \.\.\.truthCopy, \.\.\.copy\[language\] \}/);
   assert.match(apiSource, /export function openInquiryComposer/);
   assert.match(apiSource, /buildInquiryDraft/);
   assert.match(dataSource, /export const copy =/);

@@ -218,13 +218,24 @@ export const copy = {
     howWorksRecordsText: "Success Story School offers the National Program only, keeping learning clear, consistent, and aligned with the academic path families expect.",
     howWorksFollowupTitle: "Facilities and competitions",
     howWorksFollowupText: "Students learn in international-grade facilities and are encouraged to participate in school, district, and national competitions that build confidence and distinction.",
-    feedbackEyebrow: "School feedback",
-    feedbackTitle: "Feedback from the school community",
-    feedbackText: "Published feedback will appear here after Success Story School approves real comments from families or staff.",
-    feedbackSlotParent: "Parent feedback awaiting approval",
-    feedbackSlotTeacher: "Teacher feedback awaiting approval",
-    feedbackSlotAdmin: "Administration feedback awaiting approval",
-    feedbackEmpty: "Waiting for school approval",
+    facilitiesTitle: "Facilities",
+    facilitiesReadMore: "Read more",
+    facilityFootballTitle: "Two Football Stadiums",
+    facilityFootballText:
+      "Two spacious turf football stadiums give students room for training, teamwork, PE lessons, and school competitions.",
+    facilityFootballAlt: "Students playing football on the Success Story School field",
+    facilityBasketballTitle: "Basketball Court",
+    facilityBasketballText:
+      "A dedicated basketball court supports active PE lessons, after-school play, and confidence-building team activities.",
+    facilityBasketballAlt: "Students playing basketball on the school court",
+    facilityScienceTitle: "Science Labs",
+    facilityScienceText:
+      "Hands-on science labs turn experiments, observation, and discovery into a regular part of the learning day.",
+    facilityScienceAlt: "A student and teacher using a science model in class",
+    facilityClassroomTitle: "Technology-Ready Classes",
+    facilityClassroomText:
+      "Every classroom is equipped with modern learning technology and a focused environment for stronger understanding.",
+    facilityClassroomAlt: "A student learning with an interactive classroom display",
     trustEyebrow: "Family support",
     trustTitle: "Helpful school information in one place.",
     trustText: "Families can use the website to prepare a visit, ask admissions questions, open directions, and follow school updates after accounts are issued.",
@@ -233,7 +244,7 @@ export const copy = {
     trustBadgeDatabase: "Grades 1 to 10 information",
     trustBadgeSessions: "Homework and announcements",
     trustBadgePasswords: "Attendance, grades, fees, and bus requests",
-    trustBadgeHonest: "School-approved feedback",
+    trustBadgeHonest: "International-grade facilities",
     showcaseEyebrow: "School highlights",
     showcaseTitle: "A homepage that helps families move quickly.",
     showcaseText:
@@ -479,6 +490,24 @@ export const copy = {
     howWorksFollowupTitle: "مرافق ومسابقات",
     howWorksFollowupText:
       "يتعلم الطلاب في مرافق بمستوى عالمي، ويتم تشجيعهم على المشاركة في مسابقات المدرسة والمديرية والمسابقات الوطنية لبناء الثقة والتميز.",
+    facilitiesTitle: "المرافق",
+    facilitiesReadMore: "اقرأ المزيد",
+    facilityFootballTitle: "ملعبا كرة قدم",
+    facilityFootballText:
+      "يوفر ملعبا كرة القدم مساحات واسعة للتدريب والعمل الجماعي وحصص الرياضة والمنافسات المدرسية.",
+    facilityFootballAlt: "طلاب يلعبون كرة القدم في ملعب مدرسة قصة نجاح",
+    facilityBasketballTitle: "ملعب كرة سلة",
+    facilityBasketballText:
+      "يدعم ملعب كرة السلة حصص الرياضة واللعب بعد الدوام والأنشطة الجماعية التي تبني الثقة.",
+    facilityBasketballAlt: "طلاب يلعبون كرة السلة في ملعب المدرسة",
+    facilityScienceTitle: "مختبرات العلوم",
+    facilityScienceText:
+      "تجعل مختبرات العلوم التجارب العملية والملاحظة والاكتشاف جزءاً أساسياً من يوم الطالب.",
+    facilityScienceAlt: "طالب ومعلمة يستخدمان نموذجاً علمياً في الصف",
+    facilityClassroomTitle: "صفوف مجهزة بالتكنولوجيا",
+    facilityClassroomText:
+      "كل صف مجهز بتقنيات تعليم حديثة وبيئة مريحة تساعد الطلاب على التركيز والفهم الأفضل.",
+    facilityClassroomAlt: "طالب يتعلم باستخدام شاشة تفاعلية في الصف",
     showcaseEyebrow: "أبرز أقسام المدرسة",
     showcaseTitle: "صفحة تساعد العائلات على الوصول بسرعة.",
     showcaseText:
@@ -530,13 +559,20 @@ export const truthCopyKeys = [
   "howWorksRecordsText",
   "howWorksFollowupTitle",
   "howWorksFollowupText",
-  "feedbackEyebrow",
-  "feedbackTitle",
-  "feedbackText",
-  "feedbackSlotParent",
-  "feedbackSlotTeacher",
-  "feedbackSlotAdmin",
-  "feedbackEmpty",
+  "facilitiesTitle",
+  "facilitiesReadMore",
+  "facilityFootballTitle",
+  "facilityFootballText",
+  "facilityFootballAlt",
+  "facilityBasketballTitle",
+  "facilityBasketballText",
+  "facilityBasketballAlt",
+  "facilityScienceTitle",
+  "facilityScienceText",
+  "facilityScienceAlt",
+  "facilityClassroomTitle",
+  "facilityClassroomText",
+  "facilityClassroomAlt",
   "trustEyebrow",
   "trustTitle",
   "trustText",
@@ -721,10 +757,39 @@ export const howItWorksSteps = [
   ["04", "howWorksFollowupTitle", "howWorksFollowupText"]
 ];
 
-export const feedbackSlots = [
-  "feedbackSlotParent",
-  "feedbackSlotTeacher",
-  "feedbackSlotAdmin"
+export const facilities = [
+  {
+    title: "facilityFootballTitle",
+    text: "facilityFootballText",
+    alt: "facilityFootballAlt",
+    image: "assets/facilities-football.jpg",
+    href: "#contact",
+    crop: "football"
+  },
+  {
+    title: "facilityBasketballTitle",
+    text: "facilityBasketballText",
+    alt: "facilityBasketballAlt",
+    image: "assets/facilities-basketball.jpg",
+    href: "#contact",
+    crop: "basketball"
+  },
+  {
+    title: "facilityScienceTitle",
+    text: "facilityScienceText",
+    alt: "facilityScienceAlt",
+    image: "assets/facilities-science.jpg",
+    href: "#contact",
+    crop: "science"
+  },
+  {
+    title: "facilityClassroomTitle",
+    text: "facilityClassroomText",
+    alt: "facilityClassroomAlt",
+    image: "assets/facilities-classroom.jpg",
+    href: "#contact",
+    crop: "classroom"
+  }
 ];
 
 export const trustBadges = [

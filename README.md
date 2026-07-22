@@ -1,8 +1,8 @@
 ﻿# Success Story School Website
 
 A new responsive landing page for Success Story School. The site includes academics,
-student life, admissions steps, school-approved feedback slots, a school system story,
-family support points, FAQ content, and an inquiry form interaction.
+student life, admissions steps, school facilities, a school system story,
+family support points, and an inquiry form interaction.
 It also includes bilingual student, teacher, and administrator portals with
 server-backed accounts, classroom rosters, grades, attendance, homework,
 announcements, fees, bus information, and registration screens.
@@ -158,10 +158,11 @@ hover transforms are disabled.
 
 The homepage avoids fake social proof. It does not publish invented testimonials,
 fake user quotes, unsupported statistics, or empty values that look like real
-school results. The `School feedback` section stays empty until the school
-approves real feedback, and the trust section uses school-facing signals:
-admissions inquiry, campus directions, grade information, school updates, and clear
-waiting states for student records.
+school results. The `Facilities` section uses real school visuals for the
+football fields, basketball court, science labs, and technology-ready classrooms,
+and the trust section uses school-facing signals: admissions inquiry, campus
+directions, grade information, school updates, and clear waiting states for
+student records.
 
 ## Portal Security
 

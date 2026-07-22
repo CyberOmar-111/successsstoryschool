@@ -747,6 +747,7 @@ h3 {
 .feature-panel,
 .timeline-step,
 .how-step,
+.facility-card,
 .feedback-slot,
 .faq-card,
 .inquiry-form {
@@ -2967,6 +2968,7 @@ html {
 .portal-preview-section,
 .overview,
 .academics,
+.facilities-section,
 .feedback-section,
 .trust-section,
 .faq-section,
@@ -2977,6 +2979,7 @@ html {
 #student-life,
 #admissions,
 #contact,
+#facilities,
 #feedback,
 #faq {
   scroll-margin-top: 104px;
@@ -3066,6 +3069,7 @@ html {
 
 .split-heading,
 .overview-shell,
+.facilities-grid,
 .feedback-layout,
 .trust-layout,
 .faq-layout {
@@ -3075,6 +3079,7 @@ html {
 .portal-card,
 .proof-card,
 .how-step,
+.facility-card,
 .overview-mode-card,
 .stage-card,
 .feedback-slot,
@@ -3123,6 +3128,7 @@ html {
   .portal-preview-section,
   .overview,
   .academics,
+  .facilities-section,
   .feedback-section,
   .trust-section,
   .faq-section,
@@ -3133,6 +3139,7 @@ html {
   #student-life,
   #admissions,
   #contact,
+  #facilities,
   #feedback,
   #faq {
     scroll-margin-top: 90px;
@@ -3605,6 +3612,7 @@ canvas {
   .portal-preview-layout,
   .life-grid,
   .overview-shell,
+  .facilities-grid,
   .feedback-layout,
   .trust-layout,
   .faq-layout,
@@ -3727,6 +3735,7 @@ canvas {
   .feature-panel,
   .timeline-step,
   .how-step,
+  .facility-card,
   .feedback-slot,
   .faq-card,
   .proof-card,
@@ -6554,5 +6563,165 @@ h3,
 
   .latest-news-card a {
     align-self: flex-start;
+  }
+}
+
+.facilities-section {
+  overflow: hidden;
+  padding: clamp(82px, 8vw, 126px) 0 clamp(92px, 9vw, 136px);
+  background: #e9e9e9;
+}
+
+.facilities-heading {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  margin-bottom: clamp(42px, 5vw, 62px);
+  text-align: center;
+}
+
+.facilities-heading h2 {
+  margin: 0;
+  color: #333333;
+  font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  font-size: clamp(3.15rem, 5.2vw, 5.2rem);
+  font-style: italic;
+  font-weight: 520;
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.facilities-heading span {
+  display: block;
+  width: 92px;
+  height: 3px;
+  border-radius: 999px;
+  background: #c45166;
+}
+
+.facilities-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(22px, 2.4vw, 42px);
+}
+
+.facility-card {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 34px;
+  background: #ffffff;
+  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.1);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.facility-card:hover,
+.facility-card:focus-within {
+  transform: translateY(-5px);
+  box-shadow: 0 28px 58px rgba(15, 23, 42, 0.15);
+}
+
+.facility-card img {
+  width: 100%;
+  height: clamp(184px, 13.8vw, 248px);
+  object-fit: cover;
+  background: #dbe3ea;
+}
+
+.facility-card.football img {
+  object-position: center 50%;
+}
+
+.facility-card.basketball img {
+  object-position: center 54%;
+}
+
+.facility-card.science img {
+  object-position: center 33%;
+}
+
+.facility-card.classroom img {
+  object-position: center 50%;
+}
+
+.facility-card-body {
+  display: flex;
+  min-height: clamp(260px, 19vw, 330px);
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(24px, 2.2vw, 36px) clamp(22px, 2vw, 32px) clamp(26px, 2.6vw, 40px);
+  text-align: center;
+}
+
+.facility-card h3 {
+  margin: 0;
+  color: #111111;
+  font-family: "Rubik", "League Spartan", Arial, sans-serif;
+  font-size: clamp(1.45rem, 1.65vw, 2rem);
+  font-weight: 900;
+  line-height: 1.18;
+  letter-spacing: 0;
+}
+
+.facility-card p {
+  margin: clamp(22px, 2vw, 32px) 0 24px;
+  color: #171717;
+  font-size: clamp(1rem, 1.06vw, 1.15rem);
+  font-weight: 600;
+  line-height: 1.62;
+}
+
+.facility-card a {
+  margin-top: auto;
+  color: #a11735;
+  font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  font-size: clamp(1.04rem, 1.12vw, 1.2rem);
+  font-style: italic;
+  font-weight: 760;
+  text-decoration: none;
+}
+
+.facility-card a:hover,
+.facility-card a:focus-visible {
+  color: var(--maroon);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+[dir="rtl"] .facility-card-body {
+  direction: rtl;
+}
+
+@media (max-width: 1180px) {
+  .facilities-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .facility-card img {
+    height: clamp(220px, 28vw, 300px);
+  }
+}
+
+@media (max-width: 640px) {
+  .facilities-section {
+    padding: 64px 0 78px;
+  }
+
+  .facilities-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .facility-card {
+    border-radius: 26px;
+  }
+
+  .facility-card img {
+    height: 230px;
+  }
+
+  .facility-card-body {
+    min-height: 0;
   }
 }

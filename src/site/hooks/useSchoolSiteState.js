@@ -18,7 +18,7 @@ export function useSchoolSiteState() {
   const [formStatus, setFormStatus] = useState("");
   const [activeSection, setActiveSection] = useState("");
 
-  const t = useMemo(() => ({ ...copy[language], ...truthCopy }), [language]);
+  const t = useMemo(() => ({ ...truthCopy, ...copy[language] }), [language]);
   const isArabic = language === "ar";
   const activeMode = useMemo(
     () => profileModes.find((item) => item.id === mode) ?? profileModes[0],
