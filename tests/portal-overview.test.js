@@ -751,7 +751,6 @@ test("homepage uses an original Jordan school inspired entry layout", () => {
   const showcaseSource = fs.readFileSync(path.join(root, "src", "site", "components", "sections", "SchoolShowcaseSection.jsx"), "utf8");
   const inspirationSurface = `${heroSource}\n${highlightsSource}\n${showcaseSource}\n${homepageDataSource}\n${homepageCss}`;
 
-  assert.match(heroSource, /heroStats/);
   assert.match(highlightsSource, /schoolActions/);
   assert.match(highlightsSource, /data-inspiration="jordan-school-pattern"/);
   assert.match(appSource, /SchoolShowcaseSection/);
@@ -764,7 +763,6 @@ test("homepage uses an original Jordan school inspired entry layout", () => {
   assert.match(homepageDataSource, /exploreTiles/);
   assert.match(homepageCss, /Jordan school inspiration pass/);
   assert.match(homepageCss, /\.entry-action-card/);
-  assert.match(homepageCss, /\.hero-stats/);
   assert.match(homepageCss, /\.school-showcase-grid/);
   assert.match(homepageCss, /\.showcase-update-card/);
   assert.match(homepageCss, /\.explore-tile-grid/);

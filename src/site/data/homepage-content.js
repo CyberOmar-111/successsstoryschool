@@ -142,10 +142,6 @@ export const copy = {
     heroCardPointOne: "One school account system",
     heroCardPointTwo: "Student and staff account access",
     heroCardPointThree: "Class records connected to school accounts",
-    heroStatGrades: "Grade 1 to Grade 10",
-    heroStatPortal: "school accounts",
-    heroStatLocation: "Irbid campus",
-    heroStatLanguage: "Arabic + English",
     schoolActionsLabel: "Start here",
     campusActionContactTitle: "Contact Us",
     campusActionContactText: "Have questions? Get in touch with us to learn more about our school, grades, and admissions process.",
@@ -399,10 +395,6 @@ export const copy = {
     heroCardPointOne: "نظام حسابات مدرسي واحد",
     heroCardPointTwo: "حسابات للطلاب والمعلمين والإدارة",
     heroCardPointThree: "سجلات صفية مرتبطة بالنظام",
-    heroStatGrades: "مستويات دراسية",
-    heroStatPortal: "حسابات آمنة",
-    heroStatLocation: "مبنى إربد",
-    heroStatLanguage: "عربي + إنجليزي",
     schoolActionsLabel: "ابدأ من هنا",
     campusActionContactTitle: "تواصل معنا",
     campusActionContactText: "هل لديك أسئلة؟ تواصل معنا لمعرفة المزيد عن المدرسة والصفوف وخطوات التسجيل.",
@@ -515,10 +507,6 @@ export const copy = {
 
 export const truthCopyKeys = [
   "announcementStrong",
-  "heroStatGrades",
-  "heroStatPortal",
-  "heroStatLocation",
-  "heroStatLanguage",
   "portalPreviewEyebrow",
   "portalPreviewTitle",
   "portalPreviewText",
@@ -608,13 +596,6 @@ export const schoolActions = [
     href: "#admissions",
     icon: ClipboardList
   }
-];
-
-export const heroStats = [
-  ["Grades", "heroStatGrades"],
-  ["Accounts", "heroStatPortal"],
-  ["Irbid", "heroStatLocation"],
-  ["AR/EN", "heroStatLanguage"]
 ];
 
 export const whyStrengths = [
