@@ -864,8 +864,8 @@ export const stages = [
 
 export const admissions = [
   { number: "01", title: "stepOne", text: "stepOneText", tone: "paper", action: "enquire" },
-  { number: "02", title: "stepTwo", text: "stepTwoText", tone: "gold", image: "assets/facilities-science.jpg", alt: "stepTwoAlt" },
+  { number: "02", title: "stepTwo", text: "stepTwoText", tone: "blue", image: "assets/facilities-science.jpg", alt: "stepTwoAlt" },
   { number: "03", title: "stepThree", text: "stepThreeText", tone: "burgundy", image: "assets/facilities-football.jpg", alt: "stepThreeAlt" },
   { number: "04", title: "stepFour", text: "stepFourText", tone: "paper", action: "email" },
-  { number: "05", title: "stepFive", text: "stepFiveText", tone: "gold", image: "assets/facilities-classroom.jpg", alt: "stepFiveAlt" }
+  { number: "05", title: "stepFive", text: "stepFiveText", tone: "blue", image: "assets/facilities-classroom.jpg", alt: "stepFiveAlt" }
 ];

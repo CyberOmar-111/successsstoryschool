@@ -69,7 +69,7 @@ export function AdmissionsSection({ t, isArabic }) {
                   </div>
                 </div>
               </article>
-              <div className="admissions-marker" aria-hidden="true"><span>{step.number}</span></div>
+              <div className="admissions-marker" aria-hidden="true"><span /></div>
               <p className="admissions-step-label" aria-hidden="true">{t[step.title]}</p>
             </li>
           ))}
