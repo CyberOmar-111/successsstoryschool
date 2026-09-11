@@ -64,7 +64,8 @@ export function useSchoolSiteState() {
   useEffect(() => {
     const sections = navItems
       .map(([, href]) => document.getElementById(href.slice(1)))
-      .filter(Boolean);
+      .filter(Boolean)
+      .sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
 
     if (!sections.length) {
       return undefined;
