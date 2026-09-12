@@ -932,15 +932,20 @@ test("homepage uses production school content instead of demo or coding language
   assert.match(homepageDataSource, /facilityBasketballTitle: "Basketball Court"/);
   assert.match(homepageDataSource, /facilityScienceTitle: "Science Labs"/);
   assert.match(homepageDataSource, /facilityClassroomTitle: "Technology-Ready Classes"/);
-  assert.match(homepageDataSource, /assets\/facilities-football\.jpg/);
+  assert.match(homepageDataSource, /assets\/main-football-field\.jpg/);
   assert.match(homepageDataSource, /assets\/facilities-basketball\.jpg/);
-  assert.match(homepageDataSource, /assets\/facilities-science\.jpg/);
-  assert.match(homepageDataSource, /assets\/facilities-classroom\.jpg/);
+  assert.match(homepageDataSource, /assets\/science-lab\.jpg/);
+  assert.match(homepageDataSource, /assets\/campus-classroom\.jpg/);
   for (const assetName of [
-    "facilities-football.jpg",
+    "main-football-field.jpg",
     "facilities-basketball.jpg",
-    "facilities-science.jpg",
-    "facilities-classroom.jpg"
+    "science-lab.jpg",
+    "campus-classroom.jpg",
+    "admissions-reception.jpg",
+    "campus-entrance.jpg",
+    "computer-lab.jpg",
+    "playground.jpg",
+    "covered-football.jpg"
   ]) {
     assert.equal(fs.existsSync(path.join(root, "assets", assetName)), true);
   }

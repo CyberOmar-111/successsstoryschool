@@ -79,6 +79,7 @@ export const copy = {
     staffModeText:
       "Teachers and administrators work from protected dashboards connected to school records.",
     academicsEyebrow: "Academics",
+    academicsLabAlt: "The Success Story School computer lab with desktop workstations and a projection screen",
     academicsTitle: "Learning designed for each stage",
     academicsText:
       "From foundation years to Grade 10, students build language, confidence, independence, and focused academic habits.",
@@ -91,6 +92,8 @@ export const copy = {
     secondary: "Secondary Level",
     secondaryText: "Focused study and preparation for the next educational step.",
     lifeEyebrow: "Student life",
+    lifePlaygroundAlt: "Colourful slides and play equipment under shade sails at Success Story School",
+    lifeFootballAlt: "The school's covered football area with artificial turf, a goal and colourful shade sails",
     lifeTitle: "Learning, activities, and care in one place",
     lifeText:
       "Students take part in classroom learning, art, sports, trips, celebrations, and competitions.",
@@ -108,10 +111,10 @@ export const copy = {
     stepOneText: "Your child's story starts with a conversation. Send an enquiry with their grade and your questions, or call our office to discuss joining Success Story School.",
     stepTwo: "Meet our team",
     stepTwoText: "Arrange a conversation with our admissions team. Tell us about your child's interests and learning needs, and explore how our national programme can support their next chapter.",
-    stepTwoAlt: "A Success Story School teacher supporting a student during a science activity",
+    stepTwoAlt: "The reception office at Success Story School with a school welcome banner",
     stepThree: "Take a tour",
     stepThreeText: "Come and see school life up close. Discover our technology-equipped classrooms, science labs and sports facilities, and picture your child learning here.",
-    stepThreeAlt: "The colourful Success Story School campus in Irbid",
+    stepThreeAlt: "The entrance to Success Story School beneath the school sign",
     stepFour: "Send your application",
     stepFourText: "Contact the school office to request the application form and confirm the documents needed for your child's grade. Our team will guide you through the next steps.",
     stepFive: "Grade assessment",
@@ -209,7 +212,7 @@ export const copy = {
     facilityFootballTitle: "Two Football Stadiums",
     facilityFootballText:
       "Two spacious turf football stadiums give students room for training, teamwork, PE lessons, and school competitions.",
-    facilityFootballAlt: "Students playing football on the Success Story School field",
+    facilityFootballAlt: "The main turf football field and goal beside the Success Story School building",
     facilityBasketballTitle: "Basketball Court",
     facilityBasketballText:
       "A dedicated basketball court supports active PE lessons, after-school play, and confidence-building team activities.",
@@ -217,11 +220,11 @@ export const copy = {
     facilityScienceTitle: "Science Labs",
     facilityScienceText:
       "Hands-on science labs turn experiments, observation, and discovery into a regular part of the learning day.",
-    facilityScienceAlt: "A student and teacher using a science model in class",
+    facilityScienceAlt: "The school science laboratory with workbenches, sinks and stools",
     facilityClassroomTitle: "Technology-Ready Classes",
     facilityClassroomText:
       "Every classroom is equipped with modern learning technology and a focused environment for stronger understanding.",
-    facilityClassroomAlt: "A student learning with an interactive classroom display",
+    facilityClassroomAlt: "A bright school classroom with rows of desks and a ceiling-mounted projector",
     trustEyebrow: "Family support",
     trustTitle: "Helpful school information in one place.",
     trustText: "Families can use the website to prepare a visit, ask admissions questions, open directions, and follow school updates after accounts are issued.",
@@ -332,6 +335,7 @@ export const copy = {
     staffModeText:
       "يعمل المعلمون والإداريون من لوحات محمية مرتبطة بالنظام الحالي.",
     academicsEyebrow: "الأكاديميات",
+    academicsLabAlt: "مختبر الحاسوب في مدرسة قصة نجاح، مجهز بأجهزة حاسوب مكتبية وشاشة عرض",
     academicsTitle: "تعلم مناسب لكل مرحلة",
     academicsText:
       "من السنوات التأسيسية حتى الصف العاشر، يبني الطلاب اللغة والثقة والاستقلالية والعادات الدراسية.",
@@ -344,6 +348,8 @@ export const copy = {
     secondary: "المرحلة الثانوية",
     secondaryText: "دراسة مركزة واستعداد للخطوة التعليمية التالية.",
     lifeEyebrow: "حياة الطلاب",
+    lifePlaygroundAlt: "زحاليق وألعاب ملونة تحت المظلات في ساحة مدرسة قصة نجاح",
+    lifeFootballAlt: "ملعب كرة القدم المظلل في المدرسة، بأرضية عشب صناعي ومرمى ومظلات ملونة",
     lifeTitle: "تعلم وأنشطة ورعاية في مكان واحد",
     lifeText:
       "يشارك الطلاب في التعلم الصفي، الفن، الرياضة، الرحلات، الاحتفالات، والمسابقات.",
@@ -361,10 +367,10 @@ export const copy = {
     stepOneText: "تبدأ قصة طفلكم بحوار. أرسلوا استفساراً يتضمن الصف المطلوب وأسئلتكم، أو اتصلوا بإدارة المدرسة للتعرّف إلى فرص الانضمام إلى مدرسة قصة نجاح.",
     stepTwo: "تعرّف إلى فريقنا",
     stepTwoText: "رتّبوا لقاءً مع فريق القبول والتسجيل، وشاركونا اهتمامات طفلكم واحتياجاته التعليمية، لنتعرّف معاً إلى ما يقدّمه برنامجنا الوطني لرحلته الدراسية.",
-    stepTwoAlt: "معلمة في مدرسة قصة نجاح تساعد طالباً خلال نشاط علمي",
+    stepTwoAlt: "مكتب الاستقبال في مدرسة قصة نجاح مع لافتة ترحيبية تحمل اسم المدرسة",
     stepThree: "زر حرم المدرسة",
     stepThreeText: "تعرّفوا إلى الحياة المدرسية عن قرب. اكتشفوا صفوفنا المجهّزة بتقنيات التعلّم، ومختبرات العلوم والمرافق الرياضية، وتخيّلوا طفلكم يتعلّم وينمو هنا.",
-    stepThreeAlt: "مبنى مدرسة قصة نجاح الملوّن في إربد",
+    stepThreeAlt: "مدخل مدرسة قصة نجاح أسفل اللوحة التي تحمل اسم المدرسة",
     stepFour: "قدّم طلب التسجيل",
     stepFourText: "تواصلوا مع إدارة المدرسة للحصول على طلب التسجيل والتأكّد من الوثائق المطلوبة لصف طفلكم. سيرافقكم فريقنا ويوضّح لكم الخطوات التالية.",
     stepFive: "تقييم المستوى الدراسي",
@@ -467,7 +473,7 @@ export const copy = {
     facilityFootballTitle: "ملعبا كرة قدم",
     facilityFootballText:
       "يوفر ملعبا كرة القدم مساحات واسعة للتدريب والعمل الجماعي وحصص الرياضة والمنافسات المدرسية.",
-    facilityFootballAlt: "طلاب يلعبون كرة القدم في ملعب مدرسة قصة نجاح",
+    facilityFootballAlt: "ملعب كرة القدم الرئيسي بأرضيته العشبية ومرماه بجانب مبنى مدرسة قصة نجاح",
     facilityBasketballTitle: "ملعب كرة سلة",
     facilityBasketballText:
       "يدعم ملعب كرة السلة حصص الرياضة واللعب بعد الدوام والأنشطة الجماعية التي تبني الثقة.",
@@ -475,11 +481,11 @@ export const copy = {
     facilityScienceTitle: "مختبرات العلوم",
     facilityScienceText:
       "تجعل مختبرات العلوم التجارب العملية والملاحظة والاكتشاف جزءاً أساسياً من يوم الطالب.",
-    facilityScienceAlt: "طالب ومعلمة يستخدمان نموذجاً علمياً في الصف",
+    facilityScienceAlt: "مختبر العلوم في المدرسة، مجهز بطاولات عمل وأحواض ومقاعد",
     facilityClassroomTitle: "صفوف مجهزة بالتكنولوجيا",
     facilityClassroomText:
       "كل صف مجهز بتقنيات تعليم حديثة وبيئة مريحة تساعد الطلاب على التركيز والفهم الأفضل.",
-    facilityClassroomAlt: "طالب يتعلم باستخدام شاشة تفاعلية في الصف",
+    facilityClassroomAlt: "صف دراسي مضاء طبيعياً، مجهز بصفوف من المقاعد وجهاز عرض مثبت في السقف",
     showcaseEyebrow: "أبرز أقسام المدرسة",
     showcaseTitle: "صفحة تساعد العائلات على الوصول بسرعة.",
     showcaseText:
@@ -681,7 +687,7 @@ export const facilities = [
     title: "facilityFootballTitle",
     text: "facilityFootballText",
     alt: "facilityFootballAlt",
-    image: "assets/facilities-football.jpg",
+    image: "assets/main-football-field.jpg",
     href: "#contact",
     crop: "football"
   },
@@ -697,7 +703,7 @@ export const facilities = [
     title: "facilityScienceTitle",
     text: "facilityScienceText",
     alt: "facilityScienceAlt",
-    image: "assets/facilities-science.jpg",
+    image: "assets/science-lab.jpg",
     href: "#contact",
     crop: "science"
   },
@@ -705,7 +711,7 @@ export const facilities = [
     title: "facilityClassroomTitle",
     text: "facilityClassroomText",
     alt: "facilityClassroomAlt",
-    image: "assets/facilities-classroom.jpg",
+    image: "assets/campus-classroom.jpg",
     href: "#contact",
     crop: "classroom"
   }
@@ -845,8 +851,8 @@ export const stages = [
 
 export const admissions = [
   { number: "01", title: "stepOne", text: "stepOneText", tone: "paper", action: "enquire" },
-  { number: "02", title: "stepTwo", text: "stepTwoText", tone: "blue", image: "assets/facilities-science.jpg", alt: "stepTwoAlt" },
-  { number: "03", title: "stepThree", text: "stepThreeText", tone: "burgundy", image: "assets/facilities-football.jpg", alt: "stepThreeAlt" },
+  { number: "02", title: "stepTwo", text: "stepTwoText", tone: "blue", image: "assets/admissions-reception.jpg", alt: "stepTwoAlt" },
+  { number: "03", title: "stepThree", text: "stepThreeText", tone: "burgundy", image: "assets/campus-entrance.jpg", alt: "stepThreeAlt" },
   { number: "04", title: "stepFour", text: "stepFourText", tone: "paper", action: "email" },
   { number: "05", title: "stepFive", text: "stepFiveText", tone: "blue", image: "assets/facilities-classroom.jpg", alt: "stepFiveAlt" }
 ];

@@ -1265,6 +1265,24 @@ h3 {
   object-fit: cover;
 }
 
+.life-image.life-photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.life-image.life-photos img {
+  height: auto;
+  min-height: 0;
+  max-height: 560px;
+  aspect-ratio: 3 / 5;
+  border-radius: 8px;
+  object-position: center 60%;
+}
+
 .check-list {
   display: grid;
   gap: 12px;
@@ -2673,6 +2691,31 @@ body {
 
 .academics {
   background: #fbf8f1;
+}
+
+.academics-intro {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.academics-lab-photo {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: center 60%;
+  border-radius: 8px;
+}
+
+@media (max-width: 760px) {
+  .academics-intro {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
 }
 
 .stage-card {
@@ -6514,11 +6557,11 @@ h3,
 }
 
 .admissions-photo--02 {
-  object-position: center 5%;
+  object-position: center 65%;
 }
 
 .admissions-photo--03 {
-  object-position: center 47%;
+  object-position: center 65%;
 }
 
 .admissions-photo--05 {
@@ -6858,7 +6901,7 @@ h3,
 }
 
 .facility-card.football img {
-  object-position: center 50%;
+  object-position: center 68%;
 }
 
 .facility-card.basketball img {
@@ -6866,7 +6909,7 @@ h3,
 }
 
 .facility-card.science img {
-  object-position: center 33%;
+  object-position: center 60%;
 }
 
 .facility-card.classroom img {

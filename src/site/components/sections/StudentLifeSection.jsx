@@ -4,8 +4,21 @@ export function StudentLifeSection({ t }) {
   return (
     <section className="section life" id="life">
       <div className="shell life-grid">
-        <div className="life-image" role="img" aria-label="Success Story School campus">
-          <img src="assets/success-story-campus.jpg" alt="Success Story School campus in Irbid" />
+        <div className="life-image life-photos">
+          <img
+            src="assets/playground.jpg"
+            alt={t.lifePlaygroundAlt}
+            loading="lazy"
+            width="1290"
+            height="2270"
+          />
+          <img
+            src="assets/covered-football.jpg"
+            alt={t.lifeFootballAlt}
+            loading="lazy"
+            width="1290"
+            height="2265"
+          />
         </div>
         <div className="section-copy">
           <p className="eyebrow">{t.lifeEyebrow}</p>
